@@ -3,45 +3,35 @@ package com.bengebackend.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import java.util.Arrays;
-
-/**
- * 安全配置类
- */
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/script/**").permitAll()
-                .requestMatchers("/api/user/**").permitAll()
-                .anyRequest().authenticated()
-            );
-        
-        return http.build();
-    }
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(new AntPathRequestMatcher("/api/user/login")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/user/register")).permitAll()
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-resources/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/webjars/**")).permitAll()
+
+                        // 例如注册和登录接口
+                        .requestMatchers(new AntPathRequestMatcher("/api/user/register")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/user/login")).permitAll()
+
+                        // 其他全部认证
+                        .anyRequest().authenticated()
+                )
+                .httpBasic();
+
+        return http.build();
     }
 }
