@@ -64,9 +64,7 @@ public class ScriptServiceImpl implements ScriptService {
         script.setLastUpdated(LocalDateTime.now());
         scriptMapper.insert(script);
         return script;
-    }
-
-    @Override
+    }    @Override
     public void updateScriptAsync(Integer scriptId, String title, String content, Integer stage) {
         scriptMapper.update(scriptId, title, content, stage, LocalDateTime.now());
     }
@@ -147,10 +145,8 @@ public class ScriptServiceImpl implements ScriptService {
         
         scriptAnalysisService.saveAnalysis(analysis);
         return analysis;
-    }
-
-    @Override
-    public ScriptDetailDto getCompScriptAndDesc(Script script) {
+    }    @Override
+    public ScriptDetailDto getCompSctiptAndDesc(Script script) {
         return getScriptByIdAsync(script.getId());
     }
 

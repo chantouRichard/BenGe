@@ -27,6 +27,43 @@ public class ScriptController {
     @Autowired
     private ScriptService scriptService;
 
+
+    /**
+     * 生成剧本方向标语
+     */
+    @PostMapping("/directions")
+    public ResponseEntity<Object> generateSlogan(@RequestBody Object request) {
+        return ResponseEntity.ok().body("");
+    }
+
+    /**
+     * 流式生成剧本方向标语
+     */
+    @PutMapping("/directions/stream")
+    public ResponseEntity<String> streamGenerateSlogan(@RequestBody Object request) {
+
+        return ResponseEntity.ok("");
+    }
+
+    /**
+     * 完成流式标语生成
+     */
+    @PutMapping("/directions/stream-complete")
+    public ResponseEntity<Object> streamCompleteGenerateSlogan(@RequestBody Object request) {
+
+        return ResponseEntity.ok().body("");
+    }
+
+    /**
+     * 聊天流式接口
+     */
+    @PostMapping("/chat/stream")
+    public ResponseEntity<String> chatStream(@RequestBody Object request) {
+
+        return ResponseEntity.ok("AI服务暂未实现");
+    }
+
+
     /**
      * 根据剧本ID获取剧本详情
      */
@@ -121,7 +158,7 @@ public class ScriptController {
             return ResponseEntity.notFound().build();
         }
 
-        ScriptDetailDto result = scriptService.getCompScriptAndDesc(scriptDto.getScript());
+        ScriptDetailDto result = scriptService.getCompSctiptAndDesc(scriptDto.getScript());
         return ResponseEntity.ok(result);
     }
 
@@ -172,11 +209,16 @@ public class ScriptController {
 
     /**
      * 获取当前用户ID
+     * 参考C#实现: User.FindFirst(ClaimTypes.NameIdentifier)?.Value
      */
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof String) {
-            return Integer.parseInt((String) authentication.getPrincipal());
+        if (authentication != null && authentication.isAuthenticated()) {
+            try {
+                return Integer.parseInt(authentication.getName());
+            } catch (NumberFormatException e) {
+                return 1;
+            }
         }
         return 1;
     }

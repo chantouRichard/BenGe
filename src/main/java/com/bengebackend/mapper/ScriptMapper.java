@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 剧本数据访问层
  */
-@Mapper
+
 public interface ScriptMapper {
     
     /**

@@ -2,45 +2,32 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bengebackend.mapper.ScriptAnalysisMapper">
 
-    <resultMap id="BaseResultMap" type="com.bengebackend.model.ScriptAnalysis">
-        <id column="id" property="id" jdbcType="INTEGER"/>
-        <result column="script_id" property="scriptId" jdbcType="INTEGER"/>
-        <result column="analysis_result" property="analysisResult" jdbcType="LONGVARCHAR"/>
-        <result column="analyzed_at" property="analyzedAt" jdbcType="TIMESTAMP"/>
-    </resultMap>
-
-    <sql id="Base_Column_List">
-        id, script_id, analysis_result, analyzed_at
-    </sql>
-
-    <select id="selectByScriptId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-        SELECT 
-        <include refid="Base_Column_List"/>
-        FROM script_analysis 
-        WHERE script_id = #{scriptId}
+    <!-- 根据剧本ID查询分析结果 -->
+    <select id="selectByScriptId" resultType="com.bengebackend.model.ScriptAnalysis">
+        SELECT * FROM script_analysis WHERE script_id = #{scriptId};
     </select>
 
+    <!-- 插入新分析结果 -->
     <insert id="insert" parameterType="com.bengebackend.model.ScriptAnalysis" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO script_analysis (
-            script_id, analysis_result, analyzed_at
-        ) VALUES (
-            #{scriptId}, #{analysisResult}, #{analyzedAt}
-        )
+        INSERT INTO script_analysis (script_id, analysis_result, analyzed_at) 
+        VALUES (#{scriptId}, #{analysisResult}, #{analyzedAt});
     </insert>
 
+    <!-- 根据剧本ID更新分析结果 -->
     <update id="updateByScriptId" parameterType="com.bengebackend.model.ScriptAnalysis">
         UPDATE script_analysis 
-        SET analysis_result = #{analysisResult}, 
-            analyzed_at = #{analyzedAt}
-        WHERE script_id = #{scriptId}
+        SET analysis_result = #{analysisResult}, analyzed_at = #{analyzedAt}
+        WHERE script_id = #{scriptId};
     </update>
 
-    <delete id="deleteById" parameterType="java.lang.Integer">
-        DELETE FROM script_analysis WHERE id = #{id}
+    <!-- 删除分析结果 -->
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM script_analysis WHERE id = #{id};
     </delete>
 
-    <delete id="deleteByScriptId" parameterType="java.lang.Integer">
-        DELETE FROM script_analysis WHERE script_id = #{scriptId}
+    <!-- 根据剧本ID删除分析结果 -->
+    <delete id="deleteByScriptId" parameterType="int">
+        DELETE FROM script_analysis WHERE script_id = #{scriptId};
     </delete>
 
 </mapper>

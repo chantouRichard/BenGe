@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 剧本分析数据访问层
  */
-@Mapper
+
 public interface ScriptAnalysisMapper {
     
     /**
