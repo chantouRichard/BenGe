@@ -1,0 +1,25 @@
+spring:
+  application:
+    name:Benge-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/picture?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+    type-aliases-package: com.bengebackend.entity
+
+## JWT配置
+#jwt:
+#  secret: yoursecretkey123456789abcdefghijklmnopqrstuvwxyz
+#  expiration: 86400000 # 24小时(毫秒)
+
+# 服务端口配置
+server:
+  port: 8080
+  address: 0.0.0.0
