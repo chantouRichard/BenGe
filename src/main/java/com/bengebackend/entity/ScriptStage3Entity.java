@@ -1,19 +1,16 @@
 package com.bengebackend.entity;
 
-import jakarta.validation.constraints.NotNull;
 
 public class ScriptStage3Entity {
 
     /**
      * 脚本ID
      */
-    @NotNull(message = "ScriptId cannot be null")
     private Integer scriptId;
 
     /**
      * 是否生成可视化元素
      */
-    @NotNull(message = "IsGenVisualElement cannot be null")
     private Boolean isGenVisualElement;
 
     // 默认构造函数
