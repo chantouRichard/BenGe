@@ -12,7 +12,7 @@ mybatis:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
-    type-aliases-package: com.bengebackend.entity
+  type-aliases-package: com.bengebackend.model
 
 ## JWT配置
 #jwt:
