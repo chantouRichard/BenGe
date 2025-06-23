@@ -3,6 +3,7 @@ package com.bengebackend.controller;
 import com.bengebackend.entity.UserRegisterEntity;
 import com.bengebackend.service.UserLoginService;
 import com.bengebackend.service.UserRegisterService;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ public class UserController {
     // 登录接口
     @GetMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
+        System.out.println(username);
         // 检查用户名和密码是否为空
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             return ResponseEntity.badRequest().body("用户名或密码不能为空");
@@ -31,6 +33,7 @@ public class UserController {
         // 调用服务层的登录方法
         String token = userLoginService.LoginAsync(username, password);
         if (token == null) {
+            System.out.println("登录失败~");
             return ResponseEntity.status(401).body("Invalid username or password");
         }
 
@@ -41,6 +44,8 @@ public class UserController {
     // 注册接口
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserRegisterEntity request) {
+        System.out.println(request.getUsername());
+
         if (request.getUsername() == null || request.getUsername().isEmpty() ||
                 request.getPassword() == null || request.getPassword().isEmpty()) {
             return ResponseEntity.badRequest().body("用户名或密码不能为空");
@@ -56,6 +61,7 @@ public class UserController {
     }
 
     // 登录响应封装类
+    @Getter
     public static class LoginResponse {
         private String token;
         private String username;
@@ -65,12 +71,5 @@ public class UserController {
             this.username = username;
         }
 
-        public String getToken() {
-            return token;
-        }
-
-        public String getUsername() {
-            return username;
-        }
     }
 }
