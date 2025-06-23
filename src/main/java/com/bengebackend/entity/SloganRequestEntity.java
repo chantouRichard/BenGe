@@ -1,7 +1,6 @@
 package com.bengebackend.entity;
 
 
-import jakarta.validation.constraints.NotNull;
 
 public class SloganRequestEntity {
 
@@ -13,7 +12,6 @@ public class SloganRequestEntity {
     /**
      * Slogan的ID
      */
-    @NotNull(message = "ScriptId cannot be null")
     private Integer scriptId;
 
     // 默认构造函数

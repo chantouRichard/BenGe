@@ -1,19 +1,15 @@
 package com.bengebackend.entity;
 
-import jakarta.validation.constraints.NotNull;
-
 public class ScriptReplyRequestEntity {
 
     /**
      * 脚本ID
      */
-    @NotNull(message = "ScriptId cannot be null")
     private Integer scriptId;
 
     /**
-     * 回复消息
+     * 剧本消息
      */
-    @NotNull(message = "Message cannot be null")
     private String message;
 
     // 默认构造函数

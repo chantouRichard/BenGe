@@ -1,13 +1,11 @@
 package com.bengebackend.entity;
 
-import jakarta.validation.constraints.NotNull;
 
 public class ScriptUpdateRequestEntity {
 
     /**
      * 脚本ID
      */
-    @NotNull(message = "ScriptId cannot be null")
     private Integer scriptId;
 
     /**
