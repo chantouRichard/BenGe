@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data  // Lombok的@Data注解自动生成getter、setter、toString等方法
@@ -33,7 +32,6 @@ public class ScriptHistory {
     /**
      * 脚本ID
      */
-    @NotNull(message = "ScriptId cannot be null")
     private Integer scriptId;
 
     /**

@@ -1,20 +1,17 @@
 package com.bengebackend.entity;
 
 
-import jakarta.validation.constraints.NotNull;
 
 public class ScriptVisualRequestEntity {
 
     /**
      * 剧本ID
      */
-    @NotNull(message = "ScriptId cannot be null")
     private Integer scriptId;
 
     /**
      * 元素ID
      */
-    @NotNull(message = "ElementId cannot be null")
     private Integer elementId;
 
     // 默认构造函数
