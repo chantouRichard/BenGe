@@ -101,6 +101,7 @@ public class ScriptController {
     @PostMapping("/create")
     public ResponseEntity<ScriptDetailDto> createNewScript() {
         Integer userId = getCurrentUserId();
+        System.out.println("111111111111");
         ScriptDetailDto result = scriptService.initializeScriptAsync(userId);
         return ResponseEntity.ok(result);
     }
@@ -213,13 +214,22 @@ public class ScriptController {
      */
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // 打印调试信息，查看当前用户的信息
+        System.out.println("getCurrentUserId: " + authentication.getName());
+
         if (authentication != null && authentication.isAuthenticated()) {
             try {
-                return Integer.parseInt(authentication.getName());
-            } catch (NumberFormatException e) {
-                return 1;
+                // 获取存储在 authentication 中的 userId（保存在 details 字段）
+                Integer userId = (Integer) authentication.getDetails();  // 强制转换为 Integer 类型
+                return userId;  // 返回 userId
+            } catch (Exception e) {
+                System.out.println("Error retrieving userId: " + e.getMessage());
+                return 1;  // 如果出错，返回默认的 1
             }
         }
-        return 1;
+
+        return 1;  // 如果未认证，返回默认的 1
     }
+
 }

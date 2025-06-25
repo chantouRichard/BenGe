@@ -83,7 +83,8 @@ public class ScriptServiceImpl implements ScriptService {
         newScript.setIsDeleted(false);
         newScript.setLastUpdated(LocalDateTime.now());
         newScript.setStage(1);
-        
+
+        System.out.println("222222222:"+newScript);
         scriptMapper.insert(newScript);
 
         ScriptDetailDto dto = new ScriptDetailDto();
