@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bengebackend.mapper.ScriptHistoryMapper">
+
+    <resultMap id="BaseResultMap" type="com.bengebackend.model.ScriptHistory">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="script_id" property="scriptId" jdbcType="INTEGER"/>
+        <result column="message" property="message" jdbcType="LONGVARCHAR"/>
+        <result column="response" property="response" jdbcType="LONGVARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, script_id, message, response, created_at
+    </sql>
+
+    <select id="selectByScriptId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM script_history 
+        WHERE script_id = #{scriptId} 
+        ORDER BY created_at ASC
+    </select>
+
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM script_history 
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.bengebackend.model.ScriptHistory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO script_history (
+            script_id, message, response, created_at
+        ) VALUES (
+            #{scriptId}, #{message}, #{response}, #{createdAt}
+        )
+    </insert>
+
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        DELETE FROM script_history WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByScriptId" parameterType="java.lang.Integer">
+        DELETE FROM script_history WHERE script_id = #{scriptId}
+    </delete>
+
+</mapper>

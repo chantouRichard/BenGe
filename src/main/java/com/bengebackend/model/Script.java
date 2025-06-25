@@ -12,7 +12,7 @@ public class Script {
     private Integer id;
     private String title;
     private String content;
-    private boolean isDeleted;
+    private Boolean isDeleted;
     private LocalDateTime lastUpdated;
     private Integer userId;
 
@@ -23,5 +23,5 @@ public class Script {
     private List<VisualElement> visualElements;
     private ScriptAnalysis scriptAnalysis;
 
-    private int stage = 1;
+    private Integer stage = 1;
 }
