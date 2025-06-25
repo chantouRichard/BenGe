@@ -9,8 +9,20 @@ const routes = [
     },
     {
         path: '/home',
-        name: 'mainPage',
+        name: 'homePage',
         component: () => import('@/view/MainPage.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/single',
+        name: 'singlePro',
+        component: () => import('@/view/SinglePro.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/cooperate',
+        name: 'cooperatePro',
+        component: () => import('@/view/CooperatePro.vue'),
         meta: { requiresAuth: true }
     }
 ];
@@ -30,7 +42,7 @@ router.beforeEach((to, from, next) => {
         next({ name: 'loginPage' });
     } else if (to.name === 'loginPage' && isAuthenticated) {
         // 如果已登录，访问登录页会重定向到首页
-        next({ name: 'mainPage' });
+        next({ name: 'homePage' });
     } else {
         // 正常导航
         next();
