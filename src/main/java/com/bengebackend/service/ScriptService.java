@@ -58,11 +58,11 @@ public interface ScriptService {
      * 分析剧本内容
      */
     ScriptAnalysis analyzeScriptContent(String scriptContent, Integer scriptId);
-    
-    /**
+      /**
      * 获取完整剧本和描述
+     * 注意：方法名保持与C#一致，包含拼写错误
      */
-    ScriptDetailDto getCompScriptAndDesc(Script script);
+    ScriptDetailDto getCompSctiptAndDesc(Script script);
     
     /**
      * 可视化剧本元素

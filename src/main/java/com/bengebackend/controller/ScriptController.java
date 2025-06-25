@@ -27,6 +27,43 @@ public class ScriptController {
     @Autowired
     private ScriptService scriptService;
 
+
+    /**
+     * 生成剧本方向标语
+     */
+    @PostMapping("/directions")
+    public ResponseEntity<Object> generateSlogan(@RequestBody Object request) {
+        return ResponseEntity.ok().body("");
+    }
+
+    /**
+     * 流式生成剧本方向标语
+     */
+    @PutMapping("/directions/stream")
+    public ResponseEntity<String> streamGenerateSlogan(@RequestBody Object request) {
+
+        return ResponseEntity.ok("");
+    }
+
+    /**
+     * 完成流式标语生成
+     */
+    @PutMapping("/directions/stream-complete")
+    public ResponseEntity<Object> streamCompleteGenerateSlogan(@RequestBody Object request) {
+
+        return ResponseEntity.ok().body("");
+    }
+
+    /**
+     * 聊天流式接口
+     */
+    @PostMapping("/chat/stream")
+    public ResponseEntity<String> chatStream(@RequestBody Object request) {
+
+        return ResponseEntity.ok("AI服务暂未实现");
+    }
+
+
     /**
      * 根据剧本ID获取剧本详情
      */
@@ -64,6 +101,7 @@ public class ScriptController {
     @PostMapping("/create")
     public ResponseEntity<ScriptDetailDto> createNewScript() {
         Integer userId = getCurrentUserId();
+        System.out.println("111111111111");
         ScriptDetailDto result = scriptService.initializeScriptAsync(userId);
         return ResponseEntity.ok(result);
     }
@@ -121,7 +159,7 @@ public class ScriptController {
             return ResponseEntity.notFound().build();
         }
 
-        ScriptDetailDto result = scriptService.getCompScriptAndDesc(scriptDto.getScript());
+        ScriptDetailDto result = scriptService.getCompSctiptAndDesc(scriptDto.getScript());
         return ResponseEntity.ok(result);
     }
 
@@ -172,12 +210,26 @@ public class ScriptController {
 
     /**
      * 获取当前用户ID
+     * 参考C#实现: User.FindFirst(ClaimTypes.NameIdentifier)?.Value
      */
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof String) {
-            return Integer.parseInt((String) authentication.getPrincipal());
+
+        // 打印调试信息，查看当前用户的信息
+        System.out.println("getCurrentUserId: " + authentication.getName());
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            try {
+                // 获取存储在 authentication 中的 userId（保存在 details 字段）
+                Integer userId = (Integer) authentication.getDetails();  // 强制转换为 Integer 类型
+                return userId;  // 返回 userId
+            } catch (Exception e) {
+                System.out.println("Error retrieving userId: " + e.getMessage());
+                return 1;  // 如果出错，返回默认的 1
+            }
         }
-        return 1;
+
+        return 1;  // 如果未认证，返回默认的 1
     }
+
 }
