@@ -16,6 +16,7 @@
     "axios": "^1.8.4",
     "cloudflared": "^0.7.0",
     "core-js": "^3.8.3",
+    "element-plus": "^2.10.2",
     "marked": "^15.0.11",
     "pinia": "^3.0.2",
     "vercel": "^42.3.0",
