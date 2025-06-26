@@ -24,7 +24,13 @@ const routes = [
         name: 'cooperatePro',
         component: () => import('@/view/CooperatePro.vue'),
         meta: { requiresAuth: true }
-    }
+    },
+    {
+        path: '/room',
+        name: 'roomPage',
+        component: () => import('@/view/RoomPage.vue'),
+        meta: { requiresAuth: true }
+    },
 ];
 
 const router = createRouter({
