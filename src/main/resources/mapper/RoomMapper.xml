@@ -6,5 +6,20 @@
         values (#{name}, #{description},#{havePwd},#{password},#{ownerId});
     </insert>
 
-</mapper>
+    <select id="getAllRooms" resultType="com.bengebackend.dto.RoomDto">
+        SELECT
+            r.id as roomId,
+            r.name,
+            r.description,
+            u.username as ownerName,
+            r.current_members as currentMembers
+        FROM room r
+        LEFT JOIN users u ON r.owner_id = u.Id
+        ORDER BY r.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
 
+    <select id="getTotalRoomCount" resultType="int">
+        SELECT COUNT(*) FROM room
+    </select>
+</mapper>

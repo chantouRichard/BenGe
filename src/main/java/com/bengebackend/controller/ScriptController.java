@@ -2,12 +2,10 @@ package com.bengebackend.controller;
 
 import com.bengebackend.dto.ScriptDetailDto;
 import com.bengebackend.dto.ScriptFrameworkDto;
-import com.bengebackend.dto.SloganResponseDto;
 import com.bengebackend.entity.*;
 import com.bengebackend.model.Script;
 import com.bengebackend.model.ScriptAnalysis;
 import com.bengebackend.service.ScriptService;
-import dev.langchain4j.community.model.dashscope.QwenChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -32,38 +30,39 @@ public class ScriptController {
      * 生成剧本方向标语
      */
 
-    @Autowired
-    private QwenChatModel qwenChatModel;
+//    @Autowired
+//    private QwenChatModel qwenChatModel;
 
     @PostMapping("/directions")
     public ResponseEntity<Object> generateSlogan(@RequestBody SloganRequestEntity request) {
 
-        String response = qwenChatModel.chat("""
-                请根据以下关键词生成完整的剧本杀广告,
-                严格按照以下格式生成内容：
-                剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
-                每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
-                关键词包括以下几点：
-                """ + request.getPrompt());
-        if (response == null || response.isEmpty()) {
-            return ResponseEntity.badRequest().body("生成剧本方向标语失败");
-        }
-        // 解析生成的内容
-        String[] parts = response.split("\\n");
-        if (parts.length < 3) {
-            return ResponseEntity.badRequest().body("生成的内容格式不正确");
-        }
-        String background = parts[0].replace("剧本背景: ", "").trim();
-        String playerGoal = parts[1].replace("玩家目标: ", "").trim();
-        String coreIdea = parts[2].replace("核心创意: ", "").trim();
-        // 创建返回对象
-        SloganResponseDto sloganResponse = new SloganResponseDto();
-        sloganResponse.setSlogans(List.of(
-                new Slogan("剧本背景", background),
-                new Slogan("玩家目标", playerGoal),
-                new Slogan("核心创意", coreIdea)
-        ));
-        return ResponseEntity.ok(sloganResponse);
+//        String response = qwenChatModel.chat("""
+//                请根据以下关键词生成完整的剧本杀广告,
+//                严格按照以下格式生成内容：
+//                剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
+//                每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
+//                关键词包括以下几点：
+//                """ + request.getPrompt());
+//        if (response == null || response.isEmpty()) {
+//            return ResponseEntity.badRequest().body("生成剧本方向标语失败");
+//        }
+//        // 解析生成的内容
+//        String[] parts = response.split("\\n");
+//        if (parts.length < 3) {
+//            return ResponseEntity.badRequest().body("生成的内容格式不正确");
+//        }
+//        String background = parts[0].replace("剧本背景: ", "").trim();
+//        String playerGoal = parts[1].replace("玩家目标: ", "").trim();
+//        String coreIdea = parts[2].replace("核心创意: ", "").trim();
+//        // 创建返回对象
+//        SloganResponseDto sloganResponse = new SloganResponseDto();
+//        sloganResponse.setSlogans(List.of(
+//                new Slogan("剧本背景", background),
+//                new Slogan("玩家目标", playerGoal),
+//                new Slogan("核心创意", coreIdea)
+//        ));
+//        return ResponseEntity.ok(sloganResponse);
+        return  ResponseEntity.ok("");
     }
 
     /**
