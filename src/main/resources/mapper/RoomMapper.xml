@@ -22,4 +22,24 @@
     <select id="getTotalRoomCount" resultType="int">
         SELECT COUNT(*) FROM room
     </select>
+
+    <select id="getRoomById" resultType="com.bengebackend.model.Room">
+        SELECT * FROM room WHERE id = #{roomId}
+    </select>
+
+    <select id="isUserInRoom" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM room_member
+        WHERE room_id = #{roomId} AND user_id = #{userId}
+    </select>
+
+    <insert id="addRoomMember">
+        INSERT INTO room_member (room_id, user_id, role)
+        VALUES (#{roomId}, #{userId}, 0)
+    </insert>
+
+    <update id="updateRoomMemberCount">
+        UPDATE room
+        SET current_members = current_members + #{increment}
+        WHERE id = #{roomId}
+    </update>
 </mapper>

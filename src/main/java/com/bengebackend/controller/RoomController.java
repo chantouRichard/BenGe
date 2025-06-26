@@ -2,6 +2,7 @@ package com.bengebackend.controller;
 
 import com.bengebackend.dto.RoomCreateDto;
 import com.bengebackend.dto.RoomDto;
+import com.bengebackend.entity.room.applyRoomEntity;
 import com.bengebackend.entity.room.createRoomEntity;
 import com.bengebackend.entity.room.getAllRoomEntity;
 import com.bengebackend.service.RoomService;
@@ -46,5 +47,12 @@ public class RoomController {
         log.debug("getAllRoomsEntity: {}", getAllRoomsEntity);
         List<RoomDto> roomDtos = roomService.getAllRooms(getAllRoomsEntity);
         return ResponseEntity.ok(roomDtos);
+    }
+
+    @PostMapping("/application")
+    public ResponseEntity<String> applyRoom(@RequestBody applyRoomEntity applyRoomEntity) {
+        log.debug("applyRoomEntity: {}", applyRoomEntity);
+        String result = roomService.applyRoom(applyRoomEntity);
+        return ResponseEntity.ok(result);
     }
 }

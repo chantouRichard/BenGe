@@ -10,8 +10,15 @@ import java.util.List;
 @Mapper
 public interface RoomMapper {
 
-
     int createRoom(Room room);
 
     List<RoomDto> getAllRooms(@Param("offset") int offset, @Param("limit") int limit);
+
+    Room getRoomById(@Param("roomId") int roomId);
+
+    boolean isUserInRoom(@Param("roomId") int roomId, @Param("userId") int userId);
+
+    int addRoomMember(@Param("roomId") int roomId, @Param("userId") int userId);
+
+    int updateRoomMemberCount(@Param("roomId") int roomId, @Param("increment") int increment);
 }
