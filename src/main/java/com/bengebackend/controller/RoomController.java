@@ -1,0 +1,35 @@
+package com.bengebackend.controller;
+
+import com.bengebackend.dto.RoomCreateDto;
+import com.bengebackend.entity.room.createRoomEntity;
+import com.bengebackend.service.RoomService;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("api/room")
+@Slf4j
+public class RoomController {
+
+    @Autowired
+    private RoomService roomService;
+
+
+    /**
+     * 创建房间
+     *
+     * @param createRoomEntity 包含房间信息的实体类
+     * @return 创建结果的响应实体
+     */
+    @PostMapping
+    public ResponseEntity<RoomCreateDto> createRoom(@RequestBody createRoomEntity createRoomEntity) {
+        log.debug("createRoomEntity: {}", createRoomEntity);
+        RoomCreateDto roomDto = roomService.createRoom(createRoomEntity);
+        return ResponseEntity.ok(roomDto);
+    }
+}
