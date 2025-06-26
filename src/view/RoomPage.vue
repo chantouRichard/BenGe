@@ -1,8 +1,9 @@
 <template>
-  进入房间
+  <CompleteScriptStage />
 </template>
 
 <script setup>
+import CompleteScriptStage from '@/components/cooperate-stages/CompleteScriptStage.vue';
 
 </script>
 

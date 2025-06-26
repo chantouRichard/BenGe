@@ -17,12 +17,17 @@
     "cloudflared": "^0.7.0",
     "core-js": "^3.8.3",
     "element-plus": "^2.10.2",
-    "marked": "^15.0.11",
+    "marked": "^15.0.12",
     "pinia": "^3.0.2",
+    "quill": "^2.0.3",
+    "quill-cursors": "^4.0.4",
+    "turndown": "^7.2.0",
     "vercel": "^42.3.0",
     "vue": "^3.2.13",
     "vue-router": "^4.5.0",
-    "yarn": "^1.22.22"
+    "y-quill": "^1.0.0",
+    "yarn": "^1.22.22",
+    "yjs": "^13.6.27"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
@@ -33,7 +38,8 @@
     "@vue/compiler-sfc": "^3.5.14",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "y-websocket": "^1.4.5"
   },
   "eslintConfig": {
     "root": true,
