@@ -34,33 +34,47 @@
         ></div>
       </div>
       <div class="right-area">
-        <div class="member-area">
-          <div>
-            <h2 style="min-width: 72px;">成员区</h2>
+        <!-- 成员区 -->
+        <div class="member-area" :class="{ collapsed: !isMemberOpen }">
+          <div class="member-header">
+            <h2 style="min-width: 72px">成员区</h2>
+            <button class="toggle-btn" @click="toggleMemberArea">
+              {{ isMemberOpen ? "▲" : "▼" }}
+            </button>
           </div>
-          <div class="member-list">
-  <div class="member-item" v-for="member in members" :key="member.id">
-    <img :src="member.avatar" alt="avatar" class="member-avatar" />
-    <span class="member-name">{{ member.name }}</span>
-  </div>
-</div>
-
+          <transition name="fade">
+            <div v-show="isMemberOpen" class="member-list">
+              <div
+                class="member-item"
+                v-for="member in members"
+                :key="member.id"
+              >
+                <img :src="member.avatar" alt="avatar" class="member-avatar" />
+                <span class="member-name">{{ member.name }}</span>
+              </div>
+            </div>
+          </transition>
         </div>
-        <div class="chat-area">
+
+        <!-- 聊天区 -->
+        <div
+          class="chat-area"
+          :style="{ height: isMemberOpen ? '80%' : '95%' }"
+        >
           <div>
             <h2>聊天区</h2>
           </div>
           <div
             style="
               width: 100%;
-              height: calc(100%);
+              height: 100%;
               margin-left: auto;
               margin-right: auto;
               position: relative;
               overflow: hidden;
             "
           >
-            <Chat :userId="userId"/>
+            <Chat :userId="userId" />
           </div>
         </div>
       </div>
@@ -83,6 +97,11 @@ import Chat from "./Chat.vue";
 import loginImage from "../../assets/login.png";
 import { ref } from "vue";
 
+const isMemberOpen = ref(true)
+
+const toggleMemberArea = () => {
+  isMemberOpen.value = !isMemberOpen.value
+}
 // 注册光标模块
 Quill.register("modules/cursors", QuillCursors);
 
@@ -92,11 +111,32 @@ const userColor = getRandomColor();
 const userAvatar = loginImage;
 
 const roomId = "room_123";
-const members = ref([{
+const members = ref([
+  {
     id: userId,
     name: userName,
-    avatar: userAvatar
-}]);
+    avatar: userAvatar,
+    role:"剧情设计师"
+  },
+  {
+    id: userId,
+    name: userName,
+    avatar: userAvatar,
+    role:"角色设计师"
+  },
+  {
+    id: userId,
+    name: userName,
+    avatar: userAvatar,
+    role:"线索设计师"
+  },
+  {
+    id: userId,
+    name: userName,
+    avatar: userAvatar,
+    role:"氛围设计师"
+  },
+]);
 
 let quill, ydoc, provider, cursorsModule;
 
@@ -223,8 +263,10 @@ function output() {
 
 function updateMembers(newUser) {
   // 检查是否已有该成员
-  const existingMember = members.value.find((member) => member.id === newUser.id);
-  if (!existingMember&&members.value.length < 4) {
+  const existingMember = members.value.find(
+    (member) => member.id === newUser.id
+  );
+  if (!existingMember && members.value.length < 4) {
     // 如果没有，添加新成员
     members.value.push({
       id: newUser.id,
@@ -235,41 +277,54 @@ function updateMembers(newUser) {
     console.log("当前成员列表：", members);
   }
 }
-
 </script>
 
 <style scoped>
+.member-header {
+    display: flex;
+    height: 40px;
+
+    align-items: center;
+}
+.toggle-btn{
+    height: 30px;
+    width: 30px;
+
+    border: none;
+    background-color: white;
+}
 .member-area {
   padding: 20px;
-  height: 20%;
   display: flex;
-  padding:20px;
-
+  flex-direction: column;
   gap: 20px;
 
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
+
+  /* ❌ 移除固定高度 */
+  /* height: 20%; */
 }
+
 
 .member-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* 自动换行、每列最小120px */
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(120px, 1fr)
+  ); /* 自动换行、每列最小120px */
   margin-top: 10px;
   justify-content: center; /* 整体居中 */
   width: 90%;
   max-width: 100%;
 }
 
-
-
-
 .member-item {
   display: flex;
-  width: 48%;
   align-items: center;
-  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .member-avatar {
@@ -289,7 +344,7 @@ function updateMembers(newUser) {
   width: 100%;
   height: 100vh; /* 使用视口高度，确保充满整个屏幕 */
 
-  background-image: url("@/assets/loginback.jpg");
+  background-image: url("@/assets/thirdback.jpeg");
   background-size: cover;
   background-repeat: no-repeat;
 }
@@ -334,8 +389,8 @@ function updateMembers(newUser) {
   width: calc(100% - 100px);
   min-width: 827px;
   margin: 50px;
-  background-color: rgba(255, 255, 255, 0.3); /* 半透明白色背景 */
-  backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+  background-color: rgba(255, 255, 255, 0.1); /* 半透明白色背景 */
+  backdrop-filter: blur(8px); /* 毛玻璃模糊效果 */
   height: calc(100% - 200px);
   min-height: 500px;
   box-sizing: border-box; /* 确保 padding 不超宽 */

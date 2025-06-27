@@ -154,7 +154,7 @@ export default {
         .padStart(2, "0")}`;
     },
     setupWebSocket() {
-      this.socket = new WebSocket("ws://localhost:8081");
+      this.socket = new WebSocket("ws://10.128.138.182:8082");
 
       this.socket.onopen = () => {
         // 加入房间
