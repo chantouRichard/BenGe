@@ -33,9 +33,12 @@
       <div
         v-for="(message, index) in messages"
         :key="index"
-        :class="['message', message.isMe ? 'message-me' : 'message-other']"
+        :class="[
+          'message', 
+          message.isSystem ? 'message-system' : (message.isMe ? 'message-me' : 'message-other')
+        ]"
       >
-        <div class="message-avatar">
+        <div v-if="!message.isSystem" class="message-avatar">
           <div class="avatar-circle">
             <img
               :src="message.avatar"
@@ -45,7 +48,7 @@
           </div>
         </div>
         <div class="message-content">
-          <div class="message-sender">{{ message.sender }}</div>
+          <div v-if="!message.isSystem" class="message-sender">{{ message.sender }}</div>
           <div class="message-bubble">{{ message.content }}</div>
           <div class="message-time">{{ message.time }}</div>
         </div>
@@ -111,31 +114,32 @@ export default {
       messages: this.initialMessages,
       socket: null,
       avatar: loginImage,
+      currentUserId: null,
+      currentUsername: null,
     };
   },
   methods: {
     toggleMemberList() {
       this.isMemberListVisible = !this.isMemberListVisible;
     },
+    
+
+    
     sendMessage() {
       if (this.newMessage.trim() === "") return;
 
       const messageData = {
         type: "chat",
-        roomId: this.roomId,
-        sender: this.userId,
         content: this.newMessage,
         time: this.getCurrentTime(),
         avatar: this.avatar,
       };
 
-      // 本地显示
-      this.messages.push({ ...messageData, isMe: true });
-      this.scrollToBottom();
-
-      // 通过 WebSocket 发送
+          // 通过 WebSocket 发送
       if (this.socket && this.socket.readyState === WebSocket.OPEN) {
         this.socket.send(JSON.stringify(messageData));
+      } else {
+        console.error("WebSocket连接未就绪");
       }
 
       this.newMessage = "";
@@ -154,32 +158,67 @@ export default {
         .padStart(2, "0")}`;
     },
     setupWebSocket() {
-      this.socket = new WebSocket("ws://localhost:8081");
+      // 获取token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('未找到token，无法建立WebSocket连接');
+        return;
+      }
+
+      this.socket = new WebSocket("ws://localhost:7122/ws");
 
       this.socket.onopen = () => {
-        // 加入房间
-        this.socket.send(
-          JSON.stringify({
-            type: "join",
-            roomId: this.roomId,
-          })
-        );
+        console.log("WebSocket连接已建立");
+        // 连接建立后发送认证信息，使用固定的roomId进行测试
+        this.socket.send(JSON.stringify({
+          type: "auth",
+          token: token,
+          roomId: 1  
+        }));
       };
 
       this.socket.onmessage = (event) => {
         const msg = JSON.parse(event.data);
-        if (msg.type === "chat" && msg.sender !== this.userId) {
-          this.messages.push({ ...msg, isMe: false });
+        
+        if (msg.type === "userInfo") {
+          this.currentUserId = msg.userId;
+          this.currentUsername = msg.username;
+          console.log('接收到用户信息:', this.currentUserId, this.currentUsername);
+        } else if (msg.type === "chat") {
+          this.messages.push({ 
+            ...msg, 
+            isMe: msg.userId === this.currentUserId,
+            sender: msg.username,
+            content: msg.content,
+            time: msg.time,
+            avatar: msg.avatar || this.avatar
+          });
           this.scrollToBottom();
+        } else if (msg.type === "system") {
+          this.messages.push({
+            type: "system",
+            content: msg.message,
+            time: this.getCurrentTime(),
+            isMe: false,
+            isSystem: true
+          });
+          this.scrollToBottom();
+        } else if (msg.type === "members") {
+          // 处理成员列表更新
+          this.$emit('membersUpdated', msg.members);
+          console.log('收到成员列表更新:', msg.members);
+        } else if (msg.type === "error") {
+          console.error('WebSocket错误:', msg.message);
+          alert('错误: ' + msg.message);
         }
       };
 
       this.socket.onclose = () => {
-        console.log("WebSocket closed.");
+        console.log("WebSocket连接已关闭");
       };
 
       this.socket.onerror = (err) => {
-        console.error("WebSocket error:", err);
+        console.error("WebSocket连接错误:", err);
       };
     },
   },
@@ -308,6 +347,25 @@ export default {
 
 .message-me .message-time {
   text-align: right;
+}
+
+/* 系统消息样式 */
+.message-system {
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.message-system .message-content {
+  max-width: 80%;
+  text-align: center;
+}
+
+.message-system .message-bubble {
+  background-color: #f0f0f0;
+  color: #666;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 12px;
 }
 
 /* 输入区域样式 */
