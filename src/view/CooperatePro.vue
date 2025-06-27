@@ -53,8 +53,8 @@
           height="400"
         >
           <el-table-column prop="name" label="房间名称" />
-          <el-table-column prop="description" label="创建者" />
-          <el-table-column prop="participants" label="参与人数" />
+          <el-table-column prop="ownerName" label="创建者" />
+          <el-table-column prop="currentMembers" label="参与人数" />
           <el-table-column label="操作">
             <template #default="scope">
               <el-button type="text" @click="enterRoom(scope.row)"
@@ -83,7 +83,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { ElMessage } from "element-plus";
-import {createRoom} from "../api/room";
+import {createRoom, getRoomList} from "../api/room";
 
 const router = useRouter();
 
@@ -122,16 +122,36 @@ const pagedRooms = computed(() => {
   return filteredRooms.value.slice(start, start + pageSize.value);
 });
 
-function fetchRooms() {
+async function fetchRooms() {
   loading.value = true;
-  setTimeout(() => {
-    roomList.value = Array.from({ length: 50 }, (_, i) => ({
-      name: `剧本房间 ${i + 1}`,
-      description: `用户${i + 1}`,
-      participants: Math.floor(Math.random() * 8 + 1),
-    }));
+  try {
+    // 传递分页参数，这里先获取所有数据用于前端搜索和分页
+    const res = await getRoomList(1, 100); // 或者根据需要调整
+    console.log('API响应数据：', res);
+    
+    // 判断响应数据格式
+    if (Array.isArray(res)) {
+      // 后端直接返回数组
+      roomList.value = res;
+    } else if (res && res.code === 200) {
+      // 后端返回标准格式 {code: 200, data: [...]}
+      roomList.value = res.data || [];
+    } else if (res && res.data) {
+      // 后端返回其他格式但包含data字段
+      roomList.value = Array.isArray(res.data) ? res.data : [];
+    } else {
+      // 其他情况
+      console.warn('未知的响应格式：', res);
+      roomList.value = [];
+      ElMessage.error('获取房间列表失败：响应格式不正确');
+    }
+  } catch (err) {
+    console.error('获取房间列表失败：', err);
+    ElMessage.error('获取房间列表失败：' + (err.response?.data?.msg || err.message));
+    roomList.value = [];
+  } finally {
     loading.value = false;
-  }, 500);
+  }
 }
 
 function handlePageChange(page) {
@@ -152,9 +172,9 @@ function create() {
 }
 
 function enterRoom(room) {
-  console.log(`进入房间：${room.name}`);
-
-
+  console.log(`进入房间：${room.name}，房间ID：${room.roomId}`);
+  // 可以跳转到房间页面，使用 roomId
+  router.push(`/room/${room.roomId}`);
 }
 
 onMounted(() => {

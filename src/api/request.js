@@ -30,7 +30,8 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
-    return response;
+    // 返回完整的响应数据
+    return response.data;
   },
   error => {
     // 统一处理错误
