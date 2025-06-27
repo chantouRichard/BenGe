@@ -7943,6 +7943,11 @@ vue-eslint-parser@^8.0.1:
     lodash "^4.17.21"
     semver "^7.3.5"
 
+vue-flow@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npmmirror.com/vue-flow/-/vue-flow-0.3.0.tgz"
+  integrity sha512-J/I6z8ErkWiPCEicdZXTUEBt5MfW1GoFNs2/spGSLuzBKAOUF/MlghKAZZ4feDDjmpg/B00EviSG1fJ0PIGwVg==
+
 vue-hot-reload-api@^2.3.0:
   version "2.3.4"
   resolved "https://registry.npmmirror.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz"

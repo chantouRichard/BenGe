@@ -240,7 +240,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-height: 648px;
+  /* max-height: 648px; */
   width: 100%;
   background-color: white;
   border-radius: 8px;
