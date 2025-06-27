@@ -82,8 +82,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
-import { ElMessage } from "element-plus";
-import {createRoom, getRoomList} from "../api/room";
+import { ElMessage, ElMessageBox } from "element-plus";
+import {createRoom, getRoomList, joinRoom} from "../api/room";
 
 const router = useRouter();
 
@@ -126,28 +126,20 @@ async function fetchRooms() {
   loading.value = true;
   try {
     // 传递分页参数，这里先获取所有数据用于前端搜索和分页
-    const res = await getRoomList(1, 100); // 或者根据需要调整
+    const res = await getRoomList(1, 100);
     console.log('API响应数据：', res);
-    
-    // 判断响应数据格式
+
+    // 后端直接返回房间数组
     if (Array.isArray(res)) {
-      // 后端直接返回数组
       roomList.value = res;
-    } else if (res && res.code === 200) {
-      // 后端返回标准格式 {code: 200, data: [...]}
-      roomList.value = res.data || [];
-    } else if (res && res.data) {
-      // 后端返回其他格式但包含data字段
-      roomList.value = Array.isArray(res.data) ? res.data : [];
     } else {
-      // 其他情况
       console.warn('未知的响应格式：', res);
       roomList.value = [];
       ElMessage.error('获取房间列表失败：响应格式不正确');
     }
   } catch (err) {
     console.error('获取房间列表失败：', err);
-    ElMessage.error('获取房间列表失败：' + (err.response?.data?.msg || err.message));
+    ElMessage.error('获取房间列表失败：' + (err.response?.data || err.message));
     roomList.value = [];
   } finally {
     loading.value = false;
@@ -171,10 +163,64 @@ function create() {
   
 }
 
-function enterRoom(room) {
+async function enterRoom(room) {
   console.log(`进入房间：${room.name}，房间ID：${room.roomId}`);
-  // 可以跳转到房间页面，使用 roomId
-  router.push(`/room/${room.roomId}`);
+
+  const tryJoinRoom = async (password = '') => {
+    try {
+      const result = await joinRoom(room.roomId, password);
+      console.log('加入房间结果：', result);
+
+      // 后端成功时返回 "success"
+      if (result === 'success') {
+        ElMessage.success('成功加入房间！');
+        // 跳转到房间页面
+        router.push(`/room/${room.roomId}`);
+        return true;
+      } else if (result === '房间密码错误') {
+        // 密码错误，需要重新输入密码
+        return 'needPassword';
+      } else {
+        ElMessage.error(result || '加入房间失败');
+        return false;
+      }
+    } catch (error) {
+      console.error('加入房间请求失败：', error);
+      throw error;
+    }
+  };
+
+  try {
+    // 先尝试不带密码加入
+    const result = await tryJoinRoom();
+
+    // 如果需要密码，弹出密码输入框并重试
+    if (result === 'needPassword') {
+      try {
+        const { value } = await ElMessageBox.prompt('请输入房间密码', '加入房间', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputType: 'password',
+          inputPlaceholder: '请输入密码'
+        });
+
+        // 用输入的密码重新尝试加入
+        const retryResult = await tryJoinRoom(value);
+        if (retryResult === 'needPassword') {
+          ElMessage.error('密码错误，请重试');
+        }
+      } catch (promptError) {
+        if (promptError === 'cancel') {
+          // 用户取消输入密码
+          return;
+        }
+        throw promptError;
+      }
+    }
+  } catch (error) {
+    console.error('加入房间失败：', error);
+    ElMessage.error('加入房间失败：' + (error.response?.data || error.message));
+  }
 }
 
 onMounted(() => {
@@ -202,27 +248,29 @@ async function submitRoom() {
   const payload = {
     name: name.trim(),
     description: description?.trim() || '',
-    havePwd: havePwd ? 1 : 0,
-    password: havePwd ? password : ''
+    havePwd: havePwd, // 直接传递 boolean 值
+    password: havePwd ? password.trim() : ''
   };
 
   try {
     const res = await createRoom(payload);
-    if (res.code === 200) {
+    console.log('创建房间响应：', res);
+
+    // 后端直接返回 RoomCreateDto 对象
+    if (res && res.roomId) {
       ElMessage.success('房间创建成功！');
-      router.push(`/room/${res.data.roomId}`);
+      showCreatePage.value = false;
+      // 重新获取房间列表
+      await fetchRooms();
+      // 跳转到房间页面
+      router.push(`/room/${res.roomId}`);
     } else {
-      ElMessage.error(res.msg || '创建失败');
+      ElMessage.error('创建失败：响应格式不正确');
     }
   } catch (err) {
-    ElMessage.error('请求失败：' + (err.response?.data?.msg || err.message));
+    console.error('创建房间失败：', err);
+    ElMessage.error('请求失败：' + (err.response?.data || err.message));
   }
-
-  showCreatePage.value = false;
-  ElMessage.success("房间创建成功！");
-
-  // 跳转到房间页面
-  router.push("/room");
 }
 
 </script>
