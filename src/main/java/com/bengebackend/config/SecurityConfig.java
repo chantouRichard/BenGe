@@ -27,6 +27,7 @@ public class SecurityConfig {
                         // 使用 AntPathRequestMatcher 来明确匹配的路径
                         .requestMatchers(new AntPathRequestMatcher("/api/user/login")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/user/register")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/ws")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
