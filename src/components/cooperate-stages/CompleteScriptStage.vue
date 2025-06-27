@@ -74,7 +74,7 @@
               overflow: hidden;
             "
           >
-            <Chat :userId="userId" />
+            <Chat :userId="userId" @membersUpdated="updateMembers"/>
           </div>
         </div>
       </div>
@@ -110,33 +110,9 @@ const userName = "用户_" + userId.slice(-3);
 const userColor = getRandomColor();
 const userAvatar = loginImage;
 
-const roomId = "room_123";
-const members = ref([
-  {
-    id: userId,
-    name: userName,
-    avatar: userAvatar,
-    role:"剧情设计师"
-  },
-  {
-    id: userId,
-    name: userName,
-    avatar: userAvatar,
-    role:"角色设计师"
-  },
-  {
-    id: userId,
-    name: userName,
-    avatar: userAvatar,
-    role:"线索设计师"
-  },
-  {
-    id: userId,
-    name: userName,
-    avatar: userAvatar,
-    role:"氛围设计师"
-  },
-]);
+// 固定使用roomId为1进行测试
+const roomId = 1;
+const members = ref([]);
 
 let quill, ydoc, provider, cursorsModule;
 
@@ -184,8 +160,6 @@ onMounted(async () => {
         cursorsModule.moveCursor(clientID.toString(), selection);
       }
 
-      // 将新的成员信息广播到所有成员
-      updateMembers(user);
     }
   });
 
@@ -261,21 +235,14 @@ function output() {
   console.log("✅ 导出 Markdown：\n", markdown);
 }
 
-function updateMembers(newUser) {
-  // 检查是否已有该成员
-  const existingMember = members.value.find(
-    (member) => member.id === newUser.id
-  );
-  if (!existingMember && members.value.length < 4) {
-    // 如果没有，添加新成员
-    members.value.push({
-      id: newUser.id,
-      name: newUser.name,
-      color: newUser.color,
-      avatar: newUser.avatar,
-    });
-    console.log("当前成员列表：", members);
-  }
+function updateMembers(membersList) {
+  // 直接更新整个成员列表
+  members.value = membersList.map(member => ({
+    id: member.id,
+    name: member.username,
+    avatar: member.avatar || userAvatar
+  }));
+  console.log("成员列表已更新:", members.value);
 }
 </script>
 
