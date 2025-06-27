@@ -36,8 +36,8 @@
               <span>我的剧本</span>
             </div>
             <div class="menu-item" @click="logout">
-              <img src='../assets/user-menu-quit.png' alt="退出登录" class="menu-icon-img">
-              <span>退出登录</span>
+              <img src='../assets/user-menu-quit.png' alt="回到首页" class="menu-icon-img">
+              <span>回到首页</span>
             </div>
           </div>
           <div class="curtain-title">
@@ -137,9 +137,7 @@ const toggleUserMenu = () => {
 }
 
 const logout = () => {
-  localStorage.removeItem('username');
-  localStorage.removeItem('token');
-  router.push('/');
+  router.push('/home');
 }
  
 // 页面加载逻辑
@@ -156,6 +154,9 @@ onMounted(() => {
     }, 1000)
   }
 
+  // 控制AI助手的显示
+  loadingStore.showAiAssistantLoading();
+
   // 添加点击外部关闭菜单的事件监听
   document.addEventListener('click', handleOutsideClick);
   
@@ -165,6 +166,7 @@ onMounted(() => {
 onUnmounted(() => {
   // 移除事件监听
   document.removeEventListener('click', handleOutsideClick);
+  loadingStore.hideAiAssistantLoading();
 })
 
 const toggleScriptList = () => {
