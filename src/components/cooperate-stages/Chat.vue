@@ -80,8 +80,8 @@ export default {
   name: "ChatComponent",
   props: {
     roomId: {
-      type: Number,
-      default: 0,
+      type: [Number, String],
+      default: 1,
     },
     roomName: {
       type: String,
@@ -89,18 +89,15 @@ export default {
     },
     members: {
       type: Array,
-      default: () => [
-        { id: 1, avatar: loginImage, name: "Alice" },
-        { id: 2, avatar: loginImage, name: "Bob" },
-      ],
+      default: () => [],
     },
-    userId:{
-      type:Number,
-      default:0
+    userId: {
+      type: String,
+      default: "anonymous"
     },
-    userName:{
-      type:String,
-      default:"匿名用户"
+    userName: {
+      type: String,
+      default: "匿名用户"
     },
     initialMessages: {
       type: Array,
@@ -169,11 +166,11 @@ export default {
 
       this.socket.onopen = () => {
         console.log("WebSocket连接已建立");
-        // 连接建立后发送认证信息，使用固定的roomId进行测试
+        // 连接建立后发送认证信息，使用传入的roomId
         this.socket.send(JSON.stringify({
           type: "auth",
           token: token,
-          roomId: 1  
+          roomId: this.roomId
         }));
       };
 

@@ -11,10 +11,22 @@
     <h2 style="margin: 20px 50px 10px; color: white">第三阶段：共同编辑</h2>
     <div class="main-area">
       <div class="edit-area">
-        <div style="display: flex; margin: 0px 20px 20px">
+        <div style="display: flex; margin: 0px 20px 20px; align-items: center">
           <h2>共同编辑区</h2>
-          <div style="margin-left: auto">
-            <el-button class="button" @click="saveToServer">
+          <div style="margin-left: 20px; display: flex; align-items: center; gap: 10px">
+            <el-tag
+              :type="isConnected ? 'success' : 'danger'"
+              size="small"
+              style="font-size: 12px"
+            >
+              {{ connectionStatus }}
+            </el-tag>
+            <span style="font-size: 12px; color: #666">
+              房间ID: {{ roomId }}
+            </span>
+          </div>
+          <div style="margin-left: auto; display: flex; gap: 10px">
+            <el-button class="button" @click="saveToServer" :disabled="!isConnected">
               <img
                 src="../../assets/save.png"
                 style="width: 16px; height: 16px; margin-right: 2px"
@@ -37,7 +49,7 @@
         <!-- 成员区 -->
         <div class="member-area" :class="{ collapsed: !isMemberOpen }">
           <div class="member-header">
-            <h2 style="min-width: 72px">成员区</h2>
+            <h2 style="min-width: 72px">在线成员 ({{ members.length }})</h2>
             <button class="toggle-btn" @click="toggleMemberArea">
               {{ isMemberOpen ? "▲" : "▼" }}
             </button>
@@ -49,8 +61,14 @@
                 v-for="member in members"
                 :key="member.id"
               >
-                <img :src="member.avatar" alt="avatar" class="member-avatar" />
+                <div class="member-avatar-container">
+                  <img :src="member.avatar" alt="avatar" class="member-avatar" />
+                  <div class="online-indicator"></div>
+                </div>
                 <span class="member-name">{{ member.name }}</span>
+              </div>
+              <div v-if="members.length === 0" class="no-members">
+                暂无其他成员在线
               </div>
             </div>
           </transition>
@@ -74,7 +92,12 @@
               overflow: hidden;
             "
           >
-            <Chat :userId="userId" @membersUpdated="updateMembers"/>
+            <Chat
+              :roomId="roomId"
+              :userId="currentUser.id"
+              :userName="currentUser.name"
+              @membersUpdated="updateMembers"
+            />
           </div>
         </div>
       </div>
@@ -83,7 +106,9 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount } from "vue";
+import { onMounted, onBeforeUnmount, ref, computed } from "vue";
+import { useRoute } from "vue-router";
+import { ElMessage } from "element-plus";
 import Quill from "quill";
 import QuillCursors from "quill-cursors";
 import "quill/dist/quill.snow.css";
@@ -95,92 +120,145 @@ import TurndownService from "turndown";
 import axios from "axios";
 import Chat from "./Chat.vue";
 import loginImage from "../../assets/login.png";
-import { ref } from "vue";
 
-const isMemberOpen = ref(true)
+const route = useRoute();
+const isMemberOpen = ref(true);
+const isConnected = ref(false);
+const connectionStatus = ref('连接中...');
 
 const toggleMemberArea = () => {
-  isMemberOpen.value = !isMemberOpen.value
+  isMemberOpen.value = !isMemberOpen.value;
 }
+
 // 注册光标模块
 Quill.register("modules/cursors", QuillCursors);
 
-const userId = "user_" + Math.floor(Math.random() * 1000);
-const userName = "用户_" + userId.slice(-3);
-const userColor = getRandomColor();
-const userAvatar = loginImage;
+// 从路由参数获取房间ID，如果没有则使用默认值1
+const roomId = computed(() => {
+  return parseInt(route.params.roomId) || 1;
+});
 
-// 固定使用roomId为1进行测试
-const roomId = 1;
+// 从localStorage获取用户信息
+const currentUser = computed(() => {
+  const username = localStorage.getItem('username') || '匿名用户';
+  const userId = `user_${username}_${Date.now()}`;
+  return {
+    id: userId,
+    name: username,
+    color: getRandomColor(),
+    avatar: loginImage
+  };
+});
+
 const members = ref([]);
 
 let quill, ydoc, provider, cursorsModule;
 
 onMounted(async () => {
-  // 初始化 Yjs 文档
-  ydoc = new Y.Doc();
-  const ytext = ydoc.getText("quill");
+  try {
+    connectionStatus.value = '初始化编辑器...';
 
-  // 初始化 Quill 编辑器
-  quill = new Quill("#editor", {
-    theme: "snow",
-    modules: {
-      cursors: true,
-      toolbar: true,
-    },
-  });
+    // 初始化 Yjs 文档
+    ydoc = new Y.Doc();
+    const ytext = ydoc.getText("quill");
 
-  // 获取 cursors 模块实例
-  cursorsModule = quill.getModule("cursors");
+    // 初始化 Quill 编辑器
+    quill = new Quill("#editor", {
+      theme: "snow",
+      modules: {
+        cursors: {
+          transformOnTextChange: true,
+        },
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          ['link', 'blockquote', 'code-block'],
+          ['clean']
+        ],
+      },
+    });
 
-  // 初始化 WebSocket Provider
-  provider = new WebsocketProvider("ws://localhost:1234", roomId, ydoc);
+    // 获取 cursors 模块实例
+    cursorsModule = quill.getModule("cursors");
 
-  // 设置本地用户信息
-  provider.awareness.setLocalStateField("user", {
-    id: userId,
-    name: userName,
-    color: userColor,
-    avatar: userAvatar,
-  });
+    connectionStatus.value = '连接协作服务器...';
 
-  // 绑定 Yjs 与 Quill
-  new QuillBinding(ytext, quill, provider.awareness);
+    // 初始化 WebSocket Provider - 使用动态房间ID
+    provider = new WebsocketProvider("ws://localhost:1234", `room-${roomId.value}`, ydoc);
 
-  // 监听远程用户状态更新（用于光标显示）
-  provider.awareness.on("update", () => {
-    const states = Array.from(provider.awareness.getStates().entries());
-    cursorsModule.clearCursors();
-    for (const [clientID, state] of states) {
-      if (clientID === provider.awareness.clientID) continue;
-      const user = state.user;
-      const selection = state.selection;
-      if (user && selection) {
-        cursorsModule.createCursor(clientID.toString(), user.name, user.color);
-        cursorsModule.moveCursor(clientID.toString(), selection);
+    // 设置本地用户信息
+    provider.awareness.setLocalStateField("user", {
+      id: currentUser.value.id,
+      name: currentUser.value.name,
+      color: currentUser.value.color,
+      avatar: currentUser.value.avatar,
+    });
+
+    // 绑定 Yjs 与 Quill
+    new QuillBinding(ytext, quill, provider.awareness);
+
+    // 监听连接状态
+    provider.on('status', (event) => {
+      console.log('Y.js连接状态:', event.status);
+      if (event.status === 'connected') {
+        isConnected.value = true;
+        connectionStatus.value = '已连接';
+        ElMessage.success('协作服务器连接成功');
+      } else if (event.status === 'disconnected') {
+        isConnected.value = false;
+        connectionStatus.value = '连接断开';
+        ElMessage.warning('协作服务器连接断开');
       }
+    });
 
-    }
-  });
+    // 监听远程用户状态更新（用于光标显示）
+    provider.awareness.on("update", () => {
+      const states = Array.from(provider.awareness.getStates().entries());
+      cursorsModule.clearCursors();
 
-  // 本地用户光标变化广播
-  quill.on("selection-change", (range) => {
-    provider.awareness.setLocalStateField("selection", range ?? null);
-  });
-
-  // 首次加载 Markdown 内容
-  provider.once("synced", async () => {
-    if (ytext.length === 0) {
-      try {
-        const res = await axios.get(`/api/collab/load?roomId=${roomId}`);
-        const markdown = res.data?.content || "# 欢迎使用协同编辑";
-        const html = marked.parse(markdown);
-        quill.setContents(quill.clipboard.convert(html), "api");
-      } catch (err) {
-        console.error("加载初始内容失败", err);
+      for (const [clientID, state] of states) {
+        if (clientID === provider.awareness.clientID) continue;
+        const user = state.user;
+        const selection = state.selection;
+        if (user && selection) {
+          cursorsModule.createCursor(clientID.toString(), user.name, user.color);
+          cursorsModule.moveCursor(clientID.toString(), selection);
+        }
       }
-    }
-  });
+    });
+
+    // 本地用户光标变化广播
+    quill.on("selection-change", (range) => {
+      provider.awareness.setLocalStateField("selection", range ?? null);
+    });
+
+    // 首次加载内容
+    provider.once("synced", async () => {
+      connectionStatus.value = '同步完成';
+      if (ytext.length === 0) {
+        try {
+          // 尝试从后端加载剧本内容
+          const res = await axios.get(`/api/script/room/${roomId.value}`);
+          const content = res.data?.content || `# 房间 ${roomId.value} 的剧本\n\n开始你们的创作吧！`;
+          const html = marked.parse(content);
+          quill.setContents(quill.clipboard.convert(html), "api");
+        } catch (err) {
+          console.error("加载初始内容失败", err);
+          // 使用默认内容
+          const defaultContent = `# 房间 ${roomId.value} 的剧本\n\n开始你们的创作吧！`;
+          const html = marked.parse(defaultContent);
+          quill.setContents(quill.clipboard.convert(html), "api");
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('初始化编辑器失败:', error);
+    ElMessage.error('初始化编辑器失败，请刷新页面重试');
+    connectionStatus.value = '连接失败';
+  }
 });
 
 onBeforeUnmount(() => {
@@ -188,25 +266,61 @@ onBeforeUnmount(() => {
   ydoc?.destroy();
 });
 
-// 保存为 Markdown
+// 保存剧本到服务器
 async function saveToServer() {
-  const turndownService = new TurndownService({
-    headingStyle: "atx",
-    bulletListMarker: "-",
-    codeBlockStyle: "fenced",
-  });
+  try {
+    if (!quill) {
+      ElMessage.error('编辑器未初始化');
+      return;
+    }
 
-  // 可选：添加规则处理 quill 中可能的 <div> 或 <span>
-  turndownService.addRule("customBlock", {
-    filter: ["div", "span"],
-    replacement: function (content) {
-      return content; // 保留内容，忽略标签
-    },
-  });
+    const turndownService = new TurndownService({
+      headingStyle: "atx",
+      bulletListMarker: "-",
+      codeBlockStyle: "fenced",
+    });
 
-  const html = quill.root.innerHTML;
-  const markdown = turndownService.turndown(html);
-  console.log("✅ 保存 Markdown：\n", markdown);
+    // 添加规则处理 quill 中可能的 <div> 或 <span>
+    turndownService.addRule("customBlock", {
+      filter: ["div", "span"],
+      replacement: function (content) {
+        return content;
+      },
+    });
+
+    const html = quill.root.innerHTML;
+    const markdown = turndownService.turndown(html);
+
+    // TODO: 需要后端实现 - 保存房间剧本内容的接口
+    // POST /api/script/room/save
+    // 参数: { roomId, content, title }
+    try {
+      const response = await axios.post('/api/script/room/save', {
+        roomId: roomId.value,
+        content: markdown,
+        title: `房间${roomId.value}的剧本`
+      });
+
+      if (response.data === 'success' || response.status === 200) {
+        ElMessage.success('剧本保存成功！');
+        console.log("✅ 保存成功，内容：\n", markdown);
+      } else {
+        ElMessage.error('保存失败：' + (response.data || '未知错误'));
+      }
+    } catch (apiError) {
+      // 如果后端接口不存在，先在本地保存
+      console.warn('后端保存接口未实现，使用本地保存:', apiError.message);
+      ElMessage.warning('后端接口未实现，内容已保存到控制台');
+      console.log("✅ 本地保存内容：\n", markdown);
+
+      // 可以保存到 localStorage 作为临时方案
+      localStorage.setItem(`room_${roomId.value}_script`, markdown);
+      ElMessage.success('剧本已临时保存到本地');
+    }
+  } catch (error) {
+    console.error('保存失败:', error);
+    ElMessage.error('保存失败：' + error.message);
+  }
 }
 
 // 随机颜色
@@ -215,24 +329,48 @@ function getRandomColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+// 导出剧本
 function output() {
-  const turndownService = new TurndownService({
-    headingStyle: "atx",
-    bulletListMarker: "-",
-    codeBlockStyle: "fenced",
-  });
+  try {
+    if (!quill) {
+      ElMessage.error('编辑器未初始化');
+      return;
+    }
 
-  // 可选：添加规则处理 quill 中可能的 <div> 或 <span>
-  turndownService.addRule("customBlock", {
-    filter: ["div", "span"],
-    replacement: function (content) {
-      return content; // 保留内容，忽略标签
-    },
-  });
+    const turndownService = new TurndownService({
+      headingStyle: "atx",
+      bulletListMarker: "-",
+      codeBlockStyle: "fenced",
+    });
 
-  const html = quill.root.innerHTML;
-  const markdown = turndownService.turndown(html);
-  console.log("✅ 导出 Markdown：\n", markdown);
+    // 添加规则处理 quill 中可能的 <div> 或 <span>
+    turndownService.addRule("customBlock", {
+      filter: ["div", "span"],
+      replacement: function (content) {
+        return content;
+      },
+    });
+
+    const html = quill.root.innerHTML;
+    const markdown = turndownService.turndown(html);
+
+    // 创建下载链接
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `房间${roomId.value}_剧本_${new Date().toISOString().slice(0, 10)}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    ElMessage.success('剧本导出成功！');
+    console.log("✅ 导出 Markdown：\n", markdown);
+  } catch (error) {
+    console.error('导出失败:', error);
+    ElMessage.error('导出失败：' + error.message);
+  }
 }
 
 function updateMembers(membersList) {
@@ -240,7 +378,7 @@ function updateMembers(membersList) {
   members.value = membersList.map(member => ({
     id: member.id,
     name: member.username,
-    avatar: member.avatar || userAvatar
+    avatar: member.avatar || loginImage
   }));
   console.log("成员列表已更新:", members.value);
 }
@@ -291,7 +429,19 @@ function updateMembers(membersList) {
 .member-item {
   display: flex;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.member-item:hover {
+  background-color: #f5f5f5;
+}
+
+.member-avatar-container {
+  position: relative;
+  margin-right: 8px;
 }
 
 .member-avatar {
@@ -300,11 +450,32 @@ function updateMembers(membersList) {
   border-radius: 50%;
   object-fit: cover;
   background-color: #ccc;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #4caf50;
+  border: 2px solid #fff;
+  border-radius: 50%;
 }
 
 .member-name {
   font-size: 14px;
   color: #333;
+  font-weight: 500;
+}
+
+.no-members {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  padding: 20px;
 }
 
 .container {
@@ -402,7 +573,37 @@ function updateMembers(membersList) {
   height: 40px;
   background-color: #2712bb;
   color: white;
-
   border-radius: 10px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #1e0a9a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(39, 18, 187, 0.3);
+}
+
+.button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 过渡动画 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.fade-enter-to, .fade-leave-from {
+  opacity: 1;
+  max-height: 200px;
 }
 </style>
