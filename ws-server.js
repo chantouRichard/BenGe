@@ -1,6 +1,6 @@
 // ws-server.js 用来测试聊天区的消息转发功能
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8082 });
+const wss = new WebSocket.Server({host: '0.0.0.0', port: 8082 });
 
 const rooms = new Map();
 
