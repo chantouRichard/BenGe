@@ -12,11 +12,11 @@
       @node-drag-stop="handleNodeDragStop"
       fit-view
     >
-      <template #node-custom="{ id, type, data, position, selected }">
+      <template #node-custom="{ id, type, data, position }">
         <CustomNode 
           :id="id" 
           :type="type" 
-          :data="{ ...data, selected }" 
+          :data="{ ...data }" 
           :position="position"
           @click="handleNodeClick"
           @delete="handleDeleteNode"
@@ -29,6 +29,7 @@
 <script setup>
 import { VueFlow } from '@vue-flow/core'
 import { defineProps, defineEmits } from 'vue'
+
 import CustomNode from './CustomNode.vue'
 
 const props = defineProps({

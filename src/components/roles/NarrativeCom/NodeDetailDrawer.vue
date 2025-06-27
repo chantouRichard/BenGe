@@ -8,7 +8,7 @@
       <div class="drawer-content">
         <!-- 头部 -->
         <div class="drawer-header">
-          <h3>节点详情</h3>
+          <h3>{{ formData.title || '节点详情' }}</h3>
           <n-button 
             circle
             size="small"
@@ -24,6 +24,14 @@
           :model="formData"
           label-placement="top"
         >
+          <!-- 节点标题 -->
+          <n-form-item label="节点标题" path="title">
+            <n-input
+              v-model:value="formData.title"
+              placeholder="输入节点标题"
+            />
+          </n-form-item>
+
           <!-- 节点时间 -->
           <n-form-item label="节点时间" path="timeLabel">
             <n-input
@@ -95,9 +103,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { defineEmits, defineProps } from 'vue';
-import { NForm, NFormItem, NInput, NButton, NIcon } from 'naive-ui'; // 移除未使用的 NSpace, NRadio, NRadioGroup
+import { ref, watch , defineEmits, defineProps } from 'vue';
+import { NForm, NFormItem, NInput, NButton, NIcon } from 'naive-ui';
 import { Close as CloseIcon } from '@vicons/ionicons5';
 
 const props = defineProps({
@@ -105,16 +112,28 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  node: {
+  nodeData: {
     type: Object,
-    default: () => ({ data: {} })
+    default: () => ({
+      id: '',
+      data: {
+        title: '',
+        timeLabel: '',
+        characters: '',
+        clues: '',
+        sceneDescription: '',
+        nodeConnections: '',
+        notes: ''
+      }
+    })
   }
 });
 
 const emit = defineEmits(['close', 'save']);
 
-// 表单数据和原始数据备份
+// 表单数据
 const formData = ref({
+  title: '',
   timeLabel: '',
   characters: '',
   clues: '',
@@ -122,39 +141,45 @@ const formData = ref({
   nodeConnections: '',
   notes: ''
 });
-const originalData = ref({});
 
-// 监听节点变化，加载原始数据
-watch(() => props.node, (newNode) => {
+// 初始化表单数据
+const initFormData = () => {
+  const data = props.nodeData?.node?.data || {}; // 取出 node.data
+  formData.value = {
+    title: data.title || '',
+    timeLabel: data.timeLabel || '',
+    characters: data.characters || '',
+    clues: data.clues || '',
+    sceneDescription: data.sceneDescription || '',
+    nodeConnections: data.nodeConnections || '',
+    notes: data.notes || ''
+  };
+  console.log("formData数据:", formData.value);
+};
+
+
+// 监听节点数据变化
+watch(() => props.nodeData, (newNode) => {
   if (newNode) {
-    originalData.value = { ...newNode.data }; // 备份原始数据
-    formData.value = {
-      timeLabel: newNode.data?.timeLabel || '',
-      characters: newNode.data?.characters || '',
-      clues: newNode.data?.clues || '',
-      sceneDescription: newNode.data?.sceneDescription || '',
-      nodeConnections: newNode.data?.nodeConnections || '',
-      notes: newNode.data?.notes || ''
-    };
-  } else {
-    formData.value = { timeLabel: '', characters: '', clues: '', sceneDescription: '', nodeConnections: '', notes: '' }; // 初始化为空
+    console.log('初始化表单数据', props.nodeData);
+    initFormData();
   }
-}, { immediate: true });
-
-// 监听 visible 变化
-watch(() => props.visible, (newVal) => {
-  console.log('Visible:', newVal);
-}, { immediate: true });
+}, { deep: true, immediate: true });
 
 // 保存处理
 const handleSave = () => {
-  emit('save', { ...formData.value });
+  console.log('保存表单数据', formData.value);
+
+  if (!props.nodeData.node?.id) return;
+  emit('save', {
+    id: props.nodeData.node?.id,
+    data: formData.value
+  });
   handleClose();
 };
 
-// 关闭处理（恢复原始数据）
+// 关闭处理
 const handleClose = () => {
-  formData.value = { ...originalData.value }; // 取消时恢复原始数据
   emit('close');
 };
 </script>
@@ -191,6 +216,12 @@ const handleClose = () => {
   margin-bottom: 24px;
   padding-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.drawer-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .drawer-footer {

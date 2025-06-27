@@ -36,11 +36,19 @@ module.exports = {
   devServer: {
     proxy: {
       '/api': {
-        target: 'http://localhost:7122',//
+        target: 'http://localhost:8080',//
         changeOrigin: true,
         secure: false,//
         pathRewrite: { '^/api': '/api' }
       }
-    }
+    } ,
+    client: {
+      overlay: {
+        runtimeErrors: (error) => {
+          // 过滤ResizeObserver错误
+          return !error.message.includes('ResizeObserver');
+        },
+      },
+    },
   }
 };

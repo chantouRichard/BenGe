@@ -83,7 +83,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { ElMessage } from "element-plus";
-import createRoom from "../api/room";
+import {createRoom} from "../api/room";
 
 const router = useRouter();
 

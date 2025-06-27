@@ -8,7 +8,7 @@
       @node-select="handleNodeClick" @node-position-change="handlePositionChange"/>
 
     <!-- 节点详情抽屉 -->
-    <NodeDetailDrawer v-if="selectedNode" :visible="selectedNode" :node="selectedNode" @save="handleDetailSave"
+    <NodeDetailDrawer v-if="selectedNode" :visible="selectedNode" :nodeData="selectedNode" @save="handleDetailSave"
       @close="selectedNode = null" />
   </div>
 </template>
@@ -24,11 +24,13 @@ const nodes = ref([])
 const edges = ref([])
 const selectedNode = ref(null)
 
+const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
 // 示例初始化数据
 const initDemoData = () => {
   nodes.value = [
     {
-      id: '1',
+      id: generateNodeId(),
       type: 'custom',
       position: { x: 100, y: 100 },
       data: {
@@ -39,7 +41,6 @@ const initDemoData = () => {
         sceneDescription: '会议室',
         nodeConnections: '与节点2相关',
         notes: '注意时间冲突',
-        selected: false
       }
     }
   ]
@@ -88,7 +89,6 @@ const handleDeleteNode = (nodeId) => {
     edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId);
   }
 }
-
 // 处理节点位置变更
 const handlePositionChange = ({ id, position }) => {
   const nodeIndex = nodes.value.findIndex(n => n.id === id);
@@ -98,16 +98,23 @@ const handlePositionChange = ({ id, position }) => {
 };
 // 详情保存回调
 const handleDetailSave = (updatedData) => {
+  // console.log('保存的节点数据：', updatedData)
   if (selectedNode.value) {
-    const index = nodes.value.findIndex(n => n.id === selectedNode.value.id);
+    const index = nodes.value.findIndex(n => n.id === updatedData.id)
+    // console.log('更新节点数据位置 Index：', index)
+
     if (index !== -1) {
-      nodes.value[index] = {
-        ...nodes.value[index],
-        data: { ...nodes.value[index].data, ...updatedData }
-      };
+      nodes.value[index].data = {
+        ...nodes.value[index].data,
+        ...updatedData.data
+      }
+      console.log('更新后的节点数据：', nodes.value);
+    } else {
+      console.warn('未找到节点 id:', updatedData.id)
     }
   }
-  selectedNode.value = null; // 收起面板
+
+  selectedNode.value = null // 收起面板
 }
 </script>
 

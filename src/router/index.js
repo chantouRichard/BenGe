@@ -31,6 +31,13 @@ const routes = [
         component: () => import('@/view/RoomPage.vue'),
         meta: { requiresAuth: true }
     },
+    // 测试用
+    {
+        path: '/canvas',
+        name: 'canvas',
+        component: () => import('@/components/roles/NarrativeWorkspace.vue'),
+        meta: { requiresAuth: true }
+    }
 ];
 
 const router = createRouter({
