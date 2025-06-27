@@ -1,8 +1,9 @@
 <template>
-    <div> 团队开发 </div>
+    <NarrativeWorkspace></NarrativeWorkspace>
 </template>
 
 <script setup>
+    import NarrativeWorkspace from "../components/roles/NarrativeWorkspace.vue";
 </script>
 
 <script>

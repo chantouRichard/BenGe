@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <router-view/>
-    <AIChatWidget />
+    <AIChatWidget v-if="loadingStore.aiAssistantLoading"/>
     <transition name="slide-fade" mode="out-in">
       <FullScreenLoading v-if="loadingStore.loading"/>
     </transition>
