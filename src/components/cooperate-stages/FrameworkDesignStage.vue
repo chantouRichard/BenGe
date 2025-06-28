@@ -14,14 +14,7 @@
         @selected="handleRoleSelect"
         @confirm="stage++"
       />
-    <div v-if="stage == 0" class="main-area">
-      <RoleSelector
-        :roles="roles"
-        @selected="handleRoleSelect"
-        @confirm="stage++"
-      />
     </div>
-
 
     <div v-else-if="stage == 1" class="main-area">
       <EditArea
@@ -76,28 +69,16 @@
 
 </teleport>
 
-    <!-- 垂直居中的按钮 -->
-    <button class="side-panel-toggle" @click="isPanelCollapsed = !isPanelCollapsed">
-      {{ isPanelCollapsed ? '>' : '<' }}
-    </button>
-  </div>
-</transition>
-
-</teleport>
-
     </div>
   </div>
 </template>
 
 <script setup>
 // import NarrativeWorkspace from "../roles/NarrativeWorkspace.vue";
-// import NarrativeWorkspace from "../roles/NarrativeWorkspace.vue";
 import { onMounted, onBeforeUnmount } from "vue";
 // import Chat from "./Chat.vue";
-// import Chat from "./Chat.vue";
 // import loginImage from "../../assets/login.png";
-import { ref, computed } from "vue";
-import { useRoute } from "vue-router";
+import { ref } from "vue";
 
 import { defineEmits } from "vue";
 
@@ -125,13 +106,6 @@ import EditArea from "./second/EditArea.vue";
 import OtherEditArea from "./second/OtherEditArea.vue";
 
 const emit = defineEmits(["updateStage"]);
-
-const route = useRoute();
-
-// 从路由参数获取房间ID，如果没有则使用默认值1
-const roomId = computed(() => {
-  return parseInt(route.params.roomId) || 1;
-});
 
 const changeStage = (newStage) => {
   emit("updateStage", newStage);
@@ -182,7 +156,6 @@ const members = ref([]);
 let provider;
 
 onMounted(async () => {});
-onMounted(async () => {});
 
 onBeforeUnmount(() => {
   provider?.destroy();
@@ -210,34 +183,11 @@ function updateMembers(membersList) {
   top: 0;
   right: 0;
   width: 350px;
-/* 折叠面板 */
-
-
-/* 外部容器（包含按钮 + 面板） */
-/* 侧边栏容器（整体一起滑动） */
-.side-panel-container {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 350px;
   height: 100%;
-
 
   display: flex;
   justify-content: center;
-  justify-content: center;
   align-items: center;
-
-  flex-direction: row;
-
-  /* 亚克力风格核心 */
-  background: rgba(255, 255, 255, 0.15);  /* 半透明白色 */
-  backdrop-filter: blur(12px);           /* 毛玻璃模糊效果 */
-  -webkit-backdrop-filter: blur(12px);   /* Safari 支持 */
-
-  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2); /* 柔和阴影 */
-  border-left: 1px solid rgba(255, 255, 255, 0.2); /* 细边界线 */
-
 
   flex-direction: row;
 
@@ -253,43 +203,22 @@ function updateMembers(membersList) {
   z-index: 9999;
   border-top-left-radius: 12px;
   border-bottom-left-radius: 12px;
-  z-index: 9999;
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
 }
 
 
-/* SidePanel 区域 */
-.side-panel-content {
 /* SidePanel 区域 */
 .side-panel-content {
   width: 100%;
   height: 80%;
-  height: 80%;
   overflow: hidden;
 
-
   display: flex;
-  flex-direction: column;
   flex-direction: column;
   justify-content: center;
 
   align-items: center;
-
-  align-items: center;
 }
 
-/* 垂直居中的按钮 */
-.side-panel-toggle {
-  position: absolute;
-  left: -24px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 60px;
-
-  background-color: white;
-  color: black;
 /* 垂直居中的按钮 */
 .side-panel-toggle {
   position: absolute;
@@ -309,17 +238,8 @@ function updateMembers(membersList) {
   z-index: 9999;
 
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
-  border-top-left-radius: 16px;
-  border-bottom-left-radius: 16px;
-
-  cursor: pointer;
-  z-index: 9999;
-
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
-
-
 
 
 
