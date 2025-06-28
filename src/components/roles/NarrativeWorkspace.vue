@@ -32,13 +32,19 @@ import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import NodeDetailDrawer from './NarrativeCom/NodeDetailDrawer.vue'
 import EdgeTypeSelector from './NarrativeCom/EdgeTypeSelector.vue'
 import { useCanvasStore } from '@/stores/canvasStore'
-import { ref } from 'vue'
+import { ref , computed } from 'vue'
 
 const canvasStore = useCanvasStore()
 const canvasRef = ref(null)
+
+// // 直接使用 store 中的数据驱动画布
+const nodes = computed(() => canvasStore.nodes)
+// const edges = computed(() => canvasStore.edges)
 const handleDetailSave = (updatedData) => {
   const index = canvasStore.handleDetailSave(updatedData);
-  canvasRef.value?.forceUpdateNode(updatedData.id, canvasStore.nodes.value[index].data);
+  console.log("接受到的索引",index);
+  console.log("当前节点数据",nodes.value)
+  canvasRef.value?.forceUpdateNode(updatedData.id, nodes.value[index].data);
 }
 
 </script>

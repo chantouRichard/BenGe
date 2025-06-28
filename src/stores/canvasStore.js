@@ -146,29 +146,47 @@ export const useCanvasStore = defineStore('story', () => {
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log('保存的节点数据：', updatedData)
+    console.log('保存的节点数据：', updatedData);
+  
+    if (!updatedData || !updatedData.id || !updatedData.data) {
+      console.warn('[handleDetailSave] 无效参数：', updatedData);
+      return -1;
+    }
+  
     let index = -1;
+  
+    // 如果当前有选中节点，才尝试查找并更新
     if (selectedNode.value) {
-      index = nodes.value.findIndex(n => n.id === updatedData.id)
-      // console.log('更新节点数据位置 Index：', index)
-
+      index = nodes.value.findIndex(n => n.id === updatedData.id);
+  
       if (index !== -1) {
         nodes.value[index].data = {
           ...nodes.value[index].data,
-          ...updatedData.data
-        }
-        console.log('更新后的节点数据：', nodes.value);
+          ...updatedData.data,
+        };
+  
+        // ✅ 强制触发响应式更新
+        nodes.value[index] = { ...nodes.value[index] };
+  
+        console.log('更新后的节点数据：', nodes.value[index]);
       } else {
-        console.warn('未找到节点 id:', updatedData.id)
+        console.warn('未找到对应的节点 ID:', updatedData.id);
+        return -1;
       }
-      nodes.value[index] = { ...nodes.value[index] }
+    } else {
+      console.warn('无选中节点，可能是编辑逻辑未正确触发');
+      return -1;
     }
-
-    selectedNode.value = null // 收起面板
-    console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
-
+  
+    // 最后收起面板
+    selectedNode.value = null;
+  
+    console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2));
+    console.log("索引：", index);
     return index;
-  }
+  };
+  
+  
 
   // 工具栏中添加结点
   const handleAddNode = (event) => {
