@@ -9,43 +9,59 @@
       </div>
     </div>
     <div v-if="stage == 0" class="main-area">
-      <RoleSelector :roles="roles" @selected="handleRoleSelect" @confirm="stage++" />
+      <RoleSelector
+        :roles="roles"
+        @selected="handleRoleSelect"
+        @confirm="stage++"
+      />
     </div>
 
     <div v-else-if="stage == 1" class="main-area">
-      <EditArea :roles="roles" :userRole="userRole" @nextStage="changeStage(1)" />
+      <EditArea
+        :roles="roles"
+        :userRole="userRole"
+        @nextStage="changeStage(1)"
+      />
 
-      <SidePanel :members="members" :user-id="userId" :avatar="userAvatar" :is-member-open="true"
-        @membersUpdated="updateMembers" @clickMember="handleMemberClick" />
-      <teleport to="body">
-        <transition name="slide-panel">
-          <div v-if="showOtherPanel" class="side-panel-container" :style="{
-            transform: isPanelCollapsed ? 'translateX(0)' : 'translateX(100%)'
-          }">
-            <!-- SidePanel 内容 -->
-            <div class="side-panel-content">
-              <SidePanel :members="[selectedMember]" :user-id="userId" :avatar="userAvatar" :is-member-open="true"
-                @membersUpdated="updateMembers" @clickMember="handleMemberClick" background-color="white"
-                fontColor="black" />
-            </div>
-
-          </div>
-        </transition>
-      </teleport>
+      <SidePanel
+        :members="members"
+        :user-id="userId"
+        :avatar="userAvatar"
+        :room-id="roomId"
+        :is-member-open="true"
+        @membersUpdated="updateMembers"
+        @clickMember="handleMemberClick"
+      />
+<teleport to="body">
+<transition name="slide-panel">
+  <div v-if="showOtherPanel" class="side-panel-container" :style="{
+      transform: isPanelCollapsed ? 'translateX(0)' : 'translateX(100%)'
+    }"
+  >
+    <!-- SidePanel 内容 -->
+    <div class="side-panel-content">
+      <SidePanel
+        :members="[selectedMember]"
+        :user-id="userId"
+        :avatar="userAvatar"
+        :room-id="roomId"
+        :is-member-open="true"
+        @membersUpdated="updateMembers"
+        @clickMember="handleMemberClick"
+        background-color="white"
+        fontColor="black"
+      />
     </div>
 
-    <!-- 聊天区 -->
-    <div class="chat-area" :style="{ height: isMemberOpen ? '80%' : '95%' }">
-      <div style="
-              width: 100%;
-              height: 100%;
-              margin-left: auto;
-              margin-right: auto;
-              position: relative;
-              overflow: hidden;
-            ">
-        <Chat :roomId="roomId" :userId="userId" @membersUpdated="updateMembers" :avatar="userAvatar" />
-      </div>
+    <!-- 垂直居中的按钮 -->
+    <button class="side-panel-toggle" @click="isPanelCollapsed = !isPanelCollapsed">
+      {{ isPanelCollapsed ? '>' : '<' }}
+    </button>
+  </div>
+</transition>
+
+</teleport>
+
     </div>
   </div>
 </template>
@@ -138,7 +154,7 @@ const members = ref([]);
 
 let provider;
 
-onMounted(async () => { });
+onMounted(async () => {});
 
 onBeforeUnmount(() => {
   provider?.destroy();
@@ -175,17 +191,12 @@ function updateMembers(membersList) {
   flex-direction: row;
 
   /* 亚克力风格核心 */
-  background: rgba(255, 255, 255, 0.15);
-  /* 半透明白色 */
-  backdrop-filter: blur(12px);
-  /* 毛玻璃模糊效果 */
-  -webkit-backdrop-filter: blur(12px);
-  /* Safari 支持 */
+  background: rgba(255, 255, 255, 0.15);  /* 半透明白色 */
+  backdrop-filter: blur(12px);           /* 毛玻璃模糊效果 */
+  -webkit-backdrop-filter: blur(12px);   /* Safari 支持 */
 
-  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2);
-  /* 柔和阴影 */
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
-  /* 细边界线 */
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2); /* 柔和阴影 */
+  border-left: 1px solid rgba(255, 255, 255, 0.2); /* 细边界线 */
 
   transition: transform 0.3s ease;
   z-index: 9999;
@@ -275,7 +286,6 @@ function updateMembers(membersList) {
   border-radius: 50%;
   background-color: gray;
 }
-
 .main-area {
   display: flex;
   padding: 32px;
@@ -296,8 +306,7 @@ function updateMembers(membersList) {
   border-radius: 20px;
 
   /* 其他样式 */
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  /* 轻微的边框，增加层次感 */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* 轻微的边框，增加层次感 */
 }
 
 .right-area {
