@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 
-export const canvasStore = defineStore('story', () => {
+export const useCanvasStore = defineStore('story', () => {
+
+  // 生成结点的ID
+  const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
   // 所有节点数据
   const nodes = ref([{
@@ -18,7 +21,7 @@ export const canvasStore = defineStore('story', () => {
       notes: '注意时间冲突',
     }
   }])
-  
+
   // 所有连线
   const edges = reactive([])
 
@@ -27,7 +30,7 @@ export const canvasStore = defineStore('story', () => {
 
   // 当前选择边的ID
   const editingEdgeId = ref(null)
-  
+
   // 是否在创建边 
   const isCreatingEdge = ref(false)
 
@@ -56,7 +59,7 @@ export const canvasStore = defineStore('story', () => {
   const handleEdgeConfirm = (edgeType, label) => {
     if (selectedNodesForEdge.value.length === 2) {
       const [sourceNode, targetNode] = selectedNodesForEdge.value;
-  
+
       // 使用 reactive 包裹新边对象
       const newEdge = reactive({
         id: `edge-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
@@ -70,10 +73,10 @@ export const canvasStore = defineStore('story', () => {
           label: label || ''
         })
       });
-  
+
       edges.push(newEdge); // 直接 push 到 reactive 数组
     }
-  
+
     selectedNodesForEdge.value = [];
     isCreatingEdge.value = false;
     showEdgeSelector.value = false;
@@ -82,16 +85,16 @@ export const canvasStore = defineStore('story', () => {
   // 用户在边选择器中修改边，确认
   const handleEdgeEditConfirm = (edgeType, label) => {
     if (!editingEdgeId.value) return;
-  
+
     const edge = edges.find(e => e.id === editingEdgeId.value);
     if (edge) {
       // 直接修改 reactive 对象的属性
       edge.data.type = edgeType;
       edge.data.label = label || '';
-  
+
       // 调用 CanvasArea 的更新方法（确保传递最新数据）
-      canvasRef.value?.forceUpdateEdge(editingEdgeId.value, edge.data);
-  
+      // canvasRef.value?.forceUpdateEdge(editingEdgeId.value, edge.data);
+
       editingEdgeId.value = null;
       showEdgeSelector.value = false;
     }
@@ -110,7 +113,7 @@ export const canvasStore = defineStore('story', () => {
     if (index !== -1) {
       edges.splice(index, 1);
     }
-  
+
     // forceUpdateNode(payload.nodeId, payload.nodeData);
     editingEdgeId.value = null;
     showEdgeSelector.value = false;
@@ -122,19 +125,16 @@ export const canvasStore = defineStore('story', () => {
     edges.push(newEdge)
   }
 
-  // 生成结点的ID
-  const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-
   // 点击结点，进入结点的信息编辑界面或者是在创建边
   const handleNodeClick = (node) => {
     const actualNode = node.node || node; // 处理两种可能的情况
-  
+
     if (isCreatingEdge.value) {
       console.log("当前选择结点", actualNode)
       if (!selectedNodesForEdge.value.find(n => n.id === actualNode.id)) {
         selectedNodesForEdge.value.push(actualNode);
       }
-  
+
       if (selectedNodesForEdge.value.length === 2) {
         console.log('已选择两个节点：', selectedNodesForEdge.value);
         showEdgeSelector.value = true;
@@ -146,11 +146,12 @@ export const canvasStore = defineStore('story', () => {
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    // console.log('保存的节点数据：', updatedData)
+    console.log('保存的节点数据：', updatedData)
+    let index = -1;
     if (selectedNode.value) {
-      const index = nodes.value.findIndex(n => n.id === updatedData.id)
+      index = nodes.value.findIndex(n => n.id === updatedData.id)
       // console.log('更新节点数据位置 Index：', index)
-  
+
       if (index !== -1) {
         nodes.value[index].data = {
           ...nodes.value[index].data,
@@ -160,15 +161,13 @@ export const canvasStore = defineStore('story', () => {
       } else {
         console.warn('未找到节点 id:', updatedData.id)
       }
-  
-      canvasRef.value?.forceUpdateNode(updatedData.id, nodes.value[index].data);
-  
       nodes.value[index] = { ...nodes.value[index] }
     }
-  
+
     selectedNode.value = null // 收起面板
     console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
-  
+
+    return index;
   }
 
   // 工具栏中添加结点
@@ -176,7 +175,7 @@ export const canvasStore = defineStore('story', () => {
     const rect = event?.target?.getBoundingClientRect(); // 获取点击位置
     const x = rect ? event.clientX - rect.left : 200; // 相对画布位置
     const y = rect ? event.clientY - rect.top : 200;
-  
+
     const newNode = {
       id: generateNodeId(),
       type: 'custom',
@@ -193,7 +192,7 @@ export const canvasStore = defineStore('story', () => {
     };
     nodes.value.push(newNode);
     console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
-  
+
   }
 
   // 结点的删除
@@ -201,11 +200,11 @@ export const canvasStore = defineStore('story', () => {
     const index = nodes.value.findIndex(n => n.id === nodeId);
     if (index !== -1) {
       nodes.value.splice(index, 1)
-  
+
       if (selectedNode.value?.id === nodeId) {
         selectedNode.value = null;
       }
-  
+
       for (let i = edges.length - 1; i >= 0; i--) {
         if (edges[i].source === nodeId || edges[i].target === nodeId) {
           edges.splice(i, 1)
@@ -227,7 +226,7 @@ export const canvasStore = defineStore('story', () => {
     }
   }
 
-  return { 
+  return {
     nodes,
     edges,
     selectedNode,

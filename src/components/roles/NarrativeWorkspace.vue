@@ -10,7 +10,7 @@
 
     <!-- 节点详情抽屉 -->
     <div style="height: 100%;width: 100%;">
-      <NodeDetailDrawer :visible="canvasStore.selectedNode" :nodeData="canvasStore.selectedNode" @save="canvasStore.handleDetailSave"
+      <NodeDetailDrawer :visible="canvasStore.selectedNode" :nodeData="canvasStore.selectedNode" @save="handleDetailSave"
         @close="canvasStore.selectedNode = null" />
 
       <EdgeTypeSelector v-if="canvasStore.showEdgeSelector" :source="canvasStore.selectedNodesForEdge[0]" :target="canvasStore.selectedNodesForEdge[1]"
@@ -32,8 +32,14 @@ import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import NodeDetailDrawer from './NarrativeCom/NodeDetailDrawer.vue'
 import EdgeTypeSelector from './NarrativeCom/EdgeTypeSelector.vue'
 import { useCanvasStore } from '@/stores/canvasStore'
+import { ref } from 'vue'
 
 const canvasStore = useCanvasStore()
+const canvasRef = ref(null)
+const handleDetailSave = (updatedData) => {
+  const index = canvasStore.handleDetailSave(updatedData);
+  canvasRef.value?.forceUpdateNode(updatedData.id, canvasStore.nodes.value[index].data);
+}
 
 </script>
 
