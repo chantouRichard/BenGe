@@ -11,9 +11,9 @@
         <div v-if="isMemberOpen" class="member-list">
           <div
             class="member-item"
-            v-for="(member,index) in members"
-            :key="index"
-            @click="$emit('clickMember', {member,index})"
+            v-for="member in members"
+            :key="member.id"
+            @click="$emit('clickMember', member)"
           >
             <img :src="member.avatar" alt="avatar" class="member-avatar" />
             <div class="member-info">
@@ -29,6 +29,7 @@
     <div class="chat-area" :style="{ height: isMemberOpen ? '80%' : '95%' }">
       <div class="chat-wrapper">
         <Chat
+          :roomId="roomId"
           :userId="userId"
           :avatar="avatar"
           @membersUpdated="$emit('membersUpdated', $event)"
@@ -65,6 +66,10 @@ export default {
     },
     avatar: {
       type: String,
+      required: true,
+    },
+    roomId: {
+      type: [Number, String],
       required: true,
     },
     isMemberOpen: {
