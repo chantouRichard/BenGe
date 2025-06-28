@@ -18,10 +18,19 @@
 
     <div v-else-if="stage == 1" class="main-area">
       <EditArea
+      v-if="!showOther"
         :roles="roles"
         :userRole="userRole"
         @nextStage="changeStage(1)"
       />
+      <OtherEditArea v-else-if="showOther"
+        :roles="roles"
+        :userRole="userRole"
+        :chooseUser="selectedMember.name"
+        :chooseUserRole="氛围设计师"
+        @enlarge="showOtherPanel = true"
+        @reduce="showOtherPanel = false"
+        @nextStage="changeStage(1)"/>
 
       <SidePanel
         :members="members"
@@ -40,7 +49,7 @@
     <!-- SidePanel 内容 -->
     <div class="side-panel-content">
       <SidePanel
-        :members="[selectedMember]"
+        :members="members"
         :user-id="userId"
         :avatar="userAvatar"
         :is-member-open="true"
@@ -84,16 +93,17 @@ function handleRoleSelect(index) {
 // 侧边栏成员信息
 import SidePanel from "./second/SidePanel.vue";
 
-function handleMemberClick(member) {
-  console.log("点击了成员：", member);
-  selectedMember.value = member;
-  showOtherPanel.value = true;
+function handleMemberClick(data) {
+  console.log("点击了成员：", data.member);
+  selectedMember.value = data.member;
+  showOther.value = true;
   isPanelCollapsed.value = false;
   // TODO: 打开他的工作区
 }
 
 // 编辑区
 import EditArea from "./second/EditArea.vue";
+import OtherEditArea from "./second/OtherEditArea.vue";
 
 const emit = defineEmits(["updateStage"]);
 
@@ -104,6 +114,7 @@ const changeStage = (newStage) => {
 // 折叠面板状态
 const selectedMember = ref(null);
 const showOtherPanel = ref(false);
+const showOther = ref(false);
 const isPanelCollapsed = ref(false);
 
 
