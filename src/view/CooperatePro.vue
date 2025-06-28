@@ -83,81 +83,107 @@
       <div class="header-bar">
         <el-input
           v-model="searchKeyword"
-          placeholder="搜索房间"
+          placeholder="搜索房间名称..."
           clearable
           class="search-box"
+          :prefix-icon="Search"
         />
         <div class="header-buttons">
-          <el-button @click="fetchRooms" :loading="loading">
-            <el-icon><Refresh /></el-icon>
+          <el-button @click="fetchRooms" :loading="loading" :icon="Refresh">
             刷新
           </el-button>
-          <el-button type="primary" @click="create">创建房间</el-button>
+          <el-button type="primary" @click="create">
+            <el-icon><Plus /></el-icon>
+            创建房间
+          </el-button>
         </div>
       </div>
 
-      <!-- 房间列表区域（带滚动） -->
-      <div class="table-wrapper">
+      <!-- 房间卡片网格 -->
+      <div class="room-cards-container" v-loading="loading">
         <!-- 空状态 -->
         <div v-if="!loading && filteredRooms.length === 0" class="empty-state">
-          <el-empty description="暂无房间">
-            <el-button type="primary" @click="create">创建第一个房间</el-button>
+          <el-empty description="暂无房间数据">
+            <el-button type="primary" @click="create">
+              <el-icon><Plus /></el-icon>
+              创建第一个房间
+            </el-button>
           </el-empty>
         </div>
         
-        <!-- 房间列表 -->
-        <el-table
-          v-else
-          :data="pagedRooms"
-          style="width: 100%"
-          v-loading="loading"
-          height="400"
-        >
-          <el-table-column label="房间名称" min-width="200">
-            <template #default="scope">
-              <div class="room-name">
-                <span>{{ scope.row.name }}</span>
-                <el-tag 
-                  v-if="isOwnedRoom(scope.row.roomId)" 
-                  size="small" 
-                  type="success"
-                  style="margin-left: 8px;"
-                >
-                  我的房间
-                </el-tag>
-                <el-icon v-if="scope.row.havePwd" class="lock-icon" color="#f56c6c">
-                  <Lock />
-                </el-icon>
+        <!-- 房间卡片网格 -->
+        <div v-else class="room-grid">
+          <div 
+            v-for="room in pagedRooms" 
+            :key="room.roomId"
+            class="room-card"
+            :class="{ 
+              'owned-room': isOwnedRoom(room.roomId), 
+              'current-room': currentRoom?.id === room.roomId 
+            }"
+          >
+            <!-- 卡片头部 -->
+            <div class="card-header">
+              <div class="room-title">
+                <h3>{{ room.name }}</h3>
+                <div class="room-badges">
+                  <el-tag v-if="room.havePwd" type="warning" size="small">
+                    <el-icon><Lock /></el-icon>
+                    密码
+                  </el-tag>
+                  <el-tag v-if="isOwnedRoom(room.roomId)" type="success" size="small">
+                    <el-icon><House /></el-icon>
+                    我的
+                  </el-tag>
+                  <el-tag v-if="currentRoom?.id === room.roomId" type="info" size="small">
+                    当前房间
+                  </el-tag>
+                </div>
               </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="ownerName" label="创建者" min-width="120" />
-          <el-table-column prop="currentMembers" label="参与人数" width="100" />
-          <el-table-column label="操作" width="120">
-            <template #default="scope">
-              <el-button 
-                type="text" 
-                @click="enterRoom(scope.row)"
-                :loading="joiningRoomId === scope.row.roomId"
-                :disabled="joiningRoomId !== null"
-              >
-                进入
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
+            </div>
 
-      <!-- 分页 -->
-      <el-pagination
-        background
-        layout="prev, pager, next, ->, sizes, total"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        @size-change="handleSizeChange"
-        @current-change="handlePageChange"
-      />
+            <!-- 卡片内容 -->
+            <div class="card-content">
+              <p class="room-description">{{ room.description || '暂无描述' }}</p>
+              <div class="room-info">
+                <div class="info-item">
+                  <el-icon><User /></el-icon>
+                  <span>{{ room.currentMembers }} 人</span>
+                </div>
+                <div class="info-item">
+                  <span class="owner-name">创建者: {{ room.ownerName || '未知' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 卡片操作 -->
+            <div class="card-actions">
+              <el-button 
+                type="primary" 
+                :loading="joiningRoomId === room.roomId"
+                :disabled="joiningRoomId !== null"
+                @click="enterRoom(room)"
+                class="join-btn"
+              >
+                {{ isOwnedRoom(room.roomId) ? '进入房间' : '加入房间' }}
+              </el-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination-wrapper">
+          <el-pagination
+            background
+            layout="prev, pager, next, ->, sizes, total"
+            :total="total"
+            :page-size="pageSize"
+            :current-page="currentPage"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -166,7 +192,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Refresh, Lock, House } from '@element-plus/icons-vue';
+import { Refresh, Lock, House, User, Plus, Search } from '@element-plus/icons-vue';
 import {createRoom, getRoomList, joinRoom, getCurrentRoom, leaveRoom, getOwnedRooms, enterOwnedRoom} from "../api/room";
 
 const router = useRouter();
@@ -289,6 +315,36 @@ async function enterRoom(room) {
   
   joiningRoomId.value = room.roomId;
 
+  // 首先检查用户是否已在其他房间中
+  if (currentRoom.value && currentRoom.value.id !== room.roomId) {
+    try {
+      await ElMessageBox.confirm(
+        `您当前在房间"${currentRoom.value.name}"中，是否要退出当前房间并加入房间"${room.name}"？`,
+        '切换房间',
+        {
+          confirmButtonText: '退出并加入',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      );
+      
+      // 用户确认切换，先退出当前房间
+      await leaveRoom(currentRoom.value.id);
+      ElMessage.success('已退出当前房间');
+      // 更新当前房间状态
+      currentRoom.value = null;
+      await fetchCurrentRoom();
+      
+    } catch (error) {
+      if (error === 'cancel') {
+        // 用户取消切换
+        joiningRoomId.value = null;
+        return;
+      }
+      throw error;
+    }
+  }
+
   const tryJoinRoom = async (password = '') => {
     try {
       const result = await joinRoom(room.roomId, password);
@@ -299,6 +355,8 @@ async function enterRoom(room) {
         ElMessage.success('成功加入房间！');
         // 跳转到房间页面
         router.push(`/room/${room.roomId}`);
+        // 更新当前房间信息
+        await fetchCurrentRoom();
         return true;
       } else if (result === '房间密码错误') {
         // 密码错误，需要重新输入密码
@@ -307,9 +365,6 @@ async function enterRoom(room) {
         if(result == "您已经在房间中"){
           router.push(`/room/${room.roomId}`);
           return true;
-        } else if (result.includes('您当前在房间')) {
-          // 用户在其他房间中，提供切换选项
-          return 'needSwitch';
         } else {
           ElMessage.error(result || '加入房间失败');
           return false;
@@ -324,44 +379,9 @@ async function enterRoom(room) {
   try {
     // 先尝试不带密码加入
     const result = await tryJoinRoom();
-
-    // 处理需要切换房间的情况
-    if (result === 'needSwitch') {
-      try {
-        await ElMessageBox.confirm(
-          `您当前在房间"${currentRoom.value?.name}"中，是否要退出当前房间并加入房间"${room.name}"？`,
-          '切换房间',
-          {
-            confirmButtonText: '退出并加入',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        );
-        
-        // 用户确认切换，先退出当前房间
-        if (currentRoom.value) {
-          await leaveRoom(currentRoom.value.id);
-          ElMessage.success('已退出当前房间');
-        }
-        
-        // 重新尝试加入新房间
-        const switchResult = await tryJoinRoom();
-        if (switchResult === true) {
-          // 更新当前房间信息
-          await fetchCurrentRoom();
-        }
-        
-      } catch (error) {
-        if (error === 'cancel') {
-          // 用户取消切换
-          return;
-        }
-        throw error;
-      }
-    }
     
     // 如果需要密码，弹出密码输入框并重试
-    else if (result === 'needPassword') {
+    if (result === 'needPassword') {
       try {
         const { value } = await ElMessageBox.prompt(
           `房间"${room.name}"需要密码`, 
@@ -543,18 +563,129 @@ async function submitRoom() {
 
 .header-buttons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
 .search-box {
-  width: 300px;
+  width: 320px;
+  margin-right: 12px;
 }
 
-.table-wrapper {
-  overflow-y: auto;
-  max-height: 400px;
+.room-cards-container {
   margin-bottom: 20px;
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.room-card {
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.room-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: #409eff;
+}
+
+.room-card.owned-room {
+  border-color: #67c23a;
+  background: linear-gradient(135deg, #fff 0%, #f0f9ff 100%);
+}
+
+.room-card.current-room {
+  border-color: #409eff;
+  background: linear-gradient(135deg, #fff 0%, #ecf5ff 100%);
+}
+
+.card-header {
+  padding: 16px 16px 0;
+}
+
+.room-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.room-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.3;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.card-content {
+  padding: 0 16px 16px;
+}
+
+.room-description {
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+  height: 42px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #909399;
+}
+
+.info-item .el-icon {
+  font-size: 14px;
+}
+
+.owner-name {
+  color: #909399;
+}
+
+.card-actions {
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafbfc;
+}
+
+.join-btn {
+  width: 100%;
+  height: 36px;
+  font-weight: 500;
 }
 
 .empty-state {
@@ -564,14 +695,10 @@ async function submitRoom() {
   height: 300px;
 }
 
-.room-name {
+.pagination-wrapper {
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.lock-icon {
-  font-size: 14px;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .current-room-info {
@@ -603,8 +730,49 @@ async function submitRoom() {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  color: #495057;
-  margin-bottom: 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .room-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .header-bar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .header-buttons {
+    justify-content: center;
+  }
+  
+  .room-cards-container {
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .room-list-container {
+    margin: 50px auto;
+    padding: 15px;
+  }
+  
+  .room-title h3 {
+    font-size: 16px;
+    max-width: 150px;
+  }
+  
+  .room-badges {
+    align-items: flex-start;
+  }
 }
 
 .owned-rooms-list {
