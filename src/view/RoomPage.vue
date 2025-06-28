@@ -1,12 +1,24 @@
 <template>
-  <CompleteScriptStage />
+  <div v-if="stage == 0">
+    <FrameworkDesignStage :stage="stage" @updateStage="updateStage"/>
+  </div>
+  <div v-else-if="stage == 1">
+    <CompleteScriptStage />
+    <!-- <NarrativeWorkspace/> -->
+  </div>
 </template>
 
 <script setup>
-import CompleteScriptStage from '@/components/cooperate-stages/CompleteScriptStage.vue';
+import { ref } from "vue";
+import FrameworkDesignStage from "@/components/cooperate-stages/FrameworkDesignStage.vue";
+import CompleteScriptStage from "@/components/cooperate-stages/CompleteScriptStage.vue";
+// import NarrativeWorkspace from "@/components/roles/NarrativeWorkspace.vue";
 
+const stage = ref(0);
+
+const updateStage = (newStage) => {
+  stage.value = newStage;
+};
 </script>
 
-<style>
-
-</style>
+<style></style>

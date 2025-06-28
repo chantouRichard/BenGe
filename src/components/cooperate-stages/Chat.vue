@@ -80,8 +80,8 @@ export default {
   name: "ChatComponent",
   props: {
     roomId: {
-      type: Number,
-      default: 0,
+      type: [Number, String],
+      default: 1,
     },
     roomName: {
       type: String,
@@ -89,18 +89,19 @@ export default {
     },
     members: {
       type: Array,
-      default: () => [
-        { id: 1, avatar: loginImage, name: "Alice" },
-        { id: 2, avatar: loginImage, name: "Bob" },
-      ],
+      default: () => [],
     },
-    userId:{
-      type:Number,
-      default:0
+    userId: {
+      type: String,
+      default: "anonymous"
     },
-    userName:{
+    userName: {
+      type: String,
+      default: "匿名用户"
+    },
+    avatar:{
       type:String,
-      default:"匿名用户"
+      default:loginImage
     },
     initialMessages: {
       type: Array,
@@ -113,7 +114,6 @@ export default {
       newMessage: "",
       messages: this.initialMessages,
       socket: null,
-      avatar: loginImage,
       currentUserId: null,
       currentUsername: null,
     };
@@ -169,11 +169,12 @@ export default {
 
       this.socket.onopen = () => {
         console.log("WebSocket连接已建立");
-        // 连接建立后发送认证信息，使用固定的roomId进行测试
+        // 连接建立后发送认证信息，使用传入的roomId
         this.socket.send(JSON.stringify({
           type: "auth",
           token: token,
-          roomId: 1  
+          roomId: this.roomId,
+          avatar:this.avatar
         }));
       };
 
@@ -243,10 +244,10 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-height: 648px;
+  /* max-height: 648px; */
   width: 100%;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
   /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
 }

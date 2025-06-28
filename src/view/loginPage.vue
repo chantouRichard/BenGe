@@ -140,16 +140,17 @@
     
     try {
       const response = await login(form.username, form.password);
-      
+
       // 如果登录成功，后端返回status为200的Ok结果，带有token数据
       console.log('登录响应:', response); // 添加日志，查看具体响应
-      
-      if (response.data && response.data.token) {
+
+      if (response && response.token) {
         // 保存token到localStorage
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('username', response.data.username);
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('username', response.username);
         // 跳转到首页或其他页面
         router.push('/home');
+        loadingStore.hide();
       } else {
         loadingStore.hide();
         errorMessage.value = '登录失败，请检查用户名和密码';
@@ -160,10 +161,12 @@
       }, 1000)
 
       console.error('登录出错:', error);
-      
+
       // 如果有详细错误信息，显示它
       if (error.response && error.response.data) {
         errorMessage.value = error.response.data;
+      } else if (typeof error === 'string') {
+        errorMessage.value = error;
       } else {
         errorMessage.value = '登录失败，请稍后重试';
       }
@@ -177,11 +180,12 @@
   const handleRegister = async () => {
     loading.value = true;
     errorMessage.value = '';
-    
+
     try {
       const response = await register(form.username, form.password);
-      
-      if (response.status === 200) {
+
+      // 后端注册成功时返回字符串 "注册成功"
+      if (response === "注册成功") {
         // 注册成功，切换到登录状态
         signIn.value = true;
         // 清空错误信息
@@ -189,13 +193,21 @@
         form.username = '';
         form.password = '';
         // 可以显示成功消息
-        // alert('注册成功，请登录');
+        console.log('注册成功，请登录');
       } else {
-        errorMessage.value = response.message || '注册失败，请稍后重试';
+        errorMessage.value = response || '注册失败，请稍后重试';
       }
     } catch (error) {
       console.error('注册出错:', error);
-      errorMessage.value = '注册失败，请稍后重试';
+
+      // 处理错误响应
+      if (error.response && error.response.data) {
+        errorMessage.value = error.response.data;
+      } else if (typeof error === 'string') {
+        errorMessage.value = error;
+      } else {
+        errorMessage.value = '注册失败，请稍后重试';
+      }
     } finally {
       loading.value = false;
     }

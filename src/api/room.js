@@ -2,15 +2,28 @@
 import request from './request';
 
 //获取房间列表
-export function getRoomList() {
-  return request.get('/api/room');
+export function getRoomList(page = 1, limit = 10) {
+  return request.post('/room/list', {
+    page,
+    limit
+  });
 }
+
 // 创建房间
 export function createRoom(data) {
-  return request.post('/api/room', data);
+  const roomData = {
+    ...data,
+    havePwd: Boolean(data.havePwd)
+  };
+  console.log("我的测试：",roomData);
+  return request.post('/room', roomData);
 }
 
 //申请加入房间
-export function joinRoom(data) {
-    return request.post('/api/room/application', data);
+export function joinRoom(roomId, password = '', applyReason = '') {
+    return request.post('/room/application', {
+        roomId,
+        password,
+        applyReason
+    });
 }

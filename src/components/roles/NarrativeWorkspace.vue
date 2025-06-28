@@ -8,7 +8,8 @@
       @node-select="handleNodeClick" @edge-select="handleEdgeSelect" @node-position-change="handlePositionChange" @connect-node="handleConnectNode" />
 
     <!-- 节点详情抽屉 -->
-    <NodeDetailDrawer v-if="selectedNode" :visible="selectedNode" :nodeData="selectedNode" @save="handleDetailSave"
+     <div style="height: 100%;width: 100%;">
+    <NodeDetailDrawer :visible="selectedNode" :nodeData="selectedNode" @save="handleDetailSave"
       @close="selectedNode = null" />
 
     <EdgeTypeSelector v-if="showEdgeSelector" :source="selectedNodesForEdge[0]" :target="selectedNodesForEdge[1]"
@@ -242,8 +243,8 @@ const handleConnectNode = (newEdge) => {
 <style scoped>
 .workspace-container {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 </style>

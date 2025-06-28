@@ -19,7 +19,7 @@
           <h3>单人创作</h3>
           <p>独立构建完整剧本</p>
         </div>
-        <div class="mode-card" @click="navigateTo('canvas')">
+        <div class="mode-card" @click="navigateTo('cooperate')">
           <img src="@/assets/cooperate.png" alt="团队协作" class="mode-icon" />
           <h3>团队协作</h3>
           <p>实时协同创作剧本</p>
