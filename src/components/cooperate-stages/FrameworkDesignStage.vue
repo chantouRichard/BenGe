@@ -129,7 +129,12 @@
               overflow: hidden;
             "
           >
-            <Chat :userId="userId" @membersUpdated="updateMembers" :avatar="userAvatar" />
+            <Chat 
+              :roomId="roomId"
+              :userId="userId" 
+              @membersUpdated="updateMembers" 
+              :avatar="userAvatar" 
+            />
           </div>
         </div>
       </div>
@@ -142,7 +147,8 @@ import NarrativeWorkspace from "../roles/NarrativeWorkspace.vue";
 import { onMounted, onBeforeUnmount } from "vue";
 import Chat from "./Chat.vue";
 // import loginImage from "../../assets/login.png";
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useRoute } from "vue-router";
 
 import { defineEmits } from "vue";
 
@@ -150,6 +156,13 @@ import { defineEmits } from "vue";
 const isFullScreen = ref(false);
 
 const emit = defineEmits(["updateStage"]);
+
+const route = useRoute();
+
+// 从路由参数获取房间ID，如果没有则使用默认值1
+const roomId = computed(() => {
+  return parseInt(route.params.roomId) || 1;
+});
 
 const changeStage = (newStage) => {
   emit("updateStage", newStage);
