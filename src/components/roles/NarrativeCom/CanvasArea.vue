@@ -31,7 +31,7 @@
 
       <!-- 自定义边 -->
       <template #edge-custom="edgeProps">
-        <CustomEdge v-bind="edgeProps" />
+        <CustomEdge v-bind="edgeProps"/>
       </template>
     </VueFlow>
   </div>
@@ -70,7 +70,7 @@ const props = defineProps({
 //   console.log('旧节点列表：', oldVal)
 // }, { deep: true })
 
-const emit = defineEmits(['node-select', "edge-select" , 'delete-node', 'node-position-change', "connect-node"])
+const emit = defineEmits(['node-select', "edge-select" , 'delete-node' , 'node-position-change', "connect-node"])
 
 // 处理节点事件
 const handleNodeClick = (node) => {
@@ -82,6 +82,7 @@ const handleEdgeClick = (e) => {
   console.log("选择的边", e)
   emit("edge-select", e.edge.id)
 }
+// 删除结点
 const handleDeleteNode = (nodeId) => {
   emit('delete-node', nodeId)
 }
@@ -117,25 +118,22 @@ const forceUpdateNode = (id, newData) => {
     data: { ...newData },
   })
 }
-
 const forceUpdateEdge = (id, newData) => {
   console.log('forceUpdateEdge', id, newData)
-  const edge = props.edges.find(e => e.id === id);
-  if (!edge) return;
+  // 创建新对象触发响应式更新
+  // const updatedEdge = {
+  //   id,
+  //   data: {
+  //     ...edge.data,
+  //     ...newData
+  //   }
+  // };
 
-  // 创建新的边对象确保触发响应式更新
-  const updatedEdge = {
-    ...edge,
-    data: {
-      ...edge.data,
-      ...newData
-    }
-  };
-
-  // 使用 updateEdge 方法
-  updateEdge(updatedEdge, true); // true 表示替换整个边对象
-
-  console.log('Updated edge:', updatedEdge);
+  // // 使用 VueFlow 的 updateEdge 方法
+  // updateEdge(updatedEdge, true); // true 表示完全替换边对象
+  updateEdge(id, {
+    data: { ...newData}
+  })
 };
 
 defineExpose({

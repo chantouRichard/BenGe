@@ -5,20 +5,24 @@
 
     <!-- 主画布 -->
     <CanvasArea ref="canvasRef" v-if="nodes.length > 0" :nodes="nodes" :edges="edges" @delete-node="handleDeleteNode"
-      @node-select="handleNodeClick" @edge-select="handleEdgeSelect" @node-position-change="handlePositionChange" @connect-node="handleConnectNode" />
+      @node-select="handleNodeClick" @edge-select="handleEdgeSelect"
+      @node-position-change="handlePositionChange" @connect-node="handleConnectNode" />
 
     <!-- 节点详情抽屉 -->
-     <div style="height: 100%;width: 100%;">
-    <NodeDetailDrawer :visible="selectedNode" :nodeData="selectedNode" @save="handleDetailSave"
-      @close="selectedNode = null" />
+    <div style="height: 100%;width: 100%;">
+      <NodeDetailDrawer :visible="selectedNode" :nodeData="selectedNode" @save="handleDetailSave"
+        @close="selectedNode = null" />
 
-    <EdgeTypeSelector v-if="showEdgeSelector" :source="selectedNodesForEdge[0]" :target="selectedNodesForEdge[1]"
-      @confirm="handleEdgeConfirm" @cancel="handleEdgeCancel" />
+      <EdgeTypeSelector v-if="showEdgeSelector" :source="selectedNodesForEdge[0]" :target="selectedNodesForEdge[1]"
+        @confirm="handleEdgeConfirm" @cancel="handleEdgeCancel" />
 
-    <EdgeTypeSelector v-if="showEdgeSelector && editingEdgeId"
-      :initialType="edges.find(e => e.id === editingEdgeId)?.data?.type || null"
-      :initialLabel="edges.find(e => e.id === editingEdgeId)?.data?.label || ''" @confirm="handleEdgeEditConfirm"
-      @cancel="handleEdgeCancel" />
+      <EdgeTypeSelector v-if="showEdgeSelector && editingEdgeId"
+        :initialType="edges.find(e => e.id === editingEdgeId)?.data?.type || null"
+        :initialLabel="edges.find(e => e.id === editingEdgeId)?.data?.label || ''"
+        :showDelete="true"
+        @confirm="handleEdgeEditConfirm"
+        @cancel="handleEdgeCancel" @delete-edge="handleDeleteEdge" />
+    </div>
   </div>
 </template>
 
@@ -59,49 +63,41 @@ const handleEdgeConfirm = (edgeType, label) => {
   if (selectedNodesForEdge.value.length === 2) {
     const [sourceNode, targetNode] = selectedNodesForEdge.value;
 
-    const newEdge = {
+    // 使用 reactive 包裹新边对象
+    const newEdge = reactive({
       id: `edge-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
       source: sourceNode.id,
       target: targetNode.id,
       sourcePosition: 'right',
       targetPosition: 'left',
       type: 'custom',
-      data: reactive({
+      data: reactive({  // 嵌套的 data 也必须是响应式
         type: edgeType,
         label: label || ''
       })
-    };
+    });
 
-    edges.value.push(newEdge);
+    edges.push(newEdge); // 直接 push 到 reactive 数组
   }
 
-  selectedNodesForEdge.value = []
-  isCreatingEdge.value = false
-  showEdgeSelector.value = false
-}
+  selectedNodesForEdge.value = [];
+  isCreatingEdge.value = false;
+  showEdgeSelector.value = false;
+};
 
 // 修改边的确认
 const handleEdgeEditConfirm = (edgeType, label) => {
   if (!editingEdgeId.value) return;
 
-  const index = edges.value.findIndex(e => e.id === editingEdgeId.value);
-  if (index !== -1) {
-    // 创建新对象确保响应式更新
-    const updatedEdge = {
-      ...edges.value[index],
-      data: {
-        ...edges.value[index].data,
-        type: edgeType,
-        label: label || ''
-      }
-    };
-    
-    // 正确调用 forceUpdateEdge
-    canvasRef.value?.forceUpdateEdge(editingEdgeId.value, updatedEdge.data);
-    
-    // 更新本地状态
-    edges.value[index] = updatedEdge;
-    
+  const edge = edges.find(e => e.id === editingEdgeId.value);
+  if (edge) {
+    // 直接修改 reactive 对象的属性
+    edge.data.type = edgeType;
+    edge.data.label = label || '';
+
+    // 调用 CanvasArea 的更新方法（确保传递最新数据）
+    canvasRef.value?.forceUpdateEdge(editingEdgeId.value, edge.data);
+
     editingEdgeId.value = null;
     showEdgeSelector.value = false;
   }
@@ -181,6 +177,7 @@ const handleAddNode = (event) => {
   console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
 
 }
+// 删除节点
 const handleDeleteNode = (nodeId) => {
   const index = nodes.value.findIndex(n => n.id === nodeId);
   if (index !== -1) {
@@ -190,10 +187,24 @@ const handleDeleteNode = (nodeId) => {
       selectedNode.value = null;
     }
 
-    edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId);
+    for (let i = edges.length - 1; i >= 0; i--) {
+      if (edges[i].source === nodeId || edges[i].target === nodeId) {
+        edges.splice(i, 1)
+      }
+    }
   }
-  console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
+  // console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
+}
+// 删除边
+const handleDeleteEdge = () => {
+  const index = edges.findIndex(e => e.id === editingEdgeId.value);
+  if (index !== -1) {
+    edges.splice(index, 1);
+  }
 
+  // forceUpdateNode(payload.nodeId, payload.nodeData);
+  editingEdgeId.value = null;
+  showEdgeSelector.value = false;
 }
 // 结点位置变化
 const handlePositionChange = (payload) => {
@@ -236,7 +247,7 @@ const handleDetailSave = (updatedData) => {
 // 连接结点
 const handleConnectNode = (newEdge) => {
   console.log('[DEBUG] 连接结点边：', newEdge)
-  edges.value.push(newEdge)
+  edges.push(newEdge)
 }
 </script>
 
