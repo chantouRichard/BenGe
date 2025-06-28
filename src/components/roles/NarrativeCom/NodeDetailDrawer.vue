@@ -169,10 +169,12 @@ watch(() => props.nodeData, (newNode) => {
 // 保存处理
 const handleSave = () => {
   console.log('保存表单数据', formData.value);
+  console.log("结点信息修改", props.nodeData)
+  if (!props.nodeData?.id) return;
+  console.log("id", props.nodeData?.id)
 
-  if (!props.nodeData.node?.id) return;
   emit('save', {
-    id: props.nodeData.node?.id,
+    id: props.nodeData?.id,
     data: formData.value
   });
   handleClose();

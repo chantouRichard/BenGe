@@ -1,15 +1,18 @@
 <template>
-  <div 
-    class="custom-node"
-    @click="$emit('click', $event)"
-    :style="stylePosition"
-  >
+  <div class="custom-node" @click="$emit('click', $event)" :style="stylePosition">
+    <!-- 连接点，定义出边起点和终点 -->
+    <Handle type="target" position="left" id="left" :class="['vue-flow__handle', 'handle-left']" />
+    <Handle type="target" position="right" id="right" :class="['vue-flow__handle', 'handle-right']" />
+    <!-- <Handle type="target" position="top" id="top" :class="['vue-flow__handle', 'handle-top']" />
+    <Handle type="target" position="bottom" id="bottom" :class="['vue-flow__handle', 'handle-bottom']" /> -->
+
+    <Handle type="source" position="left" id="left-srouce" :class="['vue-flow__handle', 'handle-left']" />
+    <Handle type="source" position="right" id="right-source" :class="['vue-flow__handle', 'handle-right']" />
+    <!-- <Handle type="source" position="top" id="top-source" :class="['vue-flow__handle', 'handle-top']" />
+    <Handle type="source" position="bottom" id="bottom-source" :class="['vue-flow__handle', 'handle-bottom']" /> -->
     <div class="node-content">
       <span class="node-title">{{ props.data?.title || '未命名节点' }}</span>
-      <button 
-        class="delete-button"
-        @click.stop="handleDelete"
-      >
+      <button class="delete-button" @click.stop="handleDelete">
         ×
       </button>
     </div>
@@ -18,6 +21,7 @@
 
 <script setup>
 import { computed, defineProps, defineEmits } from 'vue'
+import { Handle } from '@vue-flow/core'
 
 const props = defineProps({
   id: String,
@@ -50,7 +54,7 @@ const handleDelete = (event) => {
 
 <style scoped>
 .custom-node {
-  position: relative;
+  position: absolute;
   width: 150px;
   padding: 10px;
   background: #fff;
@@ -90,5 +94,42 @@ const handleDelete = (event) => {
 
 .delete-button:hover {
   background: #cc0000;
+}
+
+.handle-left,
+.handle-right,
+.handle-top,
+.handle-bottom {
+  width: 10px;
+  height: 10px;
+  background: #555;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.handle-left {
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.handle-right {
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.handle-top{
+  transform: translateX(-50%);
+  top: -5px;
+  left: 50%;
+}
+
+.handle-bottom{
+  transform: translateX(-50%);
+  bottom: -5px;
+  left: 50%;
 }
 </style>

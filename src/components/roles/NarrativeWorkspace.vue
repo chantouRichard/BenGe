@@ -1,30 +1,114 @@
 <template>
   <div class="workspace-container">
     <!-- 悬浮工具球 -->
-    <FloatingToolball @add-node="handleAddNode" @export="handleExport" />
+    <FloatingToolball @add-node="handleAddNode" @add-edge="handleCreateEdgeClick" @export="handleExport" />
 
     <!-- 主画布 -->
-    <CanvasArea v-if="nodes.length > 0" :nodes="nodes" :edges="edges" @delete-node="handleDeleteNode"
-      @node-select="handleNodeClick" @node-position-change="handlePositionChange"/>
+    <CanvasArea ref="canvasRef" v-if="nodes.length > 0" :nodes="nodes" :edges="edges" @delete-node="handleDeleteNode"
+      @node-select="handleNodeClick" @edge-select="handleEdgeSelect"
+      @node-position-change="handlePositionChange" @connect-node="handleConnectNode" />
 
     <!-- 节点详情抽屉 -->
-     <div style="height: 100%;width: 100%;">
-    <NodeDetailDrawer :visible="selectedNode" :nodeData="selectedNode" @save="handleDetailSave"
-      @close="selectedNode = null" />
-      </div>
+    <div style="height: 100%;width: 100%;">
+      <NodeDetailDrawer :visible="selectedNode" :nodeData="selectedNode" @save="handleDetailSave"
+        @close="selectedNode = null" />
+
+      <EdgeTypeSelector v-if="showEdgeSelector" :source="selectedNodesForEdge[0]" :target="selectedNodesForEdge[1]"
+        @confirm="handleEdgeConfirm" @cancel="handleEdgeCancel" />
+
+      <EdgeTypeSelector v-if="showEdgeSelector && editingEdgeId"
+        :initialType="edges.find(e => e.id === editingEdgeId)?.data?.type || null"
+        :initialLabel="edges.find(e => e.id === editingEdgeId)?.data?.label || ''"
+        :showDelete="true"
+        @confirm="handleEdgeEditConfirm"
+        @cancel="handleEdgeCancel" @delete-edge="handleDeleteEdge" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import FloatingToolball from './NarrativeCom/FloatingToolball.vue'
 import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import NodeDetailDrawer from './NarrativeCom/NodeDetailDrawer.vue'
+import EdgeTypeSelector from './NarrativeCom/EdgeTypeSelector.vue'
 
 // 使用局部变量管理状态
 const nodes = ref([])
-const edges = ref([])
+const edges = reactive([])
+const canvasRef = ref(null)
 const selectedNode = ref(null)
+const isCreatingEdge = ref(false)
+const selectedNodesForEdge = ref([])
+const editingEdgeId = ref(null)
+const showEdgeSelector = ref(false)
+
+// 用户点击创建边按钮
+const handleCreateEdgeClick = () => {
+  console.log('点击创建边按钮')
+  isCreatingEdge.value = true
+  selectedNodesForEdge.value = []
+  showEdgeSelector.value = false
+}
+
+// 点击边，进入边的修改页面
+const handleEdgeSelect = (edgeId) => {
+  console.log("点击的边的Id", edgeId)
+  editingEdgeId.value = edgeId
+  showEdgeSelector.value = true
+}
+
+// 创建边最终确认
+const handleEdgeConfirm = (edgeType, label) => {
+  if (selectedNodesForEdge.value.length === 2) {
+    const [sourceNode, targetNode] = selectedNodesForEdge.value;
+
+    // 使用 reactive 包裹新边对象
+    const newEdge = reactive({
+      id: `edge-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
+      source: sourceNode.id,
+      target: targetNode.id,
+      sourcePosition: 'right',
+      targetPosition: 'left',
+      type: 'custom',
+      data: reactive({  // 嵌套的 data 也必须是响应式
+        type: edgeType,
+        label: label || ''
+      })
+    });
+
+    edges.push(newEdge); // 直接 push 到 reactive 数组
+  }
+
+  selectedNodesForEdge.value = [];
+  isCreatingEdge.value = false;
+  showEdgeSelector.value = false;
+};
+
+// 修改边的确认
+const handleEdgeEditConfirm = (edgeType, label) => {
+  if (!editingEdgeId.value) return;
+
+  const edge = edges.find(e => e.id === editingEdgeId.value);
+  if (edge) {
+    // 直接修改 reactive 对象的属性
+    edge.data.type = edgeType;
+    edge.data.label = label || '';
+
+    // 调用 CanvasArea 的更新方法（确保传递最新数据）
+    canvasRef.value?.forceUpdateEdge(editingEdgeId.value, edge.data);
+
+    editingEdgeId.value = null;
+    showEdgeSelector.value = false;
+  }
+};
+
+// 取消创建边
+const handleEdgeCancel = () => {
+  selectedNodesForEdge.value = []
+  isCreatingEdge.value = false
+  showEdgeSelector.value = false
+}
 
 const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
@@ -53,9 +137,21 @@ initDemoData()
 
 // 事件处理
 const handleNodeClick = (node) => {
-  console.log("点击了结点", node);
-  selectedNode.value = { ...node };
-  console.log("选中了结点", selectedNode);
+  const actualNode = node.node || node; // 处理两种可能的情况
+
+  if (isCreatingEdge.value) {
+    console.log("当前选择结点", actualNode)
+    if (!selectedNodesForEdge.value.find(n => n.id === actualNode.id)) {
+      selectedNodesForEdge.value.push(actualNode);
+    }
+
+    if (selectedNodesForEdge.value.length === 2) {
+      console.log('已选择两个节点：', selectedNodesForEdge.value);
+      showEdgeSelector.value = true;
+    }
+  } else {
+    selectedNode.value = { ...actualNode };
+  }
 }
 // 添加结点
 const handleAddNode = (event) => {
@@ -64,7 +160,7 @@ const handleAddNode = (event) => {
   const y = rect ? event.clientY - rect.top : 200;
 
   const newNode = {
-    id: nodes.value.length + 1,
+    id: generateNodeId(),
     type: 'custom',
     position: { x, y }, // 动态位置
     data: {
@@ -78,26 +174,49 @@ const handleAddNode = (event) => {
     }
   };
   nodes.value.push(newNode);
+  console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
+
 }
-// 删除结点
+// 删除节点
 const handleDeleteNode = (nodeId) => {
   const index = nodes.value.findIndex(n => n.id === nodeId);
   if (index !== -1) {
-    nodes.value.splice(index, 1); // 删除节点
+    nodes.value.splice(index, 1)
+
     if (selectedNode.value?.id === nodeId) {
-      selectedNode.value = null; // 如果删除的是选中节点，清除选择
+      selectedNode.value = null;
     }
-    // 更新 edges（如果有依赖）
-    edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId);
+
+    for (let i = edges.length - 1; i >= 0; i--) {
+      if (edges[i].source === nodeId || edges[i].target === nodeId) {
+        edges.splice(i, 1)
+      }
+    }
+  }
+  // console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
+}
+// 删除边
+const handleDeleteEdge = () => {
+  const index = edges.findIndex(e => e.id === editingEdgeId.value);
+  if (index !== -1) {
+    edges.splice(index, 1);
+  }
+
+  // forceUpdateNode(payload.nodeId, payload.nodeData);
+  editingEdgeId.value = null;
+  showEdgeSelector.value = false;
+}
+// 结点位置变化
+const handlePositionChange = (payload) => {
+  const { id, position } = payload
+  // console.log('[DEBUG] 结点位置变化：', id, position)
+  const nodeIndex = nodes.value.findIndex(n => n.id === id)
+  if (nodeIndex !== -1) {
+    nodes.value[nodeIndex].position = position
+    nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] } // ✅ 强制 Vue 感知变化
+    // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
   }
 }
-// 处理节点位置变更
-const handlePositionChange = ({ id, position }) => {
-  const nodeIndex = nodes.value.findIndex(n => n.id === id);
-  if (nodeIndex !== -1) {
-    nodes.value[nodeIndex].position = position;
-  }
-};
 // 详情保存回调
 const handleDetailSave = (updatedData) => {
   // console.log('保存的节点数据：', updatedData)
@@ -114,9 +233,21 @@ const handleDetailSave = (updatedData) => {
     } else {
       console.warn('未找到节点 id:', updatedData.id)
     }
+
+    canvasRef.value?.forceUpdateNode(updatedData.id, nodes.value[index].data);
+
+    nodes.value[index] = { ...nodes.value[index] }
   }
 
   selectedNode.value = null // 收起面板
+  console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
+
+}
+
+// 连接结点
+const handleConnectNode = (newEdge) => {
+  console.log('[DEBUG] 连接结点边：', newEdge)
+  edges.push(newEdge)
 }
 </script>
 
