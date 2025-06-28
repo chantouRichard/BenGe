@@ -27,15 +27,31 @@
         </li>
       </ul>
     </div> -->
-    <div style="width: 100px;margin-left: auto;margin-right: auto;font-size: 12px;border-color: black;border-width: 16px;border-radius: 5px;">现在开始聊天吧~</div>
+    <div
+      style="
+        width: 100px;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 12px;
+        border-color: black;
+        border-width: 16px;
+        border-radius: 5px;
+      "
+    >
+      现在开始聊天吧~
+    </div>
     <!-- 聊天内容区域 -->
     <div class="chat-messages" ref="messagesContainer">
       <div
         v-for="(message, index) in messages"
         :key="index"
         :class="[
-          'message', 
-          message.isSystem ? 'message-system' : (message.isMe ? 'message-me' : 'message-other')
+          'message',
+          message.isSystem
+            ? 'message-system'
+            : message.isMe
+            ? 'message-me'
+            : 'message-other',
         ]"
       >
         <div v-if="!message.isSystem" class="message-avatar">
@@ -48,7 +64,9 @@
           </div>
         </div>
         <div class="message-content">
-          <div v-if="!message.isSystem" class="message-sender">{{ message.sender }}</div>
+          <div v-if="!message.isSystem" class="message-sender">
+            {{ message.sender }}
+          </div>
           <div class="message-bubble">{{ message.content }}</div>
           <div class="message-time">{{ message.time }}</div>
         </div>
@@ -93,15 +111,15 @@ export default {
     },
     userId: {
       type: String,
-      default: "anonymous"
+      default: "anonymous",
     },
     userName: {
       type: String,
-      default: "匿名用户"
+      default: "匿名用户",
     },
-    avatar:{
-      type:String,
-      default:loginImage
+    avatar: {
+      type: String,
+      default: loginImage,
     },
     initialMessages: {
       type: Array,
@@ -122,9 +140,7 @@ export default {
     toggleMemberList() {
       this.isMemberListVisible = !this.isMemberListVisible;
     },
-    
 
-    
     sendMessage() {
       if (this.newMessage.trim() === "") return;
 
@@ -135,7 +151,7 @@ export default {
         avatar: this.avatar,
       };
 
-          // 通过 WebSocket 发送
+      // 通过 WebSocket 发送
       if (this.socket && this.socket.readyState === WebSocket.OPEN) {
         this.socket.send(JSON.stringify(messageData));
       } else {
@@ -159,9 +175,9 @@ export default {
     },
     setupWebSocket() {
       // 获取token
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        console.error('未找到token，无法建立WebSocket连接');
+        console.error("未找到token，无法建立WebSocket连接");
         return;
       }
 
@@ -170,29 +186,35 @@ export default {
       this.socket.onopen = () => {
         console.log("WebSocket连接已建立");
         // 连接建立后发送认证信息，使用传入的roomId
-        this.socket.send(JSON.stringify({
-          type: "auth",
-          token: token,
-          roomId: this.roomId,
-          avatar:this.avatar
-        }));
+        this.socket.send(
+          JSON.stringify({
+            type: "auth",
+            token: token,
+            roomId: this.roomId,
+            avatar: this.avatar,
+          })
+        );
       };
 
       this.socket.onmessage = (event) => {
         const msg = JSON.parse(event.data);
-        
+
         if (msg.type === "userInfo") {
           this.currentUserId = msg.userId;
           this.currentUsername = msg.username;
-          console.log('接收到用户信息:', this.currentUserId, this.currentUsername);
+          console.log(
+            "接收到用户信息:",
+            this.currentUserId,
+            this.currentUsername
+          );
         } else if (msg.type === "chat") {
-          this.messages.push({ 
-            ...msg, 
+          this.messages.push({
+            ...msg,
             isMe: msg.userId === this.currentUserId,
             sender: msg.username,
             content: msg.content,
             time: msg.time,
-            avatar: msg.avatar || this.avatar
+            avatar: msg.avatar || this.avatar,
           });
           this.scrollToBottom();
         } else if (msg.type === "system") {
@@ -201,16 +223,35 @@ export default {
             content: msg.message,
             time: this.getCurrentTime(),
             isMe: false,
-            isSystem: true
+            isSystem: true,
           });
           this.scrollToBottom();
         } else if (msg.type === "members") {
           // 处理成员列表更新
-          this.$emit('membersUpdated', msg.members);
-          console.log('收到成员列表更新:', msg.members);
+          const incoming = msg.members || [];
+          const existing = this.members || [];
+
+          // 使用 Map 根据 id 去重（新来的会覆盖旧的）
+          const mergedMap = new Map();
+
+          // 先加已有成员
+          existing.forEach((member) => {
+            mergedMap.set(member.id, member);
+          });
+
+          // 再加新成员（会自动覆盖相同 id 的）
+          incoming.forEach((member) => {
+            mergedMap.set(member.id, member);
+          });
+
+          // 得到去重后的数组
+          const mergedMembers = Array.from(mergedMap.values());
+
+          this.$emit("membersUpdated", mergedMembers);
+          console.log("合并后的成员列表:", mergedMembers);
         } else if (msg.type === "error") {
-          console.error('WebSocket错误:', msg.message);
-          alert('错误: ' + msg.message);
+          console.error("WebSocket错误:", msg.message);
+          alert("错误: " + msg.message);
         }
       };
 
@@ -280,7 +321,6 @@ export default {
 } */
 
 /* 成员列表样式 */
-
 
 /* 聊天消息区域 */
 .chat-messages {
