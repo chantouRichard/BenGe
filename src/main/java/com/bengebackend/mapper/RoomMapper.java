@@ -18,7 +18,19 @@ public interface RoomMapper {
 
     boolean isUserInRoom(@Param("roomId") int roomId, @Param("userId") int userId);
 
-    int addRoomMember(@Param("roomId") int roomId, @Param("userId") int userId);
+    int addRoomMember(@Param("roomId") int roomId, @Param("userId") int userId, @Param("role") int role);
 
     int updateRoomMemberCount(@Param("roomId") int roomId, @Param("increment") int increment);
+
+    int removeRoomMember(@Param("roomId") int roomId, @Param("userId") int userId);
+
+    int getRealMemberCount(@Param("roomId") int roomId);
+
+    int syncRoomMemberCount(@Param("roomId") int roomId);
+
+    List<Integer> getAllRoomIds();
+
+    Room getUserCurrentRoom(@Param("userId") int userId);
+
+    List<RoomDto> getUserOwnedRooms(@Param("userId") int userId);
 }

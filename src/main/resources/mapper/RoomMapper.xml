@@ -2,8 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bengebackend.mapper.RoomMapper">
     <insert id="createRoom" parameterType="com.bengebackend.model.Room" useGeneratedKeys="true" keyProperty="id">
-        insert into room (name, description,havePwd,password,owner_id)
-        values (#{name}, #{description},#{havePwd},#{password},#{ownerId});
+        insert into room (name, description,havePwd,password,owner_id,current_members)
+        values (#{name}, #{description},#{havePwd},#{password},#{ownerId},#{currentMembers});
     </insert>
 
     <select id="getAllRooms" resultType="com.bengebackend.dto.RoomDto">
@@ -12,9 +12,15 @@
             r.name,
             r.description,
             u.username as ownerName,
-            r.current_members as currentMembers
+            COALESCE(member_count.count, 0) as currentMembers,
+            r.havePwd
         FROM room r
         LEFT JOIN users u ON r.owner_id = u.Id
+        LEFT JOIN (
+            SELECT room_id, COUNT(*) as count
+            FROM room_member
+            GROUP BY room_id
+        ) member_count ON r.id = member_count.room_id
         ORDER BY r.created_at DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -34,7 +40,7 @@
 
     <insert id="addRoomMember">
         INSERT INTO room_member (room_id, user_id, role)
-        VALUES (#{roomId}, #{userId}, 0)
+        VALUES (#{roomId}, #{userId}, #{role})
     </insert>
 
     <update id="updateRoomMemberCount">
@@ -42,4 +48,54 @@
         SET current_members = current_members + #{increment}
         WHERE id = #{roomId}
     </update>
+
+    <delete id="removeRoomMember">
+        DELETE FROM room_member
+        WHERE room_id = #{roomId} AND user_id = #{userId}
+    </delete>
+
+    <select id="getRealMemberCount" resultType="int">
+        SELECT COUNT(*) FROM room_member
+        WHERE room_id = #{roomId}
+    </select>
+
+    <update id="syncRoomMemberCount">
+        UPDATE room 
+        SET current_members = (
+            SELECT COUNT(*) 
+            FROM room_member 
+            WHERE room_id = #{roomId}
+        )
+        WHERE id = #{roomId}
+    </update>
+
+    <select id="getAllRoomIds" resultType="int">
+        SELECT id FROM room
+    </select>
+
+    <select id="getUserCurrentRoom" resultType="com.bengebackend.model.Room">
+        SELECT r.* FROM room r
+        INNER JOIN room_member rm ON r.id = rm.room_id
+        WHERE rm.user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="getUserOwnedRooms" resultType="com.bengebackend.dto.RoomDto">
+        SELECT
+            r.id as roomId,
+            r.name,
+            r.description,
+            u.username as ownerName,
+            COALESCE(member_count.count, 0) as currentMembers,
+            r.havePwd
+        FROM room r
+        LEFT JOIN users u ON r.owner_id = u.Id
+        LEFT JOIN (
+            SELECT room_id, COUNT(*) as count
+            FROM room_member
+            GROUP BY room_id
+        ) member_count ON r.id = member_count.room_id
+        WHERE r.owner_id = #{userId}
+        ORDER BY r.created_at DESC
+    </select>
 </mapper>

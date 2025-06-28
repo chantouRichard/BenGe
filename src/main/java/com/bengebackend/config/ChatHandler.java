@@ -93,7 +93,7 @@ public class ChatHandler implements WebSocketHandler {
                     boolean canJoin = roomMapper.isUserInRoom(roomId, authUserId);
                     if (!canJoin) {
                         // 如果用户不在房间中，尝试添加（这里可以根据业务逻辑调整）
-                        int result = roomMapper.addRoomMember(roomId, authUserId);
+                        int result = roomMapper.addRoomMember(roomId, authUserId, 0);
                         if (result <= 0) {
                             log.warn("用户 {} 无法加入房间: roomId = {}", authUserId, roomId);
                             sendErrorMessage(session, "无法加入房间");

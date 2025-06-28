@@ -18,5 +18,6 @@ public class RoomDto {
 
     private int currentMembers;
 
+    private Boolean havePwd;
 
 }
