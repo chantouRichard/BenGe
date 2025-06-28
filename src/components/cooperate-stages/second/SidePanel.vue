@@ -29,6 +29,7 @@
     <div class="chat-area" :style="{ height: isMemberOpen ? '80%' : '95%' }">
       <div class="chat-wrapper">
         <Chat
+          :roomId="roomId"
           :userId="userId"
           :avatar="avatar"
           @membersUpdated="$emit('membersUpdated', $event)"
@@ -65,6 +66,10 @@ export default {
     },
     avatar: {
       type: String,
+      required: true,
+    },
+    roomId: {
+      type: [Number, String],
       required: true,
     },
     isMemberOpen: {

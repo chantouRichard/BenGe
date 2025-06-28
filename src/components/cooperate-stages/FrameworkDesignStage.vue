@@ -246,12 +246,14 @@ function updateMembers(membersList) {
 
 .container {
   width: 100%;
-  height: 100vh; /* 使用视口高度，确保充满整个屏幕 */
+  height: 100vh;
+  /* 使用视口高度，确保充满整个屏幕 */
 
   background-image: url("@/assets/second/secondback2.jpeg");
   background-size: cover;
   background-repeat: no-repeat;
 }
+
 .header {
   display: flex;
   align-items: center;
@@ -288,16 +290,20 @@ function updateMembers(membersList) {
 .main-area {
   display: flex;
   padding: 32px;
-  gap: 20px; /* 子区域间距 */
+  gap: 20px;
+  /* 子区域间距 */
   width: calc(100% - 300px);
   min-width: 827px;
   margin: auto;
   margin-top: 50px;
-  background-color: rgba(0, 0, 0, 0.3); /* 半透明白色背景 */
-  backdrop-filter: blur(8px); /* 毛玻璃模糊效果 */
+  background-color: rgba(0, 0, 0, 0.3);
+  /* 半透明白色背景 */
+  backdrop-filter: blur(8px);
+  /* 毛玻璃模糊效果 */
   height: calc(100% - 150px);
   min-height: 500px;
-  box-sizing: border-box; /* 确保 padding 不超宽 */
+  box-sizing: border-box;
+  /* 确保 padding 不超宽 */
   border-radius: 20px;
 
   /* 其他样式 */
