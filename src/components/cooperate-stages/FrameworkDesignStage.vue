@@ -51,15 +51,35 @@
       />
     </div>
 
-    <!-- 垂直居中的按钮 -->
-    <button class="side-panel-toggle" @click="isPanelCollapsed = !isPanelCollapsed">
-      {{ isPanelCollapsed ? '>' : '<' }}
-    </button>
-  </div>
-</transition>
+              </div>
+            </div>
+          </transition>
+        </div>
 
-</teleport>
-
+        <!-- 聊天区 -->
+        <div
+          class="chat-area"
+          :style="{ height: isMemberOpen ? '80%' : '95%' }"
+        >
+          <div
+            style="
+              width: 100%;
+              height: 100%;
+              margin-left: auto;
+              margin-right: auto;
+              position: relative;
+              overflow: hidden;
+            "
+          >
+            <Chat 
+              :roomId="roomId"
+              :userId="userId" 
+              @membersUpdated="updateMembers" 
+              :avatar="userAvatar" 
+            />
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -69,7 +89,8 @@
 import { onMounted, onBeforeUnmount } from "vue";
 // import Chat from "./Chat.vue";
 // import loginImage from "../../assets/login.png";
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useRoute } from "vue-router";
 
 import { defineEmits } from "vue";
 
@@ -96,6 +117,13 @@ function handleMemberClick(member) {
 import EditArea from "./second/EditArea.vue";
 
 const emit = defineEmits(["updateStage"]);
+
+const route = useRoute();
+
+// 从路由参数获取房间ID，如果没有则使用默认值1
+const roomId = computed(() => {
+  return parseInt(route.params.roomId) || 1;
+});
 
 const changeStage = (newStage) => {
   emit("updateStage", newStage);

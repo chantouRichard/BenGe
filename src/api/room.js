@@ -27,3 +27,23 @@ export function joinRoom(roomId, password = '', applyReason = '') {
         applyReason
     });
 }
+
+// 获取用户当前所在房间
+export function getCurrentRoom() {
+    return request.post('/room/current');
+}
+
+// 退出房间
+export function leaveRoom(roomId) {
+    return request.post(`/room/leave/${roomId}`);
+}
+
+// 获取用户拥有的房间
+export function getOwnedRooms() {
+    return request.post('/room/owned');
+}
+
+// 房主进入自己的房间
+export function enterOwnedRoom(roomId) {
+    return request.post(`/room/enter-owned/${roomId}`);
+}
