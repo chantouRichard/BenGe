@@ -186,12 +186,14 @@ const handleClose = () => {
 
 <style scoped>
 .detail-drawer {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 100%;
-  max-width: 400px;
+  width: 40%;
+  max-width: 300px;
+  height: 100%;
+  /* max-width: 400px; */
   background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
@@ -232,15 +234,30 @@ const handleClose = () => {
   gap: 12px;
 }
 
-/* 动画效果 */
+/* 动画过渡时间和样式 */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.3s ease;
 }
 
-.slide-fade-enter-from,
+/* === 进入动画 === */
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.slide-fade-enter-to {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* === 离开动画 === */
+.slide-fade-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+}
 .slide-fade-leave-to {
   opacity: 0;
   transform: translateX(100%);
 }
+
 </style>

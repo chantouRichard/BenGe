@@ -58,8 +58,35 @@
           </h2>
           <button class="button" @click="changeStage(1)">下一阶段</button>
         </div>
+        <teleport to="body">
+            <transition name="fullscreen-slide">
+          <div class="canvas fullscreen" v-if="isFullScreen">
+            <!-- 全屏版本的 canvas -->
+            <button
+              class="canvasButton"
+              @click="isFullScreen = false"
+              :style="{
+                backgroundImage: `url(${require('@/assets/second/reduce.png')})`,
+              }"
+            ></button>
+            <div style="padding: 20px;">
+            <NarrativeWorkspace />
+            </div>
+          </div>
+          </transition>
+        </teleport>
+
         <div class="canvas">
-            <NarrativeWorkspace/>
+          <button
+            class="canvasButton"
+            @click="isFullScreen = true"
+            :style="{
+              backgroundImage: `url(${require('@/assets/second/enlarge.png')})`,
+            }"
+          ></button>
+          <div style="padding: 20px;height: 100%;">
+            <NarrativeWorkspace />
+            </div>
         </div>
       </div>
 
@@ -68,9 +95,7 @@
         <div class="member-area" :class="{ collapsed: !isMemberOpen }">
           <div class="member-header">
             <h2 style="min-width: 72px">成员区</h2>
-            <button class="toggle-btn" @click="toggleMemberArea">
-              {{ isMemberOpen ? "▲" : "▼" }}
-            </button>
+            
           </div>
           <transition name="collapse">
             <div v-if="isMemberOpen" class="member-list">
@@ -80,7 +105,10 @@
                 :key="member.id"
               >
                 <img :src="member.avatar" alt="avatar" class="member-avatar" />
-                <span class="member-name">{{ member.name }}</span>
+                <div style="display: flex; align-items: flex-start;height: 100%;margin-left: 10px;">
+    <span class="member-name">{{ member.name }}</span>
+</div>
+
               </div>
             </div>
           </transition>
@@ -101,7 +129,7 @@
               overflow: hidden;
             "
           >
-            <Chat :userId="userId" @membersUpdated="updateMembers" />
+            <Chat :userId="userId" @membersUpdated="updateMembers" :avatar="userAvatar" />
           </div>
         </div>
       </div>
@@ -117,13 +145,9 @@ import Chat from "./Chat.vue";
 import { ref } from "vue";
 
 import { defineEmits } from "vue";
-// import { defineProps } from "vue";
-// const props = defineProps({
-//   stage: {
-//     type: Number,
-//     required: true
-//   }
-// });
+
+// 控制全屏
+const isFullScreen = ref(false);
 
 const emit = defineEmits(["updateStage"]);
 
@@ -133,9 +157,7 @@ const changeStage = (newStage) => {
 
 const isMemberOpen = ref(true);
 
-const toggleMemberArea = () => {
-  isMemberOpen.value = !isMemberOpen.value;
-};
+
 
 const userId = "user_" + Math.floor(Math.random() * 1000);
 // const userName = "用户_" + userId.slice(-3);
@@ -274,14 +296,92 @@ function updateMembers(membersList) {
 }
 
 .canvas {
+  position: relative;
   width: 100%;
   height: calc(100% - 100px);
 
   background-image: url(~@/assets/second/canvas.png);
 
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 
   overflow: hidden;
+
+  transition: all 0.5s ease;
+}
+
+.canvas.fullscreen {
+  position: fixed; /* 使其浮动在最顶层 */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999; /* 保证在最顶层 */
+  background-color: white; /* 如需白底，或保持透明 */
+
+  /* ✅ 关键调整项 */
+  background-size: 120% auto; /* 放大宽度，高度自适应 */
+  background-position: center center; /* 始终聚焦中心 */
+  background-repeat: no-repeat;
+
+  transition: all 0.5s ease;
+}
+/* 动画进入 */
+.fullscreen-slide-enter-active {
+  animation: slideDown 0.5s ease-out forwards;
+}
+
+/* 动画离开 */
+.fullscreen-slide-leave-active {
+  animation: slideUp 0.5s ease-in forwards;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.canvasButton {
+  width: 32px;
+  height: 32px;
+
+  border: none;
+  position: absolute; /* 绝对定位 */
+  top: 20px; /* 距离父容器顶部 10px */
+  right: 20px; /* 距离父容器右侧 10px */
+  object-fit: cover;
+
+  background: transparent;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  z-index: 900;
+  transition: all 0.3s ease;
+}
+
+.canvasButton:hover {
+  width: 40px;
+  height: 40px;
 }
 
 /* 折叠/展开动画 */
@@ -305,7 +405,7 @@ function updateMembers(membersList) {
 
 .member-header {
   display: flex;
-  height: 40px;
+  height: 20px;
 
   align-items: center;
 }
@@ -323,7 +423,7 @@ function updateMembers(membersList) {
   flex-direction: column;
   gap: 20px;
 
-  background: transparent;
+  background: black;
   color: white;
 
   border-radius: 8px;
@@ -331,24 +431,26 @@ function updateMembers(membersList) {
   box-sizing: border-box;
 
   /* ❌ 移除固定高度 */
-  /* height: 20%; */
+  height: 32%;
+
 }
 
 .member-list {
   display: flex;
-  flex-wrap: wrap; /* 让项目自动换行 */
-  justify-content: space-evenly; /* 元素均匀分布 */
+  flex-direction: column;
   margin-top: 10px;
-  width: 90%;
+  width: 100%;
   max-width: 100%;
   gap: 24px;
+
+  overflow-y: auto;
+
 }
 
 .member-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   margin-bottom: 4px;
 }
 
@@ -361,7 +463,7 @@ function updateMembers(membersList) {
 }
 
 .member-name {
-  font-size: 16px;
+  font-size: 12px;
   color: white;
 
   width: 54px;
@@ -471,7 +573,8 @@ function updateMembers(membersList) {
   height: 100%;
 }
 .chat-area {
-  height: 85%;
+  height: 68%;
+  max-height: 475px;
   display: flex;
   flex-direction: column;
 

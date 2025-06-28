@@ -2,7 +2,7 @@ import request from './request';
 
 // 用户登录
 export function login(username, password) {
-  return request.get(`/user/login?username=${username}&password=${password}`);
+  return request.post(`/user/login?username=${username}&password=${password}`);
 }
 
 // 用户注册

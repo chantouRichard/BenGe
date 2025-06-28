@@ -15,6 +15,7 @@ export function createRoom(data) {
     ...data,
     havePwd: Boolean(data.havePwd)
   };
+  console.log("我的测试：",roomData);
   return request.post('/room', roomData);
 }
 

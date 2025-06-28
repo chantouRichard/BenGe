@@ -99,6 +99,10 @@ export default {
       type: String,
       default: "匿名用户"
     },
+    avatar:{
+      type:String,
+      default:loginImage
+    },
     initialMessages: {
       type: Array,
       default: () => [],
@@ -110,7 +114,6 @@ export default {
       newMessage: "",
       messages: this.initialMessages,
       socket: null,
-      avatar: loginImage,
       currentUserId: null,
       currentUsername: null,
     };
@@ -170,7 +173,8 @@ export default {
         this.socket.send(JSON.stringify({
           type: "auth",
           token: token,
-          roomId: this.roomId
+          roomId: this.roomId,
+          avatar:this.avatar
         }));
       };
 
@@ -243,7 +247,7 @@ export default {
   /* max-height: 648px; */
   width: 100%;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
   /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
 }

@@ -5,7 +5,7 @@
       <div class="right-menu">
         <div class="menu-item">我的剧本</div>
         <div class="menu-item">帮助</div>
-        <img src="../../assets/thirdback.jpeg" alt="avatar" class="avatar" />
+        <img src="../../assets/login.png" alt="avatar" class="avatar" />
       </div>
     </div>
     <h2 style="margin: 20px 50px 10px; color: white">第三阶段：共同编辑</h2>
@@ -54,8 +54,8 @@
               {{ isMemberOpen ? "▲" : "▼" }}
             </button>
           </div>
-          <transition name="collapse">
-            <div v-if="isMemberOpen" class="member-list">
+          <transition name="fade">
+            <div v-show="isMemberOpen" class="member-list">
               <div
                 class="member-item"
                 v-for="member in members"
@@ -119,8 +119,7 @@ import { marked } from "marked";
 import TurndownService from "turndown";
 import axios from "axios";
 import Chat from "./Chat.vue";
-// import loginImage from "../../assets/login.png";
-import { ref } from "vue";
+import loginImage from "../../assets/login.png";
 
 const route = useRoute();
 const isMemberOpen = ref(true);
@@ -134,15 +133,23 @@ const toggleMemberArea = () => {
 // 注册光标模块
 Quill.register("modules/cursors", QuillCursors);
 
-const userId = "user_" + Math.floor(Math.random() * 1000);
-const userName = "用户_" + userId.slice(-3);
-const userColor = getRandomColor();
-const randomAvatar = Math.floor(Math.random() * 5 + 1); // 1 到 5
-const userAvatar = require(`@/assets/avatar/${randomAvatar}.jpg`);
+// 从路由参数获取房间ID，如果没有则使用默认值1
+const roomId = computed(() => {
+  return parseInt(route.params.roomId) || 1;
+});
 
+// 从localStorage获取用户信息
+const currentUser = computed(() => {
+  const username = localStorage.getItem('username') || '匿名用户';
+  const userId = `user_${username}_${Date.now()}`;
+  return {
+    id: userId,
+    name: username,
+    color: getRandomColor(),
+    avatar: loginImage
+  };
+});
 
-// 固定使用roomId为1进行测试
-const roomId = 1;
 const members = ref([]);
 
 let quill, ydoc, provider, cursorsModule;
@@ -378,25 +385,6 @@ function updateMembers(membersList) {
 </script>
 
 <style scoped>
-/* 折叠/展开动画 */
-.collapse-enter-active,
-.collapse-leave-active {
-  transition: max-height 0.3s ease, opacity 0.3s ease;
-  overflow: hidden;
-}
-
-.collapse-enter-from,
-.collapse-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.collapse-enter-to,
-.collapse-leave-from {
-  max-height: 500px; /* 根据实际内容高度设大一点 */
-  opacity: 1;
-}
-
 .member-header {
     display: flex;
     height: 40px;
@@ -427,27 +415,38 @@ function updateMembers(membersList) {
 
 
 .member-list {
-  display: flex;
-  flex-wrap: wrap; /* 让项目自动换行 */
-  justify-content: space-evenly; /* 元素均匀分布 */
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(120px, 1fr)
+  ); /* 自动换行、每列最小120px */
   margin-top: 10px;
+  justify-content: center; /* 整体居中 */
   width: 90%;
   max-width: 100%;
-  gap: 24px;
 }
-
 
 .member-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.member-item:hover {
+  background-color: #f5f5f5;
+}
+
+.member-avatar-container {
+  position: relative;
+  margin-right: 8px;
 }
 
 .member-avatar {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   background-color: #ccc;
@@ -467,15 +466,17 @@ function updateMembers(membersList) {
 }
 
 .member-name {
-  font-size: 16px;
+  font-size: 14px;
   color: #333;
-  
-  width: 54px;
-  overflow: hidden;      /* 隐藏溢出的内容 */
-  text-overflow: ellipsis; /* 超出部分显示省略号 */
-  white-space: nowrap;   /* 不换行 */
+  font-weight: 500;
 }
 
+.no-members {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  padding: 20px;
+}
 
 .container {
   width: 100%;

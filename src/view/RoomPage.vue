@@ -4,6 +4,7 @@
   </div>
   <div v-else-if="stage == 1">
     <CompleteScriptStage />
+    <!-- <NarrativeWorkspace/> -->
   </div>
 </template>
 
@@ -11,6 +12,7 @@
 import { ref } from "vue";
 import FrameworkDesignStage from "@/components/cooperate-stages/FrameworkDesignStage.vue";
 import CompleteScriptStage from "@/components/cooperate-stages/CompleteScriptStage.vue";
+// import NarrativeWorkspace from "@/components/roles/NarrativeWorkspace.vue";
 
 const stage = ref(0);
 

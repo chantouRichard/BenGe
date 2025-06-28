@@ -181,7 +181,10 @@ async function enterRoom(room) {
         // 密码错误，需要重新输入密码
         return 'needPassword';
       } else {
-        ElMessage.error(result || '加入房间失败');
+        if(result == "您已经在房间中"){
+          router.push(`/room/${room.roomId}`);
+        }
+        else ElMessage.error(result || '加入房间失败');
         return false;
       }
     } catch (error) {
