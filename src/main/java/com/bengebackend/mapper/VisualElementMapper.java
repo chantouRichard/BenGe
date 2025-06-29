@@ -8,7 +8,6 @@ import java.util.List;
 /**
  * 可视化元素数据访问层
  */
-@Mapper
 public interface VisualElementMapper {
     
     /**

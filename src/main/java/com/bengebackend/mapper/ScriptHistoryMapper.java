@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 剧本历史数据访问层
  */
-@Mapper
+
 public interface ScriptHistoryMapper {
     
     /**

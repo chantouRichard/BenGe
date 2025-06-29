@@ -86,6 +86,7 @@ public class ScriptServiceImpl implements ScriptService {
         newScript.setLastUpdated(LocalDateTime.now());
         newScript.setStage(1);
 
+        System.out.println("222222222:" + newScript);
         scriptMapper.insert(newScript);
 
         ScriptDetailDto dto = new ScriptDetailDto();
@@ -151,7 +152,7 @@ public class ScriptServiceImpl implements ScriptService {
     }
 
     @Override
-    public ScriptDetailDto getCompScriptAndDesc(Script script) {
+    public ScriptDetailDto getCompSctiptAndDesc(Script script) {
         return getScriptByIdAsync(script.getId());
     }
 

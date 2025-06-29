@@ -2,58 +2,37 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bengebackend.mapper.VisualElementMapper">
 
-    <resultMap id="BaseResultMap" type="com.bengebackend.model.VisualElement">
-        <id column="id" property="id" jdbcType="INTEGER"/>
-        <result column="script_id" property="scriptId" jdbcType="INTEGER"/>
-        <result column="type" property="type" jdbcType="VARCHAR"/>
-        <result column="name" property="name" jdbcType="VARCHAR"/>
-        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
-        <result column="image_url" property="imageUrl" jdbcType="VARCHAR"/>
-        <result column="image_generated_at" property="imageGeneratedAt" jdbcType="TIMESTAMP"/>
-    </resultMap>
-
-    <sql id="Base_Column_List">
-        id, script_id, type, name, description, image_url, image_generated_at
-    </sql>
-
-    <select id="selectByScriptId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-        SELECT 
-        <include refid="Base_Column_List"/>
-        FROM visual_element 
-        WHERE script_id = #{scriptId}
+    <!-- 根据剧本ID查询可视化元素 -->
+    <select id="selectByScriptId" resultType="com.bengebackend.model.VisualElement">
+        SELECT * FROM visual_element WHERE script_id = #{scriptId};
     </select>
 
-    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-        SELECT 
-        <include refid="Base_Column_List"/>
-        FROM visual_element 
-        WHERE id = #{id}
+    <!-- 根据ID查询可视化元素 -->
+    <select id="selectById" resultType="com.bengebackend.model.VisualElement">
+        SELECT * FROM visual_element WHERE id = #{id};
     </select>
 
+    <!-- 插入新可视化元素 -->
     <insert id="insert" parameterType="com.bengebackend.model.VisualElement" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO visual_element (
-            script_id, type, name, description, image_url, image_generated_at
-        ) VALUES (
-            #{scriptId}, #{type}, #{name}, #{description}, #{imageUrl}, #{imageGeneratedAt}
-        )
+        INSERT INTO visual_element (script_id, type, name, description, image_url, image_generated_at) 
+        VALUES (#{scriptId}, #{type}, #{name}, #{description}, #{imageUrl}, #{imageGeneratedAt});
     </insert>
 
+    <!-- 更新可视化元素 -->
     <update id="update" parameterType="com.bengebackend.model.VisualElement">
         UPDATE visual_element 
-        SET type = #{type}, 
-            name = #{name}, 
-            description = #{description}, 
-            image_url = #{imageUrl}, 
-            image_generated_at = #{imageGeneratedAt}
-        WHERE id = #{id}
+        SET type = #{type}, name = #{name}, description = #{description}, image_url = #{imageUrl}, image_generated_at = #{imageGeneratedAt}
+        WHERE id = #{id};
     </update>
 
-    <delete id="deleteById" parameterType="java.lang.Integer">
-        DELETE FROM visual_element WHERE id = #{id}
+    <!-- 删除可视化元素 -->
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM visual_element WHERE id = #{id};
     </delete>
 
-    <delete id="deleteByScriptId" parameterType="java.lang.Integer">
-        DELETE FROM visual_element WHERE script_id = #{scriptId}
+    <!-- 根据剧本ID删除可视化元素 -->
+    <delete id="deleteByScriptId" parameterType="int">
+        DELETE FROM visual_element WHERE script_id = #{scriptId};
     </delete>
 
 </mapper>

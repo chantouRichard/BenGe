@@ -2,9 +2,7 @@ package com.bengebackend.controller;
 
 import com.bengebackend.dto.ScriptDetailDto;
 import com.bengebackend.dto.ScriptFrameworkDto;
-import com.bengebackend.entity.ScriptReplyRequestEntity;
-import com.bengebackend.entity.ScriptUpdateRequestEntity;
-import com.bengebackend.entity.ScriptVisualRequestEntity;
+import com.bengebackend.entity.*;
 import com.bengebackend.model.Script;
 import com.bengebackend.model.ScriptAnalysis;
 import com.bengebackend.service.ScriptService;
@@ -26,6 +24,74 @@ public class ScriptController {
 
     @Autowired
     private ScriptService scriptService;
+
+
+    /**
+     * 生成剧本方向标语
+     */
+
+//    @Autowired
+//    private QwenChatModel qwenChatModel;
+
+    @PostMapping("/directions")
+    public ResponseEntity<Object> generateSlogan(@RequestBody SloganRequestEntity request) {
+
+//        String response = qwenChatModel.chat("""
+//                请根据以下关键词生成完整的剧本杀广告,
+//                严格按照以下格式生成内容：
+//                剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
+//                每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
+//                关键词包括以下几点：
+//                """ + request.getPrompt());
+//        if (response == null || response.isEmpty()) {
+//            return ResponseEntity.badRequest().body("生成剧本方向标语失败");
+//        }
+//        // 解析生成的内容
+//        String[] parts = response.split("\\n");
+//        if (parts.length < 3) {
+//            return ResponseEntity.badRequest().body("生成的内容格式不正确");
+//        }
+//        String background = parts[0].replace("剧本背景: ", "").trim();
+//        String playerGoal = parts[1].replace("玩家目标: ", "").trim();
+//        String coreIdea = parts[2].replace("核心创意: ", "").trim();
+//        // 创建返回对象
+//        SloganResponseDto sloganResponse = new SloganResponseDto();
+//        sloganResponse.setSlogans(List.of(
+//                new Slogan("剧本背景", background),
+//                new Slogan("玩家目标", playerGoal),
+//                new Slogan("核心创意", coreIdea)
+//        ));
+//        return ResponseEntity.ok(sloganResponse);
+        return  ResponseEntity.ok("");
+    }
+
+    /**
+     * 流式生成剧本方向标语
+     */
+    @PutMapping("/directions/stream")
+    public ResponseEntity<String> streamGenerateSlogan(@RequestBody Object request) {
+
+        return ResponseEntity.ok("");
+    }
+
+    /**
+     * 完成流式标语生成
+     */
+    @PutMapping("/directions/stream-complete")
+    public ResponseEntity<Object> streamCompleteGenerateSlogan(@RequestBody Object request) {
+
+        return ResponseEntity.ok().body("");
+    }
+
+    /**
+     * 聊天流式接口
+     */
+    @PostMapping("/chat/stream")
+    public ResponseEntity<String> chatStream(@RequestBody Object request) {
+
+        return ResponseEntity.ok("AI服务暂未实现");
+    }
+
 
     /**
      * 根据剧本ID获取剧本详情
@@ -64,6 +130,7 @@ public class ScriptController {
     @PostMapping("/create")
     public ResponseEntity<ScriptDetailDto> createNewScript() {
         Integer userId = getCurrentUserId();
+        System.out.println("111111111111");
         ScriptDetailDto result = scriptService.initializeScriptAsync(userId);
         return ResponseEntity.ok(result);
     }
@@ -121,7 +188,7 @@ public class ScriptController {
             return ResponseEntity.notFound().build();
         }
 
-        ScriptDetailDto result = scriptService.getCompScriptAndDesc(scriptDto.getScript());
+        ScriptDetailDto result = scriptService.getCompSctiptAndDesc(scriptDto.getScript());
         return ResponseEntity.ok(result);
     }
 
@@ -172,12 +239,24 @@ public class ScriptController {
 
     /**
      * 获取当前用户ID
+     * 参考C#实现: User.FindFirst(ClaimTypes.NameIdentifier)?.Value
      */
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof String) {
-            return Integer.parseInt((String) authentication.getPrincipal());
+
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            try {
+                // 获取存储在 authentication 中的 userId（保存在 details 字段）
+                Integer userId = (Integer) authentication.getDetails();  // 强制转换为 Integer 类型
+                return userId;  // 返回 userId
+            } catch (Exception e) {
+                System.out.println("Error retrieving userId: " + e.getMessage());
+                return 1;  // 如果出错，返回默认的 1
+            }
         }
-        return 1;
+
+        return 1;  // 如果未认证，返回默认的 1
     }
+
 }
