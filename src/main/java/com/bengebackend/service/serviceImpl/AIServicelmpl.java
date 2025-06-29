@@ -1,99 +1,55 @@
 package com.bengebackend.service.serviceImpl;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.bengebackend.entity.AIStruct.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 
-import com.bengebackend.entity.AIAnalysisResult;
-import com.bengebackend.entity.ImageParameters;
 import com.bengebackend.entity.AIMsgDevide;
-import com.bengebackend.entity.AIStruct.*;
 import com.bengebackend.service.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.util.stream.IntStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import okhttp3.*;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.Duration;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 @Service
 public class AIServicelmpl implements AIService {
-    @Autowired
-    private final OkHttpClient _httpClient;
+    private static final String XFAPP_ID = "0772d014";
+    private static final String HiDreamAPI_SECRET = "ZDY3NzA0ZTNkZGFiMDZmZjc5ZGNmMzBk";
+    private static final String HiDreamAPI_KEY = "6e7c2a3271a09fcbb55f1d5e5e4c38cd";
 
-    @Autowired
-    private final OkHttpClient _client;
+    private static final String HIDREAM_CREATE_URL = "https://cn-huadong-1.xf-yun.com/v1/private/s3fd61810/create";
+    private static final String HIDREAM_QUERY_URL = "https://cn-huadong-1.xf-yun.com/v1/private/s3fd61810/query";
 
-    @Autowired
-    private final ObjectMapper objectMapper;
-
-    private static final String API_URL = "https://spark-api-open.xf-yun.com/v2/chat/completions";
-    private static final String API_KEY = "ZxztQfIySwHMqrLvRLGa:gZdZClyqiPxeoHVTZQbO";
-
-    private static final String API_BASE_URL = "https://api.deepseek.com/";
-    private static final String PICTURE_API_KEY = "sk-817d27e9c883406a87d98eb23fc4b1a9";
-    private static final String PICTURE_URL = "https://dashscope.aliyuncs.com";
-    private final ExecutorService executorService;
-
-    public AIServicelmpl(OkHttpClient client) {
-        // Stage 1 - Configure first client
-        this._client = client.newBuilder()
-                .addInterceptor(chain -> {
-                    HttpUrl newUrl = HttpUrl.parse("https://api.chatanywhere.tech")
-                            .newBuilder()
-                            .addPathSegments(chain.request().url().encodedPath().substring(1))
-                            .build();
-
-                    Request newRequest = chain.request().newBuilder()
-                            .url(newUrl)
-                            .header("Authorization", "Bearer sk-itFhufoh4wQKGkvyfiFE7BjyzL4aZAjMMqJIKQZWAwsULDm9")
-                            .build();
-                    return chain.proceed(newRequest);
-                })
-                .build();
-
-        // Configure Jackson ObjectMapper
-        this.objectMapper = new ObjectMapper()
-                .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
-                .setSerializationInclusion(JsonInclude.Include.ALWAYS)
-                .enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
-
-        // Stage 2 - Create second client
-        this._httpClient = new OkHttpClient.Builder()
-                .connectTimeout(6, TimeUnit.MINUTES)
-                .readTimeout(6, TimeUnit.MINUTES)
-                .writeTimeout(6, TimeUnit.MINUTES)
-                .addInterceptor(chain -> {
-                    Request newRequest = chain.request().newBuilder()
-                            .header("Authorization", "Bearer sk-8dbe5de96f5644849250648772aff5e2")
-                            .build();
-                    return chain.proceed(newRequest);
-                })
-                .build();
-        this.executorService = Executors.newFixedThreadPool(10);
+    public AIServicelmpl() {
     }
 
     @Override
@@ -106,7 +62,7 @@ public class AIServicelmpl implements AIService {
         });
 
         // 获取API输出
-        return GetAPIOutputAsync(msgs)
+        return GetAPIOutputAsync(msgs, "x1")
                 .thenApply(content -> {
                     AIMsgDevide devidedMsg = new AIMsgDevide();
                     DevideScriptContent(devidedMsg, content, true);
@@ -114,58 +70,8 @@ public class AIServicelmpl implements AIService {
                 });
     }
 
-    public static void DevideScriptContent(AIMsgDevide devidedMsg, String content, boolean setReplyAndTitle) {
-        String[] parts;
-        if (setReplyAndTitle) {
-            parts = content.split("》》》", 2);
-            if (parts.length == 2)
-                devidedMsg.setMsgForUser(parts[0]);
-            else
-                System.out.println("未找到分隔符》》》，回答与剧本内容分割失败");
-
-            parts = content.split("#", 2);
-            parts = parts[1].split("---", 2);
-            devidedMsg.setTitle(parts[0].replaceAll("\\s+", ""));
-            if (parts.length != 2)
-                System.out.println("未找到分隔符---，分割失败");
-            devidedMsg.setStrScript(parts[1]);
-        } else {
-            devidedMsg.setStrScript(content);
-        }
-
-        parts = content.split("## 背景\\s*", 2);
-        parts = parts[1].split("---", 2);
-        devidedMsg.setBackground(parts[0]);
-        if (parts.length != 2)
-            System.out.println("未找到分隔符 ## 背景 ，分割失败");
-
-        parts = parts[1].split("## 人物剧本", 2);
-        parts = parts[1].split("---", 2);
-        String temp_str[] = parts[0].split("-CHR");
-        if (temp_str.length == 1)
-            System.out.println("未找到分隔符 -CHR ，分割失败");
-        devidedMsg.setChrScript(new ArrayList<>(Arrays.asList(temp_str).subList(1, temp_str.length)));
-
-        parts = parts[1].split("## 线索", 2);
-        parts = parts[1].split("---", 2);
-        temp_str = parts[0].split("-C>");
-        if (temp_str.length == 1)
-            System.out.println("未找到分隔符 -C> ，分割失败");
-        devidedMsg.setClues(new ArrayList<>(Arrays.asList(temp_str).subList(1, temp_str.length)));
-
-        parts = parts[1].split("## 真相", 2);
-        parts = parts[1].split("---", 2);
-        devidedMsg.setTrues(parts[0]);
-        if (parts.length != 2)
-            System.out.println("未找到分隔符 --- ，分割失败");
-
-        parts = parts[1].split("## 组织者手册", 2);
-        parts = parts[1].split("---", 2);
-        devidedMsg.setGoBook(parts[0]);
-    }
-
     @Override
-    public static CompletableFuture<String> GenDetail(String Frame, String Title) {
+    public CompletableFuture<String> GenDetail(String Frame, String Title) {
         AIMsgDevide devidedMsg = new AIMsgDevide(Title, Frame);
         DevideScriptContent(devidedMsg, Frame, false);
         List<List<Map<String, String>>> messagesList = new ArrayList<>(); // 0背景 4-n人物剧本 1线索 2真相 3组织者手册
@@ -237,20 +143,120 @@ public class AIServicelmpl implements AIService {
     }
 
     @Override
-    public CompletableFuture<String> GetAPIOutputAsync(List<Map<String, String>> msgs) {
+    public CompletableFuture<String> AnalyzeScriptContent(String StrScript) {
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of(
+                "role", "system",
+                "content", AnalyzePrompt));
+        messages.add(Map.of(
+                "role", "user",
+                "content", StrScript));
+        return GetAPIOutputAsync(messages, "4.0Ultra");
+    }
+
+    @Override
+    public CompletableFuture<List<List<List<String>>>> GetThreeTypesOfDesc(String strScript) {
+        // 1. 准备三种请求消息
+        List<List<Map<String, String>>> messageList = IntStream.range(0, 3)
+                .mapToObj(i -> List.of(
+                        Map.of("role", "system", "content", GetDescPrompt[i]),
+                        Map.of("role", "user", "content", strScript)))
+                .collect(Collectors.toList());
+
+        // 2. 分批处理（每批最多2个请求）
+        List<CompletableFuture<List<List<String>>>> allFutures = new ArrayList<>();
+
+        for (int i = 0; i < messageList.size(); i += 2) {
+            int end = Math.min(i + 2, messageList.size());
+            List<List<Map<String, String>>> batch = messageList.subList(i, end);
+
+            // 处理当前批次
+            List<CompletableFuture<List<List<String>>>> batchFutures = batch.stream()
+                    .map(msgs -> ParseAIRespOfGetDesc(GetAPIOutputAsync(msgs, "4.0Ultra")))
+                    .collect(Collectors.toList());
+
+            // 等待当前批次完成
+            CompletableFuture<Void> batchDone = CompletableFuture.allOf(
+                    batchFutures.toArray(new CompletableFuture[0]));
+
+            // 添加到总列表
+            batchFutures.forEach(allFutures::add);
+
+            // 等待当前批次完成再继续下一批
+            batchDone.join();
+        }
+
+        // 3. 合并所有结果
+        return CompletableFuture.allOf(allFutures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> allFutures.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public CompletableFuture<String> GenImage(String Description, String NegPrompt) {
+        try {
+            // 异步创建任务
+            CompletableFuture<String> taskFuture = CreateGenImageTaskAsync(Description, NegPrompt);
+
+            // 当创建任务完成后处理结果
+            return taskFuture.thenCompose(taskId -> {
+                System.out.println("创建任务成功，任务ID: " + taskId);
+                return GetImageURLAsync(taskId)
+                        .thenCompose(url -> {
+                            if (url != null) {
+                                return DownloadImageToBase64Async(url);
+                            }
+                            return null;
+                        });
+            }).exceptionally(e -> {
+                System.err.println("创建任务失败: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public CompletableFuture<String> GetAPIOutputAsync(List<Map<String, String>> messages, String ModelName) {
+        String[] APIPassword = { "ZxztQfIySwHMqrLvRLGa:gZdZClyqiPxeoHVTZQbO",
+                "IpOQfvhLEITliSekghNa:SqZiQwEmoHfKXqIaIVSi" };
+        String[] API_URL = { "https://spark-api-open.xf-yun.com/v2/chat/completions",
+                "https://spark-api-open.xf-yun.com/v1/chat/completions" };
+        int ModelNum = 1;
         ObjectMapper mapper = new ObjectMapper();
         String requestBody;
         try {
-            requestBody = mapper.writeValueAsString(Map.of(
-                    "model", "x1",
-                    "user", "user_id",
-                    "messages", msgs,
-                    "stream", false,
-                    "tools", List.of(Map.of(
-                            "type", "web_search",
-                            "web_search", Map.of(
-                                    "enable", true,
-                                    "search_mode", "deep")))));
+            if (ModelName == "x1") {
+                requestBody = mapper.writeValueAsString(Map.of(
+                        "model", "x1",
+                        "user", "user_id",
+                        "messages", messages,
+                        "stream", false,
+                        "max_tokens", 32768,
+                        "tools", List.of(Map.of(
+                                "type", "web_search",
+                                "web_search", Map.of(
+                                        "enable", false,
+                                        "search_mode", "deep")))));
+                ModelNum = 0;
+            } else {
+                requestBody = mapper.writeValueAsString(Map.of(
+                        "model", "4.0Ultra",
+                        "user", "user_id",
+                        "messages", messages,
+                        "stream", false,
+                        "max_tokens", 8192,
+                        "tools", List.of(Map.of(
+                                "type", "web_search",
+                                "web_search", Map.of(
+                                        "enable", false,
+                                        "search_mode", "deep"))),
+                        "response_format", Map.of("type", "text")));
+                ModelNum = 1;
+            }
         } catch (JsonProcessingException e) {
             System.err.println("JSON处理失败: " + e.getMessage());
             return null;
@@ -258,8 +264,8 @@ public class AIServicelmpl implements AIService {
 
         // 2. 创建 HTTP 请求
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL))
-                .header("Authorization", "Bearer " + API_KEY)
+                .uri(URI.create(API_URL[ModelNum]))
+                .header("Authorization", "Bearer " + APIPassword[ModelNum])
                 .header("content-type", "application/json")
                 .POST(BodyPublishers.ofString(requestBody))
                 .build();
@@ -296,376 +302,325 @@ public class AIServicelmpl implements AIService {
                 });
     }
 
-    @Override
-    public CompletableFuture<String> GetV3Output(List<Message> msgs) {
-        Supplier<CompletableFuture<String>> asyncTask = () -> {
-            try {
-                // 2. 准备请求（同步部分）
-                String json = objectMapper.writeValueAsString(
-                        new ApiRequest("deepseek-chat",
-                                msgs.stream()
-                                        .map(m -> new Message(m.getRole(), m.getContent()))
-                                        .collect(Collectors.toList()),
-                                8192));
+    public void DevideScriptContent(AIMsgDevide devidedMsg, String content, boolean setReplyAndTitle) {
+        String[] parts;
+        if (setReplyAndTitle) {
+            parts = content.split("》》》", 2);
+            if (parts.length == 2)
+                devidedMsg.setMsgForUser(parts[0]);
+            else
+                System.out.println("未找到分隔符》》》，回答与剧本内容分割失败");
 
-                // 3. 创建异步HTTP调用
-                CompletableFuture<Response> responseFuture = new CompletableFuture<>();
-                _httpClient.newCall(
-                        new Request.Builder()
-                                .url(API_BASE_URL + "chat/completions")
-                                .post(RequestBody.create(json, MediaType.get("application/json")))
-                                .build())
-                        .enqueue(new Callback() {
-                            @Override
-                            public void onFailure(Call call, IOException e) {
-                                responseFuture.completeExceptionally(e);
-                            }
+            parts = content.split("#", 2);
+            parts = parts[1].split("---", 2);
+            devidedMsg.setTitle(parts[0].replaceAll("\\s+", ""));
+            if (parts.length != 2)
+                System.out.println("未找到分隔符---，分割失败");
+            devidedMsg.setStrScript(parts[1]);
+        } else {
+            devidedMsg.setStrScript(content);
+        }
 
-                            @Override
-                            public void onResponse(Call call, Response response) {
-                                responseFuture.complete(response);
-                            }
-                        });
+        parts = content.split("## 背景\\s*", 2);
+        parts = parts[1].split("## 人物剧本", 2);
+        devidedMsg.setBackground(parts[0]);
+        if (parts.length != 2)
+            System.out.println("分割背景失败");
 
-                // 4. 处理响应（异步部分）
-                return responseFuture.thenApply(response -> {
-                    try (response) {
-                        String body = response.body().string();
-                        return objectMapper.readValue(body, DeepSeekResponse.class)
-                                .getChoices().get(0).getMes().getContent()
-                                .replaceAll("^`+|`+$", "")
-                                .replaceAll("^json\\s*", "")
-                                .trim();
-                    } catch (Exception e) {
-                        throw new CompletionException(e);
-                    }
-                });
+        parts = content.split("## 人物剧本", 2);
+        parts = parts[1].split("## 线索", 2);
+        String temp_str[] = parts[0].split("CHR");
+        if (temp_str.length == 1)
+            System.out.println("未找到分隔符 CHR, 分割人物剧本失败");
+        devidedMsg.setChrScript(new ArrayList<>(Arrays.asList(temp_str).subList(1, temp_str.length)));
 
-            } catch (JsonProcessingException e) {
-                throw new CompletionException(e);
-            }
-        };
+        parts = parts[1].split("## 真相", 2);
+        temp_str = parts[0].split("C>");
+        if (temp_str.length == 1)
+            System.out.println("未找到分隔符 C> ，分割真相失败");
+        devidedMsg.setClues(new ArrayList<>(Arrays.asList(temp_str).subList(1, temp_str.length)));
 
-        // 5. 显式指定类型参数并提交任务
-        return CompletableFuture.supplyAsync(asyncTask, executorService)
-                .thenCompose(Function.identity());
+        parts = parts[1].split("## 组织者手册", 2);
+        devidedMsg.setTrues(parts[0]);
+        if (parts.length != 2)
+            System.out.println("未找到分隔符，分割真相失败");
+
+        devidedMsg.setGoBook(parts[1]);
     }
 
-    @Override
-    public CompletableFuture<String> AnalyzeScriptContent(String scriptContent) {
-        // 1. 准备消息列表
-        List<Message> msgs = List.of(
-                new Message("system", AnalyzePrompt),
-                new Message("user", scriptContent));
-
-        // 2. 链式处理异步结果
-        return GetApiOutput(msgs)
-                .thenApply(apiResponse -> {
-                    try {
-                        // 3. 反序列化结果
-                        AIAnalysisResult analysisResult = objectMapper.readValue(apiResponse, AIAnalysisResult.class);
-                        // 4. 转换为Markdown
-                        return ConvertToMarkdown(analysisResult);
-                    } catch (JsonProcessingException e) {
-                        throw new CompletionException("Failed to parse API response", e);
-                    }
-                })
-                .exceptionally(ex -> {
-                    System.err.println("分析失败: " + ex.getMessage());
-                    return "分析失败: " + ex.getMessage();
-                });
-    }
-
-    @Override
-    public String ConvertToMarkdown(AIAnalysisResult result) {
-        if (result == null) {
-            return "无分析结果";
-        }
-
-        StringBuilder markdown = new StringBuilder();
-
-        // 1. 添加标题
-        markdown.append("## 游戏脚本分析报告\n\n");
-
-        // 2. 亮点部分
-        markdown.append("### ✨ 亮点\n");
-        if (result.getPoint() != null && !result.getPoint().isEmpty()) {
-            for (String point : result.getPoint()) {
-                markdown.append("- ").append(point).append("\n");
-            }
-        } else {
-            markdown.append("- 无特别亮点\n");
-        }
-        markdown.append("\n");
-
-        // 3. 难点部分
-        markdown.append("### ⚠️ 难点\n");
-        if (result.getDifficulty() != null && !result.getDifficulty().isEmpty()) {
-            for (String difficulty : result.getDifficulty()) {
-                markdown.append("- ").append(difficulty).append("\n");
-            }
-        } else {
-            markdown.append("- 无明显难点\n");
-        }
-        markdown.append("\n");
-
-        // 4. 改进建议
-        markdown.append("### 💡 改进建议\n");
-        if (result.getSuggestion() != null && !result.getSuggestion().isEmpty()) {
-            for (String suggestion : result.getSuggestion()) {
-                markdown.append("- ").append(suggestion).append("\n");
-            }
-        } else {
-            markdown.append("- 无改进建议\n");
-        }
-        markdown.append("\n");
-
-        // 5. 评分部分（表格形式）
-        markdown.append("### ⭐ 综合评分\n");
-        markdown.append("| 维度 | 评分（满分100） |\n");
-        markdown.append("|------|--------------|\n");
-        markdown.append("| 逻辑性 | ").append(result.getLogicality() != -1 ? result.getLogicality() : 0).append(" |\n");
-        markdown.append("| 故事性 | ").append(result.getStoriness() != -1 ? result.getStoriness() : 0).append(" |\n");
-        markdown.append("| 体验感 | ").append(result.getExperience() != -1 ? result.getExperience() : 0).append(" |\n");
-        markdown.append("\n");
-
-        // 6. 添加总结
-        double avgScore = (result.getLogicality() +
-                result.getStoriness() +
-                result.getExperience()) / 3.0;
-        markdown.append(String.format("**综合平均分：%.1f/100**", avgScore));
-
-        return markdown.toString();
-    }
-
-    @Override
-    public CompletableFuture<ImageMsgs> GenDescription(String finalScript) {
-        // 准备三个不同的消息列表
-        List<Message> chrMsgs = new ArrayList<>();
-        chrMsgs.add(new Message("system", DescChr));
-        chrMsgs.add(new Message("user", finalScript + "\n\n" + "请帮我描述并补充以上剧本中的人物外貌，并以json的格式输出"));
-
-        List<Message> sceneMsgs = new ArrayList<>();
-        sceneMsgs.add(new Message("system", DescScene));
-        sceneMsgs.add(new Message("user", finalScript + "\n\n" + "请帮我提取并补充以上剧本中的场景描绘，并以json的格式输出"));
-
-        List<Message> propMsgs = new ArrayList<>();
-        propMsgs.add(new Message("system", DescProp));
-        propMsgs.add(new Message("user", finalScript + "\n\n" + "请帮我提取并补充以上剧本对关键道具的外观描写，并以json的格式输出"));
-
-        // 创建三个异步任务
-        CompletableFuture<String> chrTask = GetV3Output(chrMsgs);
-        CompletableFuture<String> sceneTask = GetV3Output(sceneMsgs);
-        CompletableFuture<String> propTask = GetV3Output(propMsgs);
-
-        // 使用ObjectMapper进行JSON反序列化
+    private CompletableFuture<List<List<String>>> ParseAIRespOfGetDesc(CompletableFuture<String> future) {
         ObjectMapper objectMapper = new ObjectMapper();
+        return future.thenApply(response -> {
+            try {
+                response = response.replaceAll("`*$", "");
+                response = response.replaceAll("`*json", "");
 
-        // 合并所有任务
-        return CompletableFuture.allOf(chrTask, sceneTask, propTask)
-                .thenApplyAsync(ignored -> {
-                    try {
-                        ThingDesc chrDesc = objectMapper.readValue(chrTask.join(), ThingDesc.class);
-                        ThingDesc sceneDesc = objectMapper.readValue(sceneTask.join(), ThingDesc.class);
-                        ThingDesc propDesc = objectMapper.readValue(propTask.join(), ThingDesc.class);
+                Map<String, Object> json = objectMapper.readValue(
+                        response, new TypeReference<Map<String, Object>>() {
+                        });
 
-                        List<ThingDesc> allDesc = new ArrayList<>();
-                        allDesc.add(chrDesc);
-                        allDesc.add(sceneDesc);
-                        allDesc.add(propDesc);
-
-                        return new ImageMsgs(allDesc);
-                    } catch (Exception e) {
-                        throw new CompletionException(e);
-                    }
-                })
-                .exceptionally(ex -> {
-                    System.err.println("API请求失败: " + ex.getCause().getMessage());
-                    return null;
-                });
+                List<List<String>> nameAndDesc = new ArrayList<>();
+                List<String> temp = (List<String>) json.get("name");
+                nameAndDesc.add(temp);
+                temp = (List<String>) json.get("description");
+                nameAndDesc.add(temp);
+                return nameAndDesc;
+            } catch (Exception e) {
+                throw new CompletionException("解析API响应失败", e);
+            }
+        }).exceptionally(ex -> {
+            System.err.println("获取描述失败: " + ex.getCause().getMessage());
+            return null;
+        });
     }
 
-    @Override
-    public CompletableFuture<String> GenerateImageUrl(String type, String name, String imageDesc) {
-        CompletableFuture<String> result;
-
-        switch (type) {
-            case "Character":
-                result = GenerateImagesAsync(imageDesc + "  写实主义", null)
-                        .thenApply(strtemp -> {
-                            if (strtemp == null || strtemp.isEmpty()) {
-                                return null;
-                            }
-                            return strtemp;
-                        });
-                break;
-            case "Scene":
-                result = GenerateImagesAsync(name + "：" + imageDesc, "不要生成人物、人、人类、男人、女人、小孩、脸、行人")
-                        .thenApply(strtemp -> {
-                            if (strtemp == null || strtemp.isEmpty()) {
-                                return null;
-                            }
-                            return strtemp;
-                        });
-                break;
-            default:
-                result = GenerateImagesAsync(name + "：" + imageDesc, "不要生成人物、人、人类、男人、女人、小孩、脸、行人")
-                        .thenApply(strtemp -> {
-                            if (strtemp == null || strtemp.isEmpty()) {
-                                return null;
-                            }
-                            return strtemp;
-                        });
-                break;
-        }
-
-        return result;
+    private String HmacSha256(String secret, String message)
+            throws NoSuchAlgorithmException, InvalidKeyException {
+        Mac sha256Hmac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        sha256Hmac.init(secretKey);
+        byte[] bytes = sha256Hmac.doFinal(message.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
-    @Override
-    public CompletableFuture<String> GenerateImagesAsync(String prompt, String negativePrompt) {
-        String size = "1024*1024";
-        int n = 1;
-        ImageParameters parameters = new ImageParameters();
-        parameters.setSize(size);
-        parameters.setN(n < 1 ? 1 : (n > 4) ? 4 : n);
-        parameters.setPromptExtend(true);
-        parameters.setWatermark(false);
-
-        return SubmitImageGenerationTask(prompt, negativePrompt, parameters)
-                .thenCompose(taskId -> WaitForTaskCompletion(taskId, 3, 5)
-                        .thenApply(imageUrls -> {
-                            if (imageUrls == null || imageUrls.isEmpty()) {
-                                throw new RuntimeException("未获取到任何图片URL");
-                            }
-                            return imageUrls.get(0);
-                        }));
-    }
-
-    @Override
-    public CompletableFuture<String> SubmitImageGenerationTask(String prompt, String negativePrompt,
-            ImageParameters p) {
-        String apiUrl = PICTURE_URL + "/api/v1/services/aigc/text2image/image-synthesis";
-
-        // 构建请求数据对象
-        Map<String, Object> requestData = new HashMap<>();
-        requestData.put("model", "wanx2.1-t2i-turbo");
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("prompt", prompt);
-        input.put("negative_prompt", negativePrompt == null || negativePrompt.isEmpty() ? null : negativePrompt);
-        requestData.put("input", input);
-
-        requestData.put("parameters", p);
-
+    private String CreateSignedUrl(String url) {
         try {
-            // 使用Jackson序列化为JSON（驼峰命名）
-            ObjectMapper mapper = new ObjectMapper()
-                    .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE);
-            String requestBody = mapper.writeValueAsString(requestData);
+            URI uri = URI.create(url);
+            String host = uri.getHost();
+            String path = uri.getPath();
 
-            // 创建HTTP请求
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .header("Authorization", "Bearer " + PICTURE_API_KEY)
-                    .header("X-DashScope-Async", "enable")
-                    .header("Accept", "application/json")
-                    .POST(BodyPublishers.ofString(requestBody))
-                    .build();
+            // 生成RFC1123格式的时间戳
+            String date = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(ZoneId.of("GMT")));
 
-            // 发送异步请求
-            return HttpClient.newHttpClient()
-                    .sendAsync(request, BodyHandlers.ofString())
-                    .thenApply(response -> {
-                        if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                            try {
-                                JsonNode root = mapper.readTree(response.body());
-                                JsonNode output = root.path("output");
-                                if (!output.isMissingNode()) {
-                                    String taskId = output.path("task_id").asText();
-                                    if (taskId != null && !taskId.isEmpty()) {
-                                        return taskId;
-                                    }
-                                }
-                                throw new RuntimeException("无法从响应中获取任务ID");
-                            } catch (IOException e) {
-                                throw new RuntimeException("解析响应失败", e);
-                            }
-                        } else {
-                            throw new RuntimeException("API请求失败，状态码: " + response.statusCode());
-                        }
-                    });
+            // 拼接签名字符串
+            String signatureOrigin = "host: " + host + "\n" +
+                    "date: " + date + "\n" +
+                    "POST " + path + " HTTP/1.1";
+
+            // 计算HMAC-SHA256签名
+            String signature = HmacSha256(HiDreamAPI_SECRET, signatureOrigin);
+
+            // 构建授权字符串
+            String authorizationOrigin = String.format(
+                    "api_key=\"%s\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"%s\"",
+                    HiDreamAPI_KEY, signature);
+
+            // Base64编码授权字符串
+            String encodedAuthorization = Base64.getEncoder()
+                    .encodeToString(authorizationOrigin.getBytes(StandardCharsets.UTF_8));
+
+            // 构建URL参数
+            return url + "?" +
+                    "authorization=" + URLEncoder.encode(encodedAuthorization, "UTF-8") +
+                    "&date=" + URLEncoder.encode(date, "UTF-8") +
+                    "&host=" + URLEncoder.encode(host, "UTF-8");
         } catch (Exception e) {
-            CompletableFuture<String> failedFuture = new CompletableFuture<>();
-            failedFuture.completeExceptionally(e);
-            return failedFuture;
+            throw new RuntimeException("生成签名URL失败", e);
         }
     }
 
-    @Override
-    public CompletableFuture<List<String>> WaitForTaskCompletion(String taskId, int maxRetries, int delaySeconds) {
-        String apiUrl = PICTURE_URL + "/api/v1/tasks/" + taskId;
-        HttpClient client = HttpClient.newHttpClient();
+    public CompletableFuture<JSONObject> GetImageTaskStateAsync(HttpClient httpClient, String taskId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Map<String, Object> data = new HashMap<>();
+                Map<String, Object> header = new HashMap<>();
+                header.put("app_id", XFAPP_ID);
+                header.put("task_id", taskId);
+                data.put("header", header);
 
+                String requestUrl = CreateSignedUrl(HIDREAM_QUERY_URL);
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(requestUrl))
+                        .header("Content-Type", "application/json")
+                        .header("app_id", XFAPP_ID)
+                        .POST(HttpRequest.BodyPublishers.ofString(new JSONObject(data).toString()))
+                        .build();
+
+                // 发送异步请求
+                return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                        .thenApply(response -> {
+                            String responseBody = response.body();
+
+                            if (response.statusCode() != 200) {
+                                throw new RuntimeException("HTTP请求失败: " + response.statusCode() + " " + responseBody);
+                            }
+
+                            return new JSONObject(responseBody);
+                        })
+                        .get(50, TimeUnit.SECONDS); // 等待查询完成
+            } catch (Exception e) {
+                throw new RuntimeException("查询任务失败: " + e.getMessage(), e);
+            }
+        });
+    }
+
+    public CompletableFuture<String> GetImageURLAsync(String taskId) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(50))
+                .followRedirects(HttpClient.Redirect.ALWAYS) // 自动处理重定向
+                .build();
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                while (true) {
+                    System.out.println(new Date());
+                    JSONObject queryResponse = GetImageTaskStateAsync(httpClient, taskId).get(50, TimeUnit.SECONDS);
+
+                    // 检查响应是否包含header
+                    if (!queryResponse.has("header")) {
+                        System.err.println("无效的API响应，缺少header字段: " + queryResponse);
+                        return null;
+                    }
+
+                    JSONObject header = queryResponse.getJSONObject("header");
+                    int code = header.getInt("code");
+
+                    if (code == 0) {
+                        String taskStatus = header.getString("task_status");
+
+                        if ("3".equals(taskStatus)) {
+                            System.out.println("任务完成时间: " + new Date());
+
+                            // 检查是否包含payload.result字段
+                            if (!queryResponse.has("payload")) {
+                                System.err.println("无效的API响应，缺少payload字段: " + queryResponse);
+                                return null;
+                            }
+
+                            JSONObject payload = queryResponse.getJSONObject("payload");
+                            if (!payload.has("result")) {
+                                System.err.println("无效的API响应，缺少payload.result字段: " + queryResponse);
+                                return null;
+                            }
+
+                            JSONObject result = payload.getJSONObject("result");
+                            String fText = result.getString("text");
+                            byte[] decoded = Base64.getDecoder().decode(fText);
+                            fText = new String(decoded, StandardCharsets.UTF_8);
+                            return (new JSONArray(fText)).getJSONObject(0).getString("image_wm");
+                        } else {
+                            System.out.println("查询结果 当前状态: " + taskStatus);
+                            Thread.sleep(3000); // 2秒后再次查询
+                        }
+                    } else {
+                        String errorMsg = header.optString("message", "未知错误");
+                        System.err.println("API请求失败: 错误码=" + code + ", 错误信息=" + errorMsg);
+                        System.err.println("完整响应: " + queryResponse);
+                        return null;
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("轮询任务状态失败: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
+        });
+    }
+
+    public CompletableFuture<String> CreateGenImageTaskAsync(String DescPrompt, String NegPrompt) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .build();
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Map<String, Object> textPayload = new HashMap<>();
+                textPayload.put("prompt", DescPrompt);
+                textPayload.put("aspect_ratio", "1:1");
+                textPayload.put("negative_prompt", NegPrompt);
+                textPayload.put("img_count", 1);
+                textPayload.put("resolution", "2k");
+
+                String jsonText = new JSONObject(textPayload).toString();
+                String bText = Base64.getEncoder().encodeToString(jsonText.getBytes(StandardCharsets.UTF_8));
+
+                Map<String, Object> requestData = new HashMap<>();
+
+                // 构建header
+                Map<String, Object> header = new HashMap<>();
+                header.put("app_id", XFAPP_ID);
+                header.put("status", 3);
+                header.put("channel", "default");
+                header.put("callback_url", "default");
+                requestData.put("header", header);
+
+                // 构建parameter
+                Map<String, Object> parameter = new HashMap<>();
+                Map<String, Object> oigParam = new HashMap<>();
+                Map<String, Object> resultParam = new HashMap<>();
+                resultParam.put("encoding", "utf8");
+                resultParam.put("compress", "raw");
+                resultParam.put("format", "json");
+                oigParam.put("result", resultParam);
+                parameter.put("oig", oigParam);
+                requestData.put("parameter", parameter);
+
+                // 构建payload
+                Map<String, Object> payload = new HashMap<>();
+                Map<String, Object> oigPayload = new HashMap<>();
+                oigPayload.put("text", bText);
+                payload.put("oig", oigPayload);
+                requestData.put("payload", payload);
+
+                // 生成带签名的URL
+                String requestUrl = CreateSignedUrl(HIDREAM_CREATE_URL);
+
+                // 异步发送请求
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(requestUrl))
+                        .header("Content-Type", "application/json")
+                        .header("app_id", XFAPP_ID)
+                        .POST(HttpRequest.BodyPublishers.ofString(new JSONObject(requestData).toString()))
+                        .build();
+
+                // 发送异步请求并处理响应
+                return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                        .thenApply(response -> {
+                            String responseBody = response.body();
+                            System.out.println("API响应: " + responseBody);
+
+                            if (response.statusCode() != 200) {
+                                throw new RuntimeException("HTTP请求失败: " + response.statusCode() + " " + responseBody);
+                            }
+
+                            JSONObject resp = new JSONObject(responseBody);
+
+                            // 检查响应是否包含header
+                            if (!resp.has("header")) {
+                                throw new RuntimeException("API响应中缺少header字段: " + resp);
+                            }
+
+                            // 检查任务ID是否存在
+                            JSONObject respHeader = resp.getJSONObject("header");
+                            if (!respHeader.has("task_id") || respHeader.getString("task_id").isEmpty()) {
+                                throw new RuntimeException("任务ID缺失或为空: " + resp);
+                            }
+
+                            return respHeader.getString("task_id");
+                        })
+                        .get(60, TimeUnit.SECONDS); // 等待任务创建完成（可以调整超时时间）
+            } catch (Exception e) {
+                throw new RuntimeException("创建任务失败: " + e.getMessage(), e);
+            }
+        });
+    }
+
+    public CompletableFuture<String> DownloadImageToBase64Async(String imageUrl) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(20))
+                .followRedirects(HttpClient.Redirect.ALWAYS) // 自动处理重定向
+                .build();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .header("Authorization", "Bearer " + PICTURE_API_KEY)
-                .header("Accept", "application/json")
+                .uri(URI.create(imageUrl))
                 .GET()
                 .build();
 
-        return CompletableFuture.supplyAsync(() -> {
-            ObjectMapper mapper = new ObjectMapper();
-            for (int i = 0; i < maxRetries; i++) {
-                try {
-                    System.out.print(".");
-                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                        JsonNode root = mapper.readTree(response.body());
-                        JsonNode output = root.path("output");
-
-                        if (!output.isMissingNode()) {
-                            String status = output.path("task_status").asText();
-
-                            if ("SUCCEEDED".equals(status)) {
-                                List<String> imageUrls = new ArrayList<>();
-                                JsonNode results = output.path("results");
-                                if (results.isArray()) {
-                                    for (JsonNode result : results) {
-                                        String url = result.path("url").asText();
-                                        if (url != null && !url.isEmpty()) {
-                                            imageUrls.add(url);
-                                        }
-                                    }
-                                }
-                                if (!imageUrls.isEmpty()) {
-                                    return imageUrls;
-                                }
-                                throw new RuntimeException("任务成功但未获取到任何图片URL");
-                            } else if ("FAILED".equals(status)) {
-                                String code = output.path("code").asText();
-                                String message = output.path("message").asText();
-                                throw new RuntimeException("任务处理失败\ncode: " + code + "\nmessage: " + message);
-                            }
-                        }
-                    } else {
-                        throw new RuntimeException("API请求失败，状态码: " + response.statusCode());
+        return httpClient.sendAsync(request, BodyHandlers.ofByteArray())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        return Base64.getEncoder().encodeToString(response.body());
                     }
-
-                    // 延迟等待
-                    try {
-                        TimeUnit.SECONDS.sleep(delaySeconds);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException("延迟等待被中断", e);
-                    }
-                } catch (IOException | InterruptedException e) {
-                    throw new RuntimeException("请求处理失败", e);
-                }
-            }
-            throw new RuntimeException("任务处理超时");
-        });
+                    throw new RuntimeException("HTTP错误: " + response.statusCode());
+                });
     }
 
     private static final String[] GenDetailSysPrompt = {
@@ -697,8 +652,8 @@ public class AIServicelmpl implements AIService {
                     	1、请以如下模板输出
                             	## 线索
                                 -C> ...
-                    		-C> ...
-                    		-C> ...
+                    		    -C> ...
+                    		    -C> ...
 
                         2、除了”## 线索“这部分内容使用MarkDown格式，剩余部分请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
 
@@ -735,308 +690,306 @@ public class AIServicelmpl implements AIService {
     };
 
     private static final String System_MSG = """
-            你是一名逻辑严谨的剧本杀作家，必须严格遵循以下规则：
-            1. 必须严格按以下模板输出,不要包含额外文本！:
-                {
-                "作为作家的礼貌性回答":"...",
-                "标题":"...",
-                "背景":"...",
-                "人物剧本": ["...","...",...],
-                "线索":["...","...",...],
-                "真相":"...",
-                "组织者手册": "..."
-                }
+            你是一名逻辑严谨且最求内容完整的剧本杀作家，必须严格遵循以下规则：
+                规则1. 请严格按指定MarkDown格式输出以下字段，七部分内容缺一不可！不要包含额外文本！:
+            		AI回复（一句话）
+            		标题
+            		背景（一段话）
+            		人物剧本（数组）
+            		线索（数组）
+            		真相
+            		组织者手册
 
-            2.若有玩家人物是凶手，则需要在其剧本中写明身份；若未写明身份，需在真相处表明原因（如失忆、人格扭曲...）
+            	输出需符合如下结构：
+            		AI回复：
+                        ...（这部分是给用户的礼貌性回答）
+            		》》》
+                # ...（这部分是标题）
+            		---
+                ## 背景
+            		...
+            		---
+                ## 人物剧本:
+            		-CHR ...（角色1名称）
+            		...（关于角色1的相关内容）
+            		-CHR ...（角色2名称）
+            		...（关于角色2的相关内容）
+            		...（其它角色的格式以此类推）
+            		---
+                ## 线索
+            		-C> ...
+            		-C> ...
+            		-C> ...
+            		...
+            		---
+                ## 真相
+            		...
+            		---
+                ## 组织者手册
+            		...
+            		---
+            	（到此结束，不要再输出文本）
 
-            3. 当用户要求细化某部分时：
-               - 保持原有内容的基础上更新指定部分
-               - 未修改的部分需保留原有内容
-               - 始终维持完整JSON结构
+                规则2.若有玩家人物是凶手，则需要在其剧本中写明身份；若未写明身份，需在真相处表明原因（如失忆、人格扭曲...）
 
-            4. 格式要求：
-               - 严格遵循JSON语法
-               - 每次响应必须完整包含所有JSON字段（作为作家的礼貌性回答、标题、背景、人物剧本、线索、真相、组织者手册），不可遗漏
-               - 禁止输出\n或者\\n
+                规则3. 当用户要求细化某部分时：
+                    - 保持原有内容的基础上更新指定部分
+                    - 未修改的部分需保留原有内容
+                    - 输出内容必须满足规则1
 
-            5. 请按以下内容深化剧本内容：
-                （1）背景：
-                    需包含必要的事件背景、人物来历
-                    事件的叙述需按时间线描述，要求详细具体
-                    必须提供细节描写，以帮助案件推理
-                （2）人物剧本：每个角色必须包含：
-                    价值观在其生活中的体现
-                    人物背景描述
-                    动机（角色在本次事件中的目标）
-                    时间线（案发前后的行动轨迹）
-                    信息差（角色间掌握的信息不尽相同）
-                    与其他角色的关系（可以是表面也可以有不为人知的一面）
-                （3）线索：
-                    关键性线索必须有明确的指向
-                    每条线索需要有足够多的细节
-                （4）真相：
-                    必须包含凶手作案过程
-                    详细描述每个细节
+                规则4. 请按以下内容深化剧本内容：
+                    （1）背景：
+                        需包含必要的事件背景、人物来历
+                        事件的叙述需按时间线描述，要求详细具体
+                        必须提供细节描写，以帮助案件推理
+                    （2）人物剧本：每个角色必须包含：
+                        价值观在其生活中的体现
+                        人物背景、人物意图描述
+                        时间线（案发前后的行动轨迹）
+                        信息差（角色间掌握的信息不尽相同）
+                        与其他角色的关系（可以是表面也可以有不为人知的一面）
+                        不能出现“其余角色略”的字样
+                        每个人物的剧本必须以-CHR 开头（遵循规则1）
+                    （3）线索：
+                        关键性线索必须有明确的指向
+                        每条线索需要有足够多的细节
+                        线索数量不能太少
+                        每条线索必须以-C> 开头（遵循规则1）
+                    （4）真相：
+                        必须包含凶手作案过程
+                        详细描述每个细节
+                    （5）组织者手册：
+                        必须足够详细到能够帮助玩家破局，不能过于简单
 
-            6. 针对上述规则的示例：
-                违规示例（1）：
-            生成人物剧本部分时，返回
-            "人物剧本": {
-                "价值观": "...",
-                "背景": "...",
-                "角色": "...",
-                "动机": "...",
-                "时间线": [
-                "19:00 ...",
-                "20:15 ...",
-                "21:00 ..."],
-                "信息差": "...",
-                "关系": "..."},
-                正确示例（1）：
-            "人物剧本":"甲是一名...，甲...（体现价值观），甲的出身...，甲是为了...来到这里，19：00 甲做了...；20：15 甲在...；21：00 甲...；...。甲知道...的事。甲和...有...的关系，和...有...的关系..."
+            	    规则5. 请务必输出每部分之间的分隔符“---”！
+
+                        下面是针对上述规则的示例：
+                            人物剧本参考示例（1）：
+                        ##人物剧本
+            		甲是一名...，甲...（体现价值观），甲的出身...，甲是为了...来到这里，19：00 甲做了...；20：15 甲在...；21：00 甲...；...。甲知道...的事。甲和...有...的关系，和...有...的关系...
+            		...（其它角色剧本）
 
                 违规示例（2）：
-            用户要求细化手册时，若仅返回{
-              "组织者手册": "..."
-            } → 视为违规
+                    用户要求细化组织者手册时，若仅返回
+                      ##组织者手册
+            		...
+            	      ---
+                         → 视为违规
                 正确示例（2）：
-            用户要求细化手册时，应返回完整结构{
-              "作为作家的礼貌性回答": "好的，已细化手册部分，其他部分保持现有内容...",
-              "标题": "...",
-              ...
-              "组织者手册": "新细化内容..."
-            }
+                    用户要求细化手册时，应满足规则1
+                        好的，已细化手册部分，其他部分保持现有内容...
+            		---
+            		#我的剧本杀标题
+                            ---
+            		##背景
+            		...
+            		---
+            		##人物剧本:
+            		-...
+            		-...
+            		...
+            		---
+                            ##线索
+            		-...
+            		-...
+            		...
+            		---
+                            ##真相
+            		...
+            		---
+            		##组织者手册": "新细化内容..."
 
                 违规示例（3）：
-            生成组织者手册部分，若返回错误结构
-            "组织者手册":[
-                "...",
-                "...",
-                "...",
-                ...]  →  视为违规
-                正确示例（3）：
-            "组织者手册":"..."
+                    输出“维持原有详细内容”及其相近意义的语段视为违规
 
-                违规示例（4）：
-            生成作为作家的礼貌性回答部分，若回答
-            ...，以下是...的完整剧本
-             →  视为违规
-                正确示例（4）：
-            ...，左侧是...的完整剧本
+                示例结束，现在请根据用户请求进行处理：
 
-                违规示例（5）：
-            用户要求细化线索时，若其它部分未返回原有部分：
-             {"作为作家的礼貌性回答": "...",
-              "标题": "...",
-              "背景": "维持原有详细内容",
-              "人物剧本": "维持原有详细内容",
-              "线索": "...",
-              "组织者手册": "维持原有详细内容"
-            } → 视为违规
-                正确示例（5）：
-            用户要求细化线索时，应返回完整内容，且不替换原有部分为“维持原有详细内容”
-            {"作为作家的礼貌性回答": "...",
-              "标题": "...",
-              "背景": "...（原有内容）",
-              "人物剧本": "...（原有内容）",
-              "线索": "...",
-              ...}
+                                    """;
 
-                违规示例（6）：
-            输出“维持原有详细内容”及其相近意义的语段视为违规
-            }
+    private static final String[] GetDescPrompt = { """
+            你擅长于提取和完善剧本中所有人物的外貌描写。请遵循以下规则：
+                1、严格使用JSON格式，包含name（角色名称）、description（角色外貌描绘）两个字段，请按如下JSON格式输出，不要包含额外文本：
+            	    {
+                    "name":["...","...","...",...]
+                    "description":[
+                        "...",
+                        "...",
+                        "...",
+                        ...
+                    ]}
 
-                违规示例（7）：
-            生成内容时违反JSON语法规则：
-             {"作为作家的礼貌性回答": "...",
-              "标题": "...",
-              "背景": "..."电梯"...于12:13坠落{一些解释}...\n死者...",
-                ....
-            } → 视为违规 （解释：共有4处错误，1、"电梯"使用了"而不是“，2、12:13使用了:而不是：，3、{一些解释}使用了{}而不是（）,4、\n死者中使用的\n非法，应改为。）
-                正确示例（7）：
-            生成内容应符合JSON语法：
-             {"作为作家的礼貌性回答": "...",
-              "标题": "...",
-              "背景": "...“电梯”...于12：13坠落（一些解释）...。死者...",
-                ....
-            }
+                2、若原文有明确人物外貌描写，则提取人物外貌特征到描绘中，若原文描绘不完整，则适当补充。
 
+                3、若原文无人物外貌描写，则生成符合人物身份（年龄/职业/性格）的合理特征到描绘中
 
-            现在请根据用户请求进行处理：
-                        """;
+                4、若输出与外貌描绘无关的信息，视为违规（例如输出人物关系、背景、原因等信息，是违规的）
 
-    private static final String DescChr = """
-            你擅长于提取剧本中人物的外貌描写。请遵循以下规则：
-            1、严格使用JSON格式，包含名称、描绘两个字段，描绘需包含人物给人的整体感受。
+                5、请输出剧本提及的所有人物及其外貌描绘
 
-            2、若原文有明确人物外貌描写，提取人物外貌特征到描绘中；若原文描绘不完整可适当补充。
+                6、输出示例：
+                    {
+                    "name":["小明","小红","小王",...]
+                    "description":[
+                        "...",
+                        "...",
+                        "...",
+                        ...
+                    ]}
 
-            3、若原文无人物外貌描写，则生成符合人物身份（年龄/职业/性格）的合理特征到描绘中
-
-            5、若输出与外貌描绘无关的信息，视为违规（例如输出人物关系、背景、原因等信息，是违规的）
-
-            4、必须严格按以下模板输出,不要包含额外文本！：
-                {
-                "名称":["...","...","...",...]
-                "描绘":[
-                    "...",
-                    "...",
-                    "...",
-                    ...
-                ]}
-
-            5、输出示例：
-                {
-                "名称":["小明","小红","小王",...]
-                "描绘":[
-                    "小明的外貌描绘...",
-                    "小红的外貌描绘...",
-                    "小王的外貌描绘...",
-                    ...
-                ]}
-
-            请输出JSON：
-            """;
-
-    private static final String DescScene = """
-                        你擅长于提取剧本中场景的环境描写。请遵循以下规则：
-                        1、严格使用JSON格式，包含名称、描绘两个字段。
-
-                        2、若原文有明确场景描写，则提取场景特征到描绘中。
-
-                        3、若输出与场景描绘无关的信息，则视为违规
-
-                        4、场景描绘中不能出现人物名称以及人物动作等与人物相关的描述
-
-                        5、输出的场景 名称 和场景 描绘 必须一一对应
-
-                        6、必须严格按以下模板输出,不要包含额外文本！：
+            请根据用户提供的剧本，以JSON格式输出所有人物的外貌描绘
+                                    """,
+            """
+                    你擅长于提取剧本中场景的环境描写。请遵循以下规则：
+                    	1、严格使用JSON格式，包含name（场景名称）、description（场景描绘）两个字段，请按下面的JSON格式输出，不要包含额外文本：
                             {
-                            "名称":["...","...","...",...]
-                            "描绘":[
-                                "...",
-                                "...",
-                                "...",
-                                ...
+                            "name":["...","...","...",...]
+                            "description":[
+                            "...",
+                            "...",
+                            "...",
+                            ...
                             ]}
 
-                        7、输出示例：
+                        2、若原文有明确场景描写，则提取场景特征到描绘中。请输出剧本提及的所有场景及其环境描写。
+
+                    	3、若输出与场景描绘无关的信息，则视为违规（例如，场景描绘中不能出现人物名称以及人物动作等与人物相关的描述）
+
+                    	4、输出示例：
                             {
-                            "名称":["浴室","悬崖","厨房",...]
-                            "描绘":[
-                                "浴室的场景描绘...",
-                                "悬崖的场景描绘...",
-                                "厨房的场景描绘...",
-                                ...
+                            "name":["浴室","悬崖","厨房",...]
+                            "description":[
+                            "（浴室的场景描绘）",
+                            "（悬崖的场景描绘）",
+                            "（厨房的场景描绘）",
+                            ...
                             ]}
 
-                        8、错误示例（1）：
-                                {
+                    	5、错误示例（1）：
+                            {
                             "名称":["浴室","悬崖","厨房"]
                             "描绘":[
-                                "浴室的场景描绘...",
-                                "悬崖的场景描绘...",
+                            "浴室的场景描绘...",
+                            "悬崖的场景描绘...",
                             ]}
                             解释：名称与描绘必须一一对应，示例中输出3个名称却只有2个描绘
 
                             错误示例（2）：
-                                {
+                            {
                             "名称":["浴室","悬崖","厨房"]
                             "描绘":[
-                                "浴室的场景描绘...",
-                                "悬崖连接着...李萌依靠在栏杆上...",
-                                "厨房的场景描绘..."
+                            "浴室的场景描绘...",
+                            "悬崖连接着...李萌依靠在栏杆上...",
+                            "厨房的场景描绘..."
                             ]}
                             解释：悬崖的场景描绘出现人物李萌（或者描述成玩家、众人等对人的抽象），这是违规的
 
-                        请输出JSON：
-            """;
-    private static final String DescProp = """
-            你擅长于提取剧本中关键道具的静态外观描写。请遵循以下规则：
+                    请根据用户提供的剧本，输出JSON格式的场景描绘
+                                """,
+            """
+                                    你擅长于提取剧本中道具的静态外观描写。请遵循以下规则：
+                            1、严格使用JSON格式，包含name（道具名称）、description（道具描绘）两个字段，请按下面的JSON格式输出，不要包含额外文本：
+                                            {
+                                            "name":["...","...","...",...]
+                                            "description":[
+                                            "...",
+                                            "...",
+                                            "...",
+                                            ...
+                                            ]}
 
-            1、若原文有关键道具的明确的状物描写，则将其提取到描绘中；若无原文描写，则基于物品类型进行专业级外观推理
+                                    2、若原文有道具明确的状物描写，则将其提取到描绘中；若无原文描写，则基于物品类型推测其外观
 
-            2、描绘字段只能包含物品的视觉特征，例如（不需要全部包含）：
-               - 颜色、形状、材质、尺寸比例
-               - 表面纹理/装饰/特殊标记
-               - 磨损/氧化/使用痕迹
-               - 光影反射特征
+                                    3、描绘字段只能包含物品的视觉特征，例如（不需要全部包含）：
+                                       - 颜色、形状、材质、尺寸比例
+                                       - 表面纹理/装饰/特殊标记
+                                       - 磨损/氧化/使用痕迹
+                                       - 光影反射特征
 
-            3、绝对禁止出现：
-               - 物品用途或功能描述
-               - 背景故事或象征意义
-               - 与人物相关的任何信息
-               - 非视觉特征（如气味、声音）
+                                    4、描绘字段禁止出现下面的内容：
+                                       - 物品用途或功能描述
+                                       - 背景故事或象征意义
+                                       - 与人物相关的任何信息
+                                       - 非视觉特征（如气味、声音）
 
-            4、名称与描绘必须一一对应且数量相等
+                                    5、请输出剧本提及的道具及其状物描写，并且名称与描绘必须一一对应且数量相等
 
-            5、必须严格按以下模板输出,不要包含额外文本！：
-                {
-                "名称":["...","...","...",...]
-                "描绘":[
-                    "...",
-                    "...",
-                    "...",
-                    ...
-                ]}
+                                    6、输出示例：
+                                        {
+                                        "name":["皮医生的药箱","陈夫人的项链","王大爷的皮带",...]
+                                        "description":[
+                                            "方方正正，约莫一尺来长，半尺宽...",
+                                            "链身极细，每一环都打磨得溜光水滑，在灯下泛着冷冽的银光...",
+                                            "褐色的牛皮表面布满细密的纹路，带身约莫三指宽，边缘处已经被磨得发亮...",
+                                            ...
+                                        ]}
 
-            6、输出示例：
-                {
-                "名称":["皮医生的药箱","陈夫人的项链","王大爷的皮带",...]
-                "描绘":[
-                    "方方正正，约莫一尺来长，半尺宽...",
-                    "链身极细，每一环都打磨得溜光水滑，在灯下泛着冷冽的银光...",
-                    "褐色的牛皮表面布满细密的纹路，带身约莫三指宽，边缘处已经被磨得发亮...",
-                    ...
-                ]}
-
-            7、错误示例（1）：
-                {
-                "名称":["皮医生的药箱","陈夫人的项链","王大爷的皮带"]
-                "描绘":[
-                    "方方正正，约莫一尺来长，半尺宽...",
-                    "链身极细，每一环都打磨得溜光水滑，在灯下泛着冷冽的银光...",
-                ]}
-                解释：名称与描绘必须一一对应，示例中输出3个名称却只有2个描绘
-
-            错误示例（2）：
-                    {
-                "名称":["DNA检测报告"...]
-                "描绘":[
-                    "显示你与陈天明存在生物学父女关系",
-                    ...
-                ]}
-                解释：输出内容涉及人物，不是纯粹的外观描写
-
-            请输出JSON：
-                            """;
+                                    请根据用户提供的剧本，以JSON格式输出所有道具的描绘
+                    """ };
 
     private static final String AnalyzePrompt = """
-            你是一名剧本杀质量评估员，请遵循以下规则对用户给与的剧本杀进行评估：
-            1、按指定JSON格式输出以下字段：
-                亮点（数组）
-                难点（数组）
-                改进建议（数组）
-                综合评分（包含逻辑性、故事性、体验感三项整数评分）
+             	你是一名剧本杀质量评估员，请遵循以下规则对用户的剧本杀进行评估：
+                        1、按指定MarkDown格式输出以下字段：
+            		标题
+                            剧本亮点（数组）
+                            游玩难点（数组）
+                            改进建议（数组）
+                            综合评分（包含逻辑性、故事性、体验感、总体得分四项整数评分，这部分内容无需输出分析部分）
 
-            输出需符合如下结构：
-            {
-                "analysis": {
-                "point": ["..."],
-                "difficulty": ["..."],
-                "suggestion": ["..."],
-                "score": {
-                    "logicality": 0,
-                    "storiness": 0,
-                    "experience": 0
-                    }
-                }
+                        输出需符合如下结构：
+            		# 剧本分析报告
 
-            2、评分部分满分为100
-                logicality为对剧本故事、人物行为的逻辑性评分
-                storiness为对剧本故事性的评分
-                experience是对玩家体验性的预测评分
+            		## ✨ 剧本亮点
+            		    ...
+            		---
+            		## ⚠️ 游玩难点
+            		    ...
+            		---
+            		## 💡 改进建议
+            		    ...
+            		---
+            		## ⭐ 综合评分
+            		|维度|评分（满分100）|
+            		|:-------:|:-----------------:|
+            		|逻辑性|对应分数|
+            		|故事性|对应分数|
+            		|体验感|对应分数|
+            		|总体得分|对应分数|
 
-            3、亮点、难点、改进意见的表达需要简单明了，足够详尽
-                        """;
+                        2、亮点、难点、改进意见的表达需要足够详尽
+
+                        3、评分部分满分为100，评分标准如下：
+                            逻辑性：对剧本故事、人物行为的逻辑性评分，如果人物/事件发展不符合现实逻辑，应给予低分
+                            故事性：评分规则如下：
+            			（1）加分项：叙事风格包含心理/环境描写
+            			（2）加分项：角色动机含多重因素（如"经济压力+历史恩怨+情感纠葛"）
+            			（3）加分项：剧情具有多层反转
+            			（4）加分项：线索描绘与剧情相融合
+                                    （5）扣分项：对剧本的描述过于简单
+                            体验感：推测每个人物剧本所带给玩家体验性的预测评分，如果某一角色参与度很低，应给予低分
+            		总体得分：综合上述三项进行评分
+
+            		参考案例：下面剧本的逻辑性得分：70，故事性得分：60，体验感得分：50，总体得分：65
+            雨夜钟声
+            背景
+            1935年秋，苏州城郊「福临客栈」因暴雨歇业。掌柜李世昌深夜遇害于账房，胸口插着断裂的铜制怀表指针，屋内老式座钟停摆于凌晨2:15。六名住客被困客栈，暴雨冲断山路前，需厘清命案真相。
+
+            人物剧本:
+            -CHR 赵文远（男，账房先生）价值观：信奉“钱财身外物，性命最要紧”。背景：因挪用公款被李世昌威胁，携家眷投宿客栈。案发前与掌柜争吵，要求结算工钱。时间线：19:00与掌柜对账→21:30回房→22:00听见钟声→未离开房间。信息差：不知掌柜曾私下克扣其他伙计工钱。
+            -CHR 苏红袖（女，客栈厨师）价值观：“情义比银钱重，恨比爱长久”。背景：暗恋李世昌之女李婉儿，因身份悬殊未表白。案发前夜为李婉儿送醒酒汤。时间线：20:00熬药→21:50倒药渣→22:10回灶台取烛台。信息差：知晓掌柜私藏鸦片于灶房梁上。
+            -CHR 李婉儿（女，掌柜之女）价值观：“宁可撕破脸，不可吃亏”。背景：因父亲逼婚富商之子，赌气带丫鬟投靠客栈。案发时正与丫鬟缝补嫁衣。时间线：20:30骂跑说亲媒人→22:00绣花→22:15听见瓷器碎裂声。信息差：发现父亲账本记录自己嫁妆被挪用。
+            -CHR 陈阿四（男，客栈杂役）价值观：“活着比什么都强”。背景：聋哑人，被掌柜收留。案发前擦拭大堂铜钟，目睹掌柜与黑衣人争执。时间线：19:30擦钟→21:00喂狗→22:00躺柴房。信息差：看见苏红袖深夜进入后院竹林。
+            -CHR 王警长（男，巡警队长）价值观：“规矩比人重要”。背景：伪装成住客调查客栈走私案。案发后第一时间封锁现场。时间线：20:45登记住客→22:05听到钟声→22:10破门而入。信息差：携带记录客栈走私名单的密信。
+            -CHR 刘麻子（男，落魄货郎）
+            价值观：“墙头草两边倒”。背景：欠赌债躲进客栈。案发时偷喝柜台酒，见掌柜尸体后藏起铜钥匙。时间线：21:00撬柜台→21:50醉酒→22:05呕吐在院中。信息差：捡到半张烧焦的婚约文书。
+
+            线索
+            -C> 【铜钟指针】：断裂处有新鲜血迹与指纹，内侧刻“福临”字样（指向凶器来源）。-C> 【账本残页】：夹在《论语》中，记录“苏红袖借支五块”“李婉儿嫁妆短少十块”（暗示经济矛盾）。-C> 【灶房烟灰】：含罂粟壳碎片，与李世昌指甲缝残留物一致（指向毒品交易）。-C> 【绣花针盒】：李婉儿房间掉落，针尖沾蓝墨水（与婚约文书字迹同色）。-C> 【密信残角】：王警长口袋露出“李世昌勾结盐商”字样（暗示其死亡牵连更大阴谋）。-C> 【竹叶露水】：后院竹林采集，检测出麻沸散成分（与苏红袖药锅药材吻合）。
+
+            真相
+            凶手：苏红袖。作案过程：苏红袖因爱生恨，利用灶房鸦片与麻沸散制作毒药，假借送汤下毒。
+            22:00将昏迷掌柜拖至账房，用铜钟指针刺死，布置成自杀假象。利用座钟停摆制造不在场证明，实际通过灶台暗门往返现场。关键诡计：竹叶上的露水实为下毒时蹭落的汗液，与陈阿四擦拭的铜钟形成时间差证据。
+
+            组织者手册
+            流程指引：强调时间线对比（赵文远争吵时间vs苏红袖送汤时间）。引导分析线索关联性（账本矛盾指向经济动机，竹叶露水指向下毒手法）。揭露王警长身份时，需同步公开密信内容以解释其隐瞒行为。最终推理需串联“麻沸散-竹林-铜钟”三重证据链。新手提示：重点排查角色与死者的直接利益冲突（如苏红袖情感、赵文远债务）。注意“聋哑人陈阿四”证词需通过手势比划还原，增强沉浸感。李婉儿嫁衣绣线颜色与婚约文书墨迹的对应关系可作为辅助推理点。
+                                    """;
 }
