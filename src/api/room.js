@@ -47,3 +47,8 @@ export function getOwnedRooms() {
 export function enterOwnedRoom(roomId) {
     return request.post(`/room/enter-owned/${roomId}`);
 }
+
+// 判断用户是不是房主
+export function isOwner(roomId) {
+    return request.post(`/room/is-owner/${roomId}`);
+}
