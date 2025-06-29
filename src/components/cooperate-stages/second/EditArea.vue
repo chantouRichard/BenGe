@@ -19,37 +19,41 @@
             :style="{ backgroundImage: `url(${reduceIcon})` }"
           ></button>
           <div style="padding: 20px">
-            <NarrativeWorkspace :nodes="sharedNodes"
-  :edges="sharedEdges"
+            <NarrativeWorkspace v-if="userRole == 0"
   @updateGraph="handleGraphUpdate"/>
+  <CharacterDesign v-if="userRole==1" @updateGraph="handleGraphUpdate"/>
           </div>
         </div>
       </transition>
     </teleport>
 
     <!-- 常规编辑区域 -->
-    <div class="canvas">
+     <transition name="canvas-fade">
+    <div class="canvas" v-if="!isFullScreen">
       <button
         class="canvasButton"
         @click="isFullScreen = true"
         :style="{ backgroundImage: `url(${enlargeIcon})` }"
       ></button>
       <div style="padding: 20px; height: 100%">
-        <NarrativeWorkspace :nodes="sharedNodes"
-  :edges="sharedEdges"
+        <NarrativeWorkspace  v-if="userRole == 0"
   @updateGraph="handleGraphUpdate"/>
+  <CharacterDesign v-if="userRole==1" @updateGraph="handleGraphUpdate"/>
       </div>
     </div>
+    </transition>
   </div>
 </template>
 
 <script>
 import NarrativeWorkspace from '@/components/roles/NarrativeWorkspace.vue';
+import CharacterDesign from '@/components/roles/CharacterDesign.vue';
 
 export default {
   name: "EditArea",
   components: {
     NarrativeWorkspace,
+    CharacterDesign
   },
   props: {
     roles: {
@@ -153,6 +157,14 @@ export default {
   background-repeat: no-repeat;
 
   transition: all 0.5s ease;
+}
+.canvas-fade-enter-active{
+    opacity: 1;
+    transition: all 0.5s ease;
+}
+.canvas-fade-leave-active{
+    opacity: 0;
+    transition: all 0.5s ease;
 }
 /* 动画进入 */
 .fullscreen-slide-enter-active {

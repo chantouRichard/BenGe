@@ -31,7 +31,7 @@ import FloatingToolball from './NarrativeCom/FloatingToolball.vue'
 import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import NodeDetailDrawer from './NarrativeCom/NodeDetailDrawer.vue'
 import EdgeTypeSelector from './NarrativeCom/EdgeTypeSelector.vue'
-import { useCanvasStore } from '@/stores/canvasStore'
+import { useCharacter } from '@/stores/character'
 import { ref , computed } from 'vue'
 
 // 传入参数
@@ -45,7 +45,7 @@ const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
 const effectiveEdges = computed(() => props.edges || canvasStore.edges)
 
 
-const canvasStore = useCanvasStore()
+const canvasStore = useCharacter()
 const canvasRef = ref(null)
 
 // // 直接使用 store 中的数据驱动画布
