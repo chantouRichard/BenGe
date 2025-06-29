@@ -10,7 +10,7 @@ import com.bengebackend.entity.AIStruct.*;
 
 import com.bengebackend.entity.AIAnalysisResult;
 import com.bengebackend.entity.ImageParameters;
-import com.bengebackend.entity.Stage2AIMsgDevide;
+import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.entity.AIStruct.*;
 import com.bengebackend.service.*;
 
@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -96,7 +97,7 @@ public class AIServicelmpl implements AIService {
     }
 
     @Override
-    public CompletableFuture<Stage2AIMsgDevide> GenFramework(List<Map<String, String>> msgs) {
+    public CompletableFuture<AIMsgDevide> GenFramework(List<Map<String, String>> msgs) {
         msgs.add(new HashMap<String, String>() {
             {
                 put("role", "system");
@@ -107,29 +108,30 @@ public class AIServicelmpl implements AIService {
         // 获取API输出
         return GetAPIOutputAsync(msgs)
                 .thenApply(content -> {
-                    Stage2AIMsgDevide devidedMsg = new Stage2AIMsgDevide();
-                    DevideScriptContent(devidedMsg, content);
+                    AIMsgDevide devidedMsg = new AIMsgDevide();
+                    DevideScriptContent(devidedMsg, content, true);
                     return devidedMsg;
                 });
     }
 
-    public static void DevideScriptContent(Stage2AIMsgDevide devidedMsg, String content, boolean devideResponse) {
+    public static void DevideScriptContent(AIMsgDevide devidedMsg, String content, boolean setReplyAndTitle) {
         String[] parts;
-        if (devideResponse) {
+        if (setReplyAndTitle) {
             parts = content.split("》》》", 2);
-            devidedMsg.setMsgForUser(parts[0]);
-            if (parts.length != 2)
+            if (parts.length == 2)
+                devidedMsg.setMsgForUser(parts[0]);
+            else
                 System.out.println("未找到分隔符》》》，回答与剧本内容分割失败");
+
+            parts = content.split("#", 2);
+            parts = parts[1].split("---", 2);
+            devidedMsg.setTitle(parts[0].replaceAll("\\s+", ""));
+            if (parts.length != 2)
+                System.out.println("未找到分隔符---，分割失败");
             devidedMsg.setStrScript(parts[1]);
         } else {
             devidedMsg.setStrScript(content);
         }
-
-        parts = content.split("#", 2);
-        parts = parts[1].split("---", 2);
-        devidedMsg.setTitle(parts[0].replaceAll("\\s+", ""));
-        if (parts.length != 2)
-            System.out.println("未找到分隔符---，分割失败");
 
         parts = content.split("## 背景\\s*", 2);
         parts = parts[1].split("---", 2);
@@ -163,75 +165,75 @@ public class AIServicelmpl implements AIService {
     }
 
     @Override
-    public CompletableFuture<String> GenDetail(String frame, String title) {
-        // 1. 提取人物剧本
-        Pattern pattern = Pattern.compile("人物剧本\\n\\n([\\s\\S]*?)\\n---\\n\\n## 线索\\n\\n");
-        Matcher matcher = pattern.matcher(frame);
-        String tempmatch = matcher.find() ? matcher.group() : "";
-        tempmatch = tempmatch.substring(12, tempmatch.length() - 25);
-        String[] temps = tempmatch.split("- CHR ");
-        List<String> chrScript = new ArrayList<>(Arrays.asList(temps));
-
-        // 2. 准备消息列表
-        List<List<Message>> msgs = new ArrayList<>();
-        StringBuilder finalout = new StringBuilder("# ").append(title).append("\n\n---\n\n## 背景\n");
-
-        // 3. 添加基础消息
-        for (int i = 0; i < 5; i++) {
-            if (i == 1)
-                continue;
-            List<Message> temp = new ArrayList<>();
-            temp.add(new Message("system", LIMIT[i]));
-            temp.add(new Message("user", frame + "\n\n" + COMMAND[i]));
-            msgs.add(temp);
+    public static CompletableFuture<String> GenDetail(String Frame, String Title) {
+        AIMsgDevide devidedMsg = new AIMsgDevide(Title, Frame);
+        DevideScriptContent(devidedMsg, Frame, false);
+        List<List<Map<String, String>>> messagesList = new ArrayList<>(); // 0背景 4-n人物剧本 1线索 2真相 3组织者手册
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of(
+                "role", "system",
+                "content", GenDetailSysPrompt[0]));
+        messages.add(Map.of(
+                "role", "user",
+                "content", devidedMsg.getStrScript() + "\n\n" + GenDetailUserPrompt[0]));
+        messagesList.add(messages);
+        for (int i = 0; i < devidedMsg.getChrScript().size(); i += 1) {
+            messages = new ArrayList<>();
+            messages.add(Map.of(
+                    "role", "system",
+                    "content", GenDetailSysPrompt[1]));
+            messages.add(Map.of(
+                    "role", "user",
+                    "content", devidedMsg.getStrScript() + "\n\n" + GenDetailUserPrompt[1] + "\n\n"
+                            + devidedMsg.getChrScript().get(i)));
+            messagesList.add(messages);
+        }
+        for (int i = 2; i < 5; i += 1) {
+            messages = new ArrayList<>();
+            messages.add(Map.of(
+                    "role", "system",
+                    "content", GenDetailSysPrompt[i]));
+            messages.add(Map.of(
+                    "role", "user",
+                    "content", devidedMsg.getStrScript() + "\n\n" + GenDetailUserPrompt[i]));
+            messagesList.add(messages);
         }
 
-        // 4. 添加人物剧本消息
-        for (String script : chrScript) {
-            List<Message> temp = new ArrayList<>();
-            temp.add(new Message("system", LIMIT[1]));
-            temp.add(new Message("user", frame + "\n\n" + COMMAND[1] + "\n\n" + script));
-            msgs.add(temp);
-        }
+        return CompletableFuture.supplyAsync(() -> {
+            StringBuilder resultBuilder = new StringBuilder();
+            AtomicInteger addTime = new AtomicInteger(0);
+            // 分批处理
+            for (int i = 0; i < messagesList.size(); i += 2) {
+                int end = Math.min(i + 2, messagesList.size());
+                List<List<Map<String, String>>> batch = messagesList.subList(i, end);
 
-        // 5. 并行调用API（修正版本）
-        List<CompletableFuture<String>> futures = msgs.stream()
-                .map(msg -> {
+                // 并行处理当前批次
+                List<CompletableFuture<String>> futures = batch.stream()
+                        .map(msgs -> GetAPIOutputAsync(msgs, "x1"))
+                        .collect(Collectors.toList());
+
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+                // 收集当前批次结果
+                futures.forEach(future -> {
                     try {
-                        // 直接返回GetApiOutput的Future
-                        return GetApiOutput(msg)
-                                .exceptionally(ex -> {
-                                    System.err.println("部分请求失败: " + ex.getMessage());
-                                    return ""; // 返回空字符串作为默认值
-                                });
-                    } catch (RuntimeException e) {
-                        return CompletableFuture.completedFuture(""); // 错误时返回空字符串
+                        resultBuilder.append(future.join());
+                        if (addTime.get() == 0) {
+                            resultBuilder.append("\n---\n## 人物剧本\n");
+                        }
+                        if (addTime.get() != 0 && addTime.get() < devidedMsg.getChrScript().size()) {
+                            resultBuilder.append("\n\n");
+                        } else {
+                            resultBuilder.append("\n---\n");
+                        }
+                        addTime.incrementAndGet();
+                    } catch (CompletionException e) {
+                        resultBuilder.append("[Error: ").append(e.getCause().getMessage()).append("]");
                     }
-                })
-                .collect(Collectors.toList());
-
-        // 6. 组合结果
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(ignored -> {
-                    String[] results = futures.stream()
-                            .map(CompletableFuture::join)
-                            .toArray(String[]::new);
-
-                    // 构建最终输出
-                    finalout.append(results[0]).append("\n\n---\n\n## 人物剧本\n\n---\n\n");
-                    for (int i = 4; i < msgs.size(); i++) {
-                        finalout.append("### ").append(results[i]).append("\n\n---\n\n");
-                    }
-                    finalout.append("## 线索\n\n").append(results[1])
-                            .append("\n\n---\n\n## 真相\n\n").append(results[2])
-                            .append("\n---\n\n## 组织者手册\n\n").append(results[3]);
-
-                    return finalout.toString();
-                })
-                .exceptionally(ex -> {
-                    System.err.println("API请求失败: " + ex.getMessage());
-                    return "null";
                 });
+            }
+            return resultBuilder.toString();
+        });
     }
 
     @Override
@@ -666,15 +668,65 @@ public class AIServicelmpl implements AIService {
         });
     }
 
-    private static final String[] LIMIT = {
-            "输出内容禁止使用markdown格式，仅输出背景相关内容，禁止输出其它无关文字，内容必须非常详细",
-            "输出内容禁止使用markdown格式，仅输出用户提及的角色内容，禁止输出其它无关文字，内容必须非常详细",
-            "输出内容禁止使用markdown格式，仅输出线索的内容，禁止输出其它无关文字，内容必须非常详细，只能在原本线索的基础上添加描述性信息以及有助于推理的要素，严禁添加线索数量",
-            "输出内容禁止使用markdown格式，仅输出真相内容，禁止输出其它无关文字。必须包含案件发生的完整过程、人物的目的及详细原因。",
-            "输出内容禁止使用markdown格式，仅输出组织者手册相关内容，禁止输出其它无关文字，内容必须非常详细"
+    private static final String[] GenDetailSysPrompt = {
+            """
+                    你是剧本杀创作的一员，你的任务是完善剧本背景，要求如下：
+                    	1、请以如下模板输出
+                    	## 背景
+                    	...（纯文本）
+
+                    	2、除了”## 背景“这部分内容使用MarkDown格式，剩余部分请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
+
+                    	3、请根据用户给出的剧本，完善和丰富背景部分的内容，并且只输出背景部分的内容
+                                        """,
+            """
+                    你是一名小说家，你将根据用户提供的剧本杀框架完成用户指定的人物剧本，要求如下：
+                                	1、请以 CHR 角色姓名 的形式开头
+                                	示例：
+                                	CHR 王小明
+                                	...（王小明的详细剧本内容）
+
+                                	2、请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
+
+                                	3、请根据用户给出的剧本，尽可能完善和丰富用户指定角色的剧本内容，并且只输出用户指定角色的剧本内容
+
+                                	4、请使用线性叙事，严格采用第一人称限知视角，仅通过主角的眼睛观察事件。禁止切换其他角色视角，所有信息必须来自：（1）主角亲眼所见/听闻；（2）主角的回忆；（3）主角对物理证据的推理
+                                                                """,
+            """
+                    你是剧本杀创作的一员，你的任务是完整描述剧本中已有的线索，要求如下：
+                    	1、请以如下模板输出
+                            	## 线索
+                                -C> ...
+                    		-C> ...
+                    		-C> ...
+
+                        2、除了”## 线索“这部分内容使用MarkDown格式，剩余部分请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
+
+                        3、请根据用户给出的剧本，完善和丰富线索部分的内容，并且只输出线索部分的内容
+
+                        4、禁止增加线索数量，请详细描述每一条已有线索
+                                        """,
+            """
+                    你是剧本杀创作的一员，你的任务是完善剧本真相，要求如下：
+                        1、请以如下模板输出
+                     	## 真相
+                        ...（纯文本）
+
+                        2、除了”## 真相“这部分内容使用MarkDown格式，剩余部分请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
+
+                        3、请根据用户给出的剧本，完善和丰富真相部分的内容，并且只输出真相部分的内容
+                                        """,
+            """
+                    你是剧本杀创作的一员，你的任务是完善组织者手册，要求如下：
+                    	1、请以 ## 组织者手册\n 开头
+
+                    	2、请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
+
+                    	3、请根据用户给出的剧本，完善和丰富组织者手册部分的内容，并且只输出组织者手册部分的内容
+                                        """
     };
 
-    private static final String[] COMMAND = {
+    private static final String[] GenDetailUserPrompt = {
             "\n\n请不遗余力地详细描述上述剧本中的 ## 背景 部分",
             "\n\n请根据上述剧本内容不遗余力地详细描述下述人物的剧本",
             "\n\n请不遗余力地详细描述上述剧本中的 ## 线索 部分",

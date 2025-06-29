@@ -2,7 +2,7 @@ package com.bengebackend.service;
 
 import com.bengebackend.entity.Slogan;
 import com.bengebackend.entity.SloganRequestEntity;
-import com.bengebackend.entity.Stage2AIMsgDevide;
+import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.entity.AIAnalysisResult;
 import com.bengebackend.entity.ThingDesc;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,7 +26,7 @@ public interface AIService {
     /**
      * 根据ID获取剧本详情
      */
-    CompletableFuture<Stage2AIMsgDevide> GenFramework(List<Map<String, String>> msgs);
+    CompletableFuture<AIMsgDevide> GenFramework(List<Map<String, String>> msgs);
 
     /**
      * 根据ID获取剧本详情

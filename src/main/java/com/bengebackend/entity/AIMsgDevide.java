@@ -2,7 +2,7 @@ package com.bengebackend.entity;
 
 import java.util.List;
 
-public class Stage2AIMsgDevide {
+public class AIMsgDevide {
     private String MsgForUser;
     private String StrScript;
     private String Title;
@@ -12,10 +12,15 @@ public class Stage2AIMsgDevide {
     private String Trues;
     private String GoBook;
 
-    public Stage2AIMsgDevide() {
+    public AIMsgDevide() {
     }
 
-    public Stage2AIMsgDevide(String MsgForUser, String StrScript, String Title, String Background,
+    public AIMsgDevide(String Title, String StrScript) {
+        this.Title = Title;
+        this.StrScript = StrScript;
+    }
+
+    public AIMsgDevide(String MsgForUser, String StrScript, String Title, String Background,
             List<String> ChrScript, List<String> Clues, String Trues, String GoBook) {
         this.MsgForUser = MsgForUser;
         this.StrScript = StrScript;
