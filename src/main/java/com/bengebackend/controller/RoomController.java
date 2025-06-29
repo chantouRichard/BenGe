@@ -9,10 +9,7 @@ import com.bengebackend.service.RoomService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -56,5 +53,12 @@ public class RoomController {
         log.debug("applyRoomEntity: {}", applyRoomEntity);
         String result = roomService.applyRoom(applyRoomEntity);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/is-owner/{roomId}")
+    public ResponseEntity<Boolean> isOwner(@PathVariable Integer roomId) {
+        // 调用 Service 获取当前用户是否是房主
+        boolean isOwner = roomService.isOwner(roomId);
+        return ResponseEntity.ok(isOwner);
     }
 }

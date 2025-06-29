@@ -42,4 +42,16 @@
         SET current_members = current_members + #{increment}
         WHERE id = #{roomId}
     </update>
+
+    <!-- 检查用户是否是房主 -->
+    <select id="checkIfOwner" resultType="boolean">
+        SELECT CASE
+        WHEN role = 1 THEN TRUE  <!-- 2 表示房主 -->
+        ELSE FALSE
+        END
+        FROM room_member
+        WHERE room_id = #{roomId}
+        AND user_id = #{userId}
+        LIMIT 1
+    </select>
 </mapper>

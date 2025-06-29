@@ -21,4 +21,6 @@ public interface RoomMapper {
     int addRoomMember(@Param("roomId") int roomId, @Param("userId") int userId);
 
     int updateRoomMemberCount(@Param("roomId") int roomId, @Param("increment") int increment);
+
+    boolean checkIfOwner(@Param("roomId") Integer roomId, @Param("userId") Integer userId);
 }

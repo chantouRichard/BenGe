@@ -14,4 +14,6 @@ public interface RoomService {
     List<RoomDto> getAllRooms(getAllRoomEntity getAllRoomsEntity);
 
     String applyRoom(applyRoomEntity applyRoomEntity);
+
+    boolean isOwner(Integer roomId);
 }

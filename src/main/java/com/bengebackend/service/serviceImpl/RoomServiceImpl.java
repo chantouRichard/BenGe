@@ -79,4 +79,12 @@ public class RoomServiceImpl implements RoomService {
 
         return "success";
     }
+
+    @Override
+    public boolean isOwner(Integer roomId) {
+        // 获取当前用户ID
+        int userId = Context.getCurrentUserId();  // 假设这是获取当前用户ID的方式
+        // 调用 Mapper 检查是否为房主
+        return roomMapper.checkIfOwner(roomId, userId);
+    }
 }

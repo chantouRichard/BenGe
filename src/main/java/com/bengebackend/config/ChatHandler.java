@@ -25,6 +25,8 @@ public class ChatHandler implements WebSocketHandler {
     private final ConcurrentHashMap<String, CopyOnWriteArraySet<WebSocketSession>> rooms = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> sessionRooms = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Integer> sessionUsers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, String> sessionAvatars = new ConcurrentHashMap<>();
+
 
     @Autowired
     private TokenService tokenService;
@@ -34,6 +36,8 @@ public class ChatHandler implements WebSocketHandler {
 
     @Autowired
     private RoomMapper roomMapper;
+
+    private String Avatar;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -54,6 +58,7 @@ public class ChatHandler implements WebSocketHandler {
                 // 处理认证消息
                 String token = msg.get("token").asText();
                 String roomIdStr = msg.get("roomId").asText();
+                this.Avatar = msg.get("avatar").asText();
                 
                 if (token == null || token.isEmpty()) {
                     log.warn("认证消息缺少token: sessionId = {}", session.getId());
@@ -106,7 +111,9 @@ public class ChatHandler implements WebSocketHandler {
                     // 保存用户和房间映射
                     sessionUsers.put(session.getId(), authUserId);
                     sessionRooms.put(session.getId(), roomIdStr);
-                    
+                    sessionAvatars.put(session.getId(), msg.get("avatar").asText());
+
+
                     // 加入房间WebSocket组
                     rooms.computeIfAbsent(roomIdStr, k -> new CopyOnWriteArraySet<>()).add(session);
                     
@@ -114,8 +121,11 @@ public class ChatHandler implements WebSocketHandler {
                             authUserId, userOpt.get().getUsername(), roomId, session.getId());
                     
                     // 发送用户信息给前端
-                    sendUserInfo(session, userOpt.get());
-                    
+                    log.info("用户认证成功并加入房间222: userId = {}, avatar = {}, roomId = {}, sessionId = {}",
+                            authUserId, msg.get("avatar").asText(), roomId, session.getId());
+                    sendUserInfo(session, userOpt.get(), sessionAvatars.get(session.getId()));
+
+
                     // 广播用户加入房间的消息
                     broadcastSystemMessage(roomIdStr, userOpt.get().getUsername() + " 加入了房间");
                     
@@ -231,12 +241,13 @@ public class ChatHandler implements WebSocketHandler {
         }
     }
     
-    private void sendUserInfo(WebSocketSession session, User user) {
+    private void sendUserInfo(WebSocketSession session, User user,String avatar) {
         try {
             JsonNode userInfoMsg = mapper.createObjectNode()
                     .put("type", "userInfo")
                     .put("userId", user.getId())
-                    .put("username", user.getUsername());
+                    .put("username", user.getUsername())
+                    .put("avatar", avatar);
             session.sendMessage(new TextMessage(mapper.writeValueAsString(userInfoMsg)));
         } catch (IOException e) {
             log.error("发送用户信息失败: sessionId = {}", session.getId(), e);
@@ -285,7 +296,8 @@ public class ChatHandler implements WebSocketHandler {
                         Map<String, Object> member = new HashMap<>();
                         member.put("id", userId);
                         member.put("username", userOpt.get().getUsername());
-                        member.put("avatar", ""); // 可以后续添加头像URL
+                        member.put("avatar", sessionAvatars.get(client.getId()));
+
                         members.add(member);
                     }
                 }
