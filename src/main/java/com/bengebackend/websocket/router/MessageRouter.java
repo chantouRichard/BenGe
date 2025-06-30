@@ -82,6 +82,10 @@ public class MessageRouter {
         
         message.setUsername(getTextValue(jsonNode, "username"));
 
+        if(jsonNode.has("roleName")){
+            message.setRoleName(getTextValue(jsonNode, "roleName"));
+        }
+
         // 新增对nodes和edges的处理
         if (jsonNode.has("nodes")) {
             message.setNodes(parseNodes(jsonNode.get("nodes")));
