@@ -1,24 +1,72 @@
 <template>
   <div class="container">
     <div class="header">
-      <div class="logo">BenGe Vision</div>
+      <div class="left-menu">
+        <div class="stage-title">
+          <i class="fa-solid fa-bars-staggered title-icon"></i>
+          <span class="title">共同编辑</span>
+        </div>
+      </div>
       <div class="right-menu">
-        <div class="menu-item">我的剧本</div>
-        <div class="menu-item">帮助</div>
-        <img src="../../assets/login.png" alt="avatar" class="avatar" />
+        <div class="back-image"></div>
+        <div class="menu-front">
+          <i class="fa-solid fa-scroll logo"></i>
+          <div class="menu-group">
+            <div class="menu-item">BenGe.Vision</div>
+            <i class="fa-solid fa-circle-info menu-icon"></i>
+            <img src="../../assets/login.png" alt="avatar" class="avatar" />
+          </div>
+        </div>
       </div>
     </div>
-    <h2 style="margin: 20px 50px 10px; color: white">第三阶段：共同编辑</h2>
     <div class="main-area">
+      <div class="toolbar-container">
+        <button @click="format('header', 1)" class="ql-custom">
+          <i class="fas fa-heading"></i><span>Heading 1</span>
+        </button>
+        <button @click="format('header', 2)" class="ql-custom">
+          <i class="fas fa-heading"></i><span>Heading 2</span>
+        </button>
+        <button @click="format('header', 3)" class="ql-custom">
+          <i class="fas fa-heading"></i><span>Heading 3</span>
+        </button>
+        <button @click="format('header', false)" class="ql-custom">
+          <i class="fas fa-paragraph"></i><span>Normal</span>
+        </button>
+        <button @click="format('bold')" class="ql-custom">
+          <i class="fas fa-bold"></i><span>Bold</span>
+        </button>
+        <button @click="format('italic')" class="ql-custom">
+          <i class="fas fa-italic"></i><span>Italic</span>
+        </button>
+        <button @click="format('underline')" class="ql-custom">
+          <i class="fas fa-underline"></i><span>Underline</span>
+        </button>
+        <button @click="format('strike')" class="ql-custom">
+          <i class="fas fa-strikethrough"></i><span>Strike</span>
+        </button>
+        <button @click="format('list', 'ordered')" class="ql-custom">
+          <i class="fas fa-list-ol"></i><span>Ordered</span>
+        </button>
+        <button @click="format('list', 'bullet')" class="ql-custom">
+          <i class="fas fa-list"></i><span>Bullet</span>
+        </button>
+        <button @click="format('link', prompt('Enter URL'))" class="ql-custom">
+          <i class="fas fa-link"></i><span>Link</span>
+        </button>
+        <button @click="format('code-block')" class="ql-custom">
+          <i class="fas fa-code"></i><span>Code</span>
+        </button>
+        <button @click="format('clean')" class="ql-custom">
+          <i class="fas fa-eraser"></i><span>Clear</span>
+        </button>
+      </div>
+
       <div class="edit-area">
-        <div style="display: flex; margin: 0px 20px 20px; align-items: center">
-          <h2>共同编辑区</h2>
+        <div class="edit-header">
+          <h2>编辑区</h2>
           <div style="margin-left: 20px; display: flex; align-items: center; gap: 10px">
-            <el-tag
-              :type="isConnected ? 'success' : 'danger'"
-              size="small"
-              style="font-size: 12px"
-            >
+            <el-tag :type="isConnected ? 'success' : 'danger'" size="small" style="font-size: 12px">
               {{ connectionStatus }}
             </el-tag>
             <span style="font-size: 12px; color: #666">
@@ -27,81 +75,43 @@
           </div>
           <div style="margin-left: auto; display: flex; gap: 10px">
             <el-button class="button" @click="saveToServer" :disabled="!isConnected">
-              <img
-                src="../../assets/save.png"
-                style="width: 16px; height: 16px; margin-right: 2px"
-              />保存剧本</el-button
-            >
-            <el-button class="button" @click="output">
-              <img
-                src="../../assets/output.png"
-                style="width: 16px; height: 16px; margin-right: 2px"
-              />导出剧本</el-button
-            >
+              <i class="fas fa-save fa-fw save-icon"></i>
+              保存剧本
+            </el-button>
+            <el-button class="button print" @click="output">
+              <img src="../../assets/output.png" style="width: 16px; height: 16px; margin-right: 2px" />导出剧本</el-button>
           </div>
         </div>
-        <div
-          id="editor"
-          style="height: calc(100% - 100px); background: #fff"
-        ></div>
+        <div id="editor" style="height: calc(100% - 100px);"></div>
       </div>
-      <div class="right-area">
-        <!-- 成员区 -->
-        <div class="member-area" :class="{ collapsed: !isMemberOpen }">
-          <div class="member-header">
-            <h2 style="min-width: 72px">在线成员 ({{ members.length }})</h2>
-            <button class="toggle-btn" @click="toggleMemberArea">
-              {{ isMemberOpen ? "▲" : "▼" }}
-            </button>
-          </div>
-          <transition name="fade">
-            <div v-show="isMemberOpen" class="member-list">
-              <div
-                class="member-item"
-                v-for="member in members"
-                :key="member.id"
-              >
-                <div class="member-avatar-container">
-                  <img :src="member.avatar" alt="avatar" class="member-avatar" />
-                  <div class="online-indicator"></div>
-                </div>
-                <span class="member-name">{{ member.name }}</span>
-              </div>
-              <div v-if="members.length === 0" class="no-members">
-                暂无其他成员在线
-              </div>
-            </div>
-          </transition>
-        </div>
 
-        <!-- 聊天区 -->
-        <div
-          class="chat-area"
-          :style="{ height: isMemberOpen ? '80%' : '95%' }"
-        >
-          <div>
-            <h2>聊天区</h2>
-          </div>
-          <div
-            style="
-              width: 100%;
-              height: 100%;
-              margin-left: auto;
-              margin-right: auto;
-              position: relative;
-              overflow: hidden;
-            "
-          >
-            <Chat
-              :roomId="roomId"
-              :userId="currentUser.id"
-              :userName="currentUser.name"
-              @membersUpdated="updateMembers"
-            />
-          </div>
+      <!-- 成员区 -->
+      <div class="member-area" :class="{ collapsed: !isMemberOpen }">
+        <div class="member-header">
+          <span class="member-titlr">在线成员 ({{ members.length }})</span>
+          <button class="toggle-btn" @click="toggleMemberArea">
+            {{ isMemberOpen ? "▲" : "▼" }}
+          </button>
         </div>
+        <transition name="fade">
+          <div v-show="isMemberOpen" class="member-list">
+            <div class="member-item" v-for="member in members" :key="member.id">
+              <div class="member-avatar-container">
+                <img :src="member.avatar" alt="avatar" class="member-avatar" />
+                <div class="online-indicator"></div>
+              </div>
+              <span class="member-name">{{ member.name }}</span>
+            </div>
+            <div v-if="members.length === 0" class="no-members">
+              暂无其他成员在线
+            </div>
+          </div>
+        </transition>
       </div>
     </div>
+    <FloatingChatWrapper :room-id="roomId" :user-id="currentUser.id" :user-name="currentUser.name"
+      :avatar="currentUser.avatar" @membersUpdated="updateMembers" />
+
   </div>
 </template>
 
@@ -118,7 +128,7 @@ import { WebsocketProvider } from "y-websocket";
 import { marked } from "marked";
 import TurndownService from "turndown";
 import axios from "axios";
-import Chat from "./Chat.vue";
+import FloatingChatWrapper from "./third/FloatingChatWrapper.vue";
 import loginImage from "../../assets/login.png";
 
 const route = useRoute();
@@ -169,14 +179,7 @@ onMounted(async () => {
         cursors: {
           transformOnTextChange: true,
         },
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'indent': '-1'}, { 'indent': '+1' }],
-          ['link', 'blockquote', 'code-block'],
-          ['clean']
-        ],
+        toolbar: false,
       },
     });
 
@@ -260,6 +263,16 @@ onMounted(async () => {
     connectionStatus.value = '连接失败';
   }
 });
+
+function format(name, value = true) {
+  if (quill) {
+    if (name === 'clean') {
+      quill.removeFormat(quill.getSelection());
+    } else {
+      quill.format(name, value);
+    }
+  }
+}
 
 onBeforeUnmount(() => {
   provider?.destroy();
@@ -386,42 +399,54 @@ function updateMembers(membersList) {
 
 <style scoped>
 .member-header {
-    display: flex;
-    height: 40px;
+  display: flex;
+  height: 40px;
 
-    align-items: center;
+  align-items: center;
 }
-.toggle-btn{
-    height: 30px;
-    width: 30px;
 
-    border: none;
-    background-color: white;
+.member-title {
+  font-size: 16px;
+  font-weight: bold;
+
 }
+
+.toggle-btn {
+  height: 30px;
+  width: 30px;
+
+  border: none;
+  background-color: white;
+}
+
 .member-area {
-  padding: 20px;
+  width: 240px;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  background-color: white;
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
-
-  /* ❌ 移除固定高度 */
-  /* height: 20%; */
+  padding-left: 14px;
+  padding-top: 20px;
 }
 
+/* 折叠状态下宽度变小，只保留 header */
+.member-area.collapsed {
+  width: 50px;
+}
 
 .member-list {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(120px, 1fr)
-  ); /* 自动换行、每列最小120px */
+  grid-template-columns: repeat(auto-fit,
+      minmax(120px, 1fr));
+  /* 自动换行、每列最小120px */
   margin-top: 10px;
-  justify-content: center; /* 整体居中 */
+  justify-content: center;
+  /* 整体居中 */
   width: 90%;
   max-width: 100%;
 }
@@ -479,130 +504,324 @@ function updateMembers(membersList) {
 }
 
 .container {
-  width: 100%;
-  height: 100vh; /* 使用视口高度，确保充满整个屏幕 */
-
-  background-image: url("@/assets/thirdback.jpeg");
+  width: 98%;
+  height: 95vh;
+  /* 使用视口高度，确保充满整个屏幕 */
+  margin: 10px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(90deg, #EDEEF2 0%, #ECEDEF 38%, #ECEDF1 70%, #EDEEF3 100%);
   background-size: cover;
   background-repeat: no-repeat;
 }
+
 .header {
   display: flex;
   align-items: center;
-  height: 60px;
-  padding: 0 60px;
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  gap: 20px;
+  width: 100%;
+  height: 65px;
+  padding: 0 0;
+  background-color: transparent;
+  border-color: transparent;
+  border-radius: 20px;
+}
+
+.left-menu {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom-color: transparent;
+}
+
+.stage-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.title-icon {
+  font-size: large;
+}
+
+.title {
+  font-weight: 800;
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 2px;
+}
+
+.right-menu {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 30px;
+  position: relative;
+  height: 100%;
+  border-bottom-left-radius: 30px;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 4px;
+}
+
+.back-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 113%;
+  background-image: url('../../assets/header-back.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 1;
+  border-bottom-left-radius: 30px;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 4px;
+}
+
+.menu-front {
+  width: 100%;
+  height: 113%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom-left-radius: 30px;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 4px;
+  background-color: transparent;
+  backdrop-filter: blur(10px);
+  align-items: center;
+  z-index: 2;
+  padding-left: 20px;
 }
 
 .logo {
   font-size: 22px;
   font-weight: bold;
+  color: white;
 }
 
-.right-menu {
+.menu-group {
   display: flex;
+  flex-direction: row;
+  justify-content: space-around;
   align-items: center;
-  margin-left: auto;
-  gap: 30px;
+  gap: 20px;
+  margin-right: 10px;
 }
 
 .menu-item {
-  cursor: pointer;
   font-size: 16px;
+  font-weight: bold;
   color: #333;
 }
 
+.menu-icon {
+  cursor: pointer;
+  font-size: 30px;
+  background-image: linear-gradient(45deg, #E6E6ED 0%, #C6C3DF 30%, #B5C4E1 70%, #B5BDDF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .avatar {
-  width: 40px;
-  height: 40px;
+  padding: 2px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
-  background-color: gray;
+  background-color: #FCFEFE;
+  z-index: 2;
 }
 
 .main-area {
+  flex: 1;
   display: flex;
-  padding: 32px;
-  gap: 20px; /* 子区域间距 */
+  padding: 32px 0px;
+  gap: 20px;
+  /* 子区域间距 */
   width: calc(100% - 100px);
   min-width: 827px;
-  margin: 50px;
-  background-color: rgba(255, 255, 255, 0.1); /* 半透明白色背景 */
-  backdrop-filter: blur(8px); /* 毛玻璃模糊效果 */
+  width: 100%;
+  background-color: transparent;
   height: calc(100% - 200px);
   min-height: 500px;
-  box-sizing: border-box; /* 确保 padding 不超宽 */
-  border-radius: 20px;
-
-  /* 其他样式 */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* 轻微的边框，增加层次感 */
-}
-
-.edit-area {
-  width: 66%;
-  min-width: 442px;
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
+  /* 确保 padding 不超宽 */
+  border-radius: 20px;
+  border-color: transparent;
+  z-index: 2;
 }
 
-.right-area {
-  gap: 20px;
+/* 工具栏容器竖排 */
+.toolbar-container {
   display: flex;
   flex-direction: column;
-  width: 34%;
-  min-width: 312px;
-
-  height: 100%;
+  gap: 10px;
+  padding: 16px;
+  width: 220px;
+  background: transparent;
+  border-radius: 12px;
 }
-.chat-area {
+
+/* 自定义按钮样式 */
+.ql-custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  width: 80%;
+  background: transparent;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  color: #2d3748ae;
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  z-index: 0;
+  transition: color 0.2s ease;
+}
+
+.ql-custom i {
+  font-size: 16px;
+}
+
+/* 波浪渐变背景效果 */
+.ql-custom::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 0%, #2541EC 0%, #3182ce 50%, transparent 100%);
+  transform: translateY(-100%);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ql-custom:hover::before {
+  transform: translateY(0%);
+}
+
+.ql-custom:hover {
+  color: white;
+}
+
+.ql-custom:hover span {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* 图标 + 文字 */
+.ql-custom span {
+  pointer-events: none;
+}
+
+
+.edit-area {
+  /* width: 66%; */
+  flex: 1;
+  min-width: 442px;
+  background-color: white;
+  background: #F4F6F7;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  margin-left: -40px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  transition: width 0.3s ease;
+}
+
+.edit-header {
+  display: flex;
+  margin: 0px 20px 20px;
+  align-items: center;
+  padding: 10px;
+}
+
+/* .chat-area {
   height: 85%;
   display: flex;
   flex-direction: column;
-
+  position: absolute;
   background-color: white;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
-}
+} */
 
 .button {
   height: 40px;
-  background-color: #2712bb;
-  color: white;
-  border-radius: 10px;
+  border-radius: 30px;
   transition: all 0.3s ease;
   border: none;
   cursor: pointer;
 }
 
-.button:hover {
+.save-icon {
+  margin-right: 6px;
+  font-size: 16px;
+  color: hsla(231, 88%, 53%, 0.7);
+  /* 控制颜色、透明度 */
+}
+
+.button.save {
+  background-color: hsla(240, 100%, 100%, 0.435);
+  color: hsla(231, 88%, 53%, 0.339);
+}
+
+.button.print {
+  background-color: #1E3DF0;
+  color: #F5F6F9;
+}
+
+.button.save:hover i {
+  color: white;
+}
+
+.button.print:hover {
   background-color: #1e0a9a;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(39, 18, 187, 0.3);
 }
 
 .button:disabled {
-  background-color: #cccccc;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
+#editor {
+  border-color: transparent;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #E5E7F3 0%, #E3E7F4 25%, #E0E6F6 50%, #DFE4F7 75%, #DDE3F4 100%);
+  padding: 10px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+  flex: 1;
+}
+
 /* 过渡动画 */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s ease, max-height 0.3s ease;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
   max-height: 0;
 }
 
-.fade-enter-to, .fade-leave-from {
+.fade-enter-to,
+.fade-leave-from {
   opacity: 1;
   max-height: 200px;
 }

@@ -13,7 +13,12 @@
 
     <!-- 展开面板 -->
     <transition name="panel-expand">
-      <div v-if="isExpanded" class="tool-panel">
+      <div
+        v-if="isExpanded"
+        class="tool-panel"
+        @mousemove="handlePanelMove"
+        :style="panelHoverStyle"
+      >
         <button
           v-for="(btn, i) in buttons"
           :key="btn.action"
@@ -29,9 +34,7 @@
             class="icon-tool"
             :style="{
               transform: btn.hover ? 'scale(1.15)' : 'none',
-              filter: btn.hover
-                ? 'drop-shadow(0 0 8px ' + btn.color + ')'
-                : 'none',
+              filter: btn.hover ? 'drop-shadow(0 0 8px ' + btn.color + ')' : 'none',
             }"
           />
           <span class="tooltip">{{ btn.tooltip }}</span>
@@ -44,7 +47,6 @@
 <script setup>
 import { ref, computed } from "vue";
 
-// 按钮配置
 const buttons = ref([
   {
     icon: require("@/assets/icons/plus-circle.svg"),
@@ -76,20 +78,30 @@ const buttons = ref([
   },
 ]);
 
-// 交互状态
 const isExpanded = ref(false);
 const isDragging = ref(false);
 const position = ref({ x: 40, y: 40 });
 const dragStartPos = ref(null);
+const panelHoverPos = ref({ x: 0, y: 0 });
 
-// 动态样式
 const toolballStyle = computed(() => ({
   left: `${position.value.x}px`,
   top: `${position.value.y}px`,
   "--panel-width": `${buttons.value.length * 56 + 16}px`,
 }));
 
-// 拖拽逻辑
+const panelHoverStyle = computed(() => ({
+  backgroundImage: `radial-gradient(200px circle at ${panelHoverPos.value.x}px ${panelHoverPos.value.y}px, rgba(176, 227, 255, 0.35), transparent 80%)`
+}));
+
+const handlePanelMove = (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  panelHoverPos.value = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+  };
+};
+
 const startDrag = (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -133,7 +145,6 @@ const startDrag = (e) => {
   display: flex;
   align-items: center;
   cursor: grab;
-
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -149,8 +160,7 @@ const startDrag = (e) => {
   border: none;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(4px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 0 20px 2px var(--glow-color, rgba(100, 200, 255, 0.5));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 20px 2px rgba(100, 200, 255, 0.5);
   cursor: pointer;
   transition: all 0.3s ease;
   display: grid;
@@ -159,12 +169,10 @@ const startDrag = (e) => {
 
 .main-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2),
-    0 0 30px 4px var(--glow-color);
-  background-color: #9b7fff;
+  background: linear-gradient(to top, #dce1ff, #ffffff);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 30px 4px rgba(100, 200, 255, 0.7);
 }
 
-/* 图标样式 */
 .icon-main {
   width: 28px;
   height: 28px;
@@ -174,64 +182,71 @@ const startDrag = (e) => {
 .icon-tool {
   width: 22px;
   height: 22px;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transition: all 0.3s ease;
 }
 
 .tool-panel {
+  position: relative;
   display: flex;
   padding: 0 12px;
   height: 56px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(12px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  overflow: hidden;
   margin-left: 12px;
+  background: linear-gradient(to top, rgba(244, 246, 251, 0.7), rgba(255, 255, 255, 0.3));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  transition: background 0.4s ease;
 }
 
 .tool-button {
   position: relative;
+  z-index: 1;
   width: 44px;
   height: 44px;
   margin: 0 6px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 50%;
-  border: 1px solid var(--btn-color, rgba(100, 200, 255, 0.5));
-  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)
-    calc(var(--delay-index, 0) * 50ms);
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.35);
+  transition: all 0.3s ease calc(var(--delay-index, 0) * 50ms);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
 .tool-button:hover {
+  background: linear-gradient(135deg, #b0e3ff, #ffffff);
+  border: 1px solid #9faeff;
+  box-shadow: 0 0 6px rgba(176, 227, 255, 0.6), 0 0 10px rgba(159, 174, 255, 0.4);
   transform: scale(1.15);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 0 2px var(--btn-color), 0 0 15px var(--btn-color);
 }
 
-/* 提示文本 */
+.tool-button:hover .icon-tool {
+  filter: drop-shadow(0 0 6px rgba(150, 200, 255, 0.6)) saturate(140%);
+  transform: scale(1.1);
+}
+
 .tooltip {
   position: absolute;
   top: 50px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, 8px);
   white-space: nowrap;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .tool-button:hover .tooltip {
   opacity: 1;
+  transform: translate(-50%, 0);
 }
 
-/* 展开动画 */
 .panel-expand-enter-active,
 .panel-expand-leave-active {
-  transition: opacity 0.3s ease,
-    transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
 .panel-expand-enter-from,

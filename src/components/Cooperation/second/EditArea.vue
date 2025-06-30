@@ -24,13 +24,11 @@
 
 <script>
 import NarrativeWorkspace from "@/components/Cooperation/second/roles/NarrativeWorkspace.vue";
-import CharacterDesign from "@/components/Cooperation/second/roles/CharacterDesign.vue";
 
 export default {
   name: "EditArea",
   components: {
-    NarrativeWorkspace,
-    CharacterDesign,
+    NarrativeWorkspace
   },
   props: {
     roles: {
