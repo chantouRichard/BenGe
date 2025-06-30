@@ -2,7 +2,7 @@
   <div class="choose-area">
     <div class="choose-header">
       <h2 style="color: white">请选择你的角色</h2>
-      <button class="button" style="margin-left: auto" @click="$emit('confirm')">
+      <button class="button" style="margin-left: auto" @click="confirmSelection">
         选择完毕
       </button>
     </div>
@@ -10,8 +10,8 @@
       <div v-for="(role, index) in roles" :key="index" class="role-wrapper">
         <div class="card-container">
           <!-- 显示已选择角色的用户名 -->
-          <div v-if="roleSelections[index]" class="role-username">
-            {{ roleSelections[index] }}
+          <div v-if="socketState.roleSelections[roles[index].name]" class="role-username">
+            {{ socketState.roleSelections[roles[index].name] }}
           </div>
           <img
             :src="getRoleImage(index)"
@@ -27,63 +27,75 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, defineProps, defineEmits } from 'vue';
 import { socketState } from '@/stores/socket';
-export default {
-  props: {
-    roles: {
-      type: Array,
-      required: true
-    }
-  },
-  data() {
-    return {
-      selectedRole: null,  // 当前成员选择的角色
-      roleSelections: {}   // 存储每个角色的选择状态，key是角色索引，value是已选择的用户名
-    };
-  },
-  emits: ['selected', 'confirm'],
-  methods: {
-    getRoleImage(index) {
-      return require(`@/assets/second/role${index + 1}.jpeg`)
-    },
-    // 选择角色
-    selectRole(index) {
-      // 如果该角色已被其他成员选择，则弹出提示
-      if (this.roleSelections[index]) {
-        this.$message({
-          message: `${this.roleSelections[index]} 已选择该角色！`,
-          type: 'warning',
-        });
-        return;
-      }
+import { ElMessage } from 'element-plus';
 
-      // 如果是当前用户选择角色
-      this.selectedRole = this.roles[index];
-      this.emitRoleSelection(index);  // 通过 WebSocket 发送角色选择
-    },
-
-    // 发送角色选择到服务器
-    emitRoleSelection(index) {
-      const roleName = this.roles[index].name;
-      socketState.socket.send(
-        JSON.stringify({
-          type: "roleSelection",
-          roleName,
-          username: socketState.currentUsername,
-        })
-      );
-    },
-
-    // 确认角色选择
-    confirmSelection() {
-      this.$emit("confirm", this.selectedRole);
-    },
+// 定义 props
+const props = defineProps({
+  roles: {
+    type: Array,
+    required: true
   }
+});
+
+// 定义 emits
+const emit = defineEmits(['selected', 'confirm']);
+
+// 响应式数据
+const selectedRole = ref(null);  // 当前成员选择的角色
+
+// 获取角色图片
+function getRoleImage(index) {
+  return require(`@/assets/second/role${index + 1}.jpeg`);
+}
+
+// 选择角色
+function selectRole(index) {
+  const roleName = props.roles[index].name;
+
+  // 如果该角色已被其他成员选择，则弹出提示
+  if (socketState.roleSelections[roleName]) {
+    ElMessage({
+      message: `${socketState.roleSelections[roleName]} 已选择该角色！`,
+      type: 'warning',
+    });
+    return;
+  }
+
+  // 如果是当前用户选择角色
+  selectedRole.value = props.roles[index];
+  emitRoleSelection(roleName);  // 通过 WebSocket 发送角色选择
+}
+
+// 发送角色选择到服务器
+function emitRoleSelection(roleName) {
+  socketState.socket.send(
+    JSON.stringify({
+      type: "role",
+      roleName,
+      username: socketState.currentUsername,
+    })
+  );
+  console.log("发送了选择角色消息：", {
+    type: "role",
+    roleName,
+    username: socketState.currentUsername,
+  });
+}
+
+// 确认角色选择
+function confirmSelection() {
+  emit('confirm', selectedRole.value);
 }
 </script>
 
+
 <style scoped>
+.button{
+  background-color: white;
+}
 .choose-area{
     display: flex;
     flex-direction: column;
@@ -127,7 +139,7 @@ export default {
   background: rgba(0, 0, 0, 0.5);
   color: white;
   padding: 2px 8px;
-  font-size: 12px;
+  font-size: 16px;
   border-radius: 3px;
 }
 
@@ -151,7 +163,7 @@ export default {
   background-size: cover;
   background-repeat: no-repeat;
   border-radius: 10px;
-  overflow: hidden;
+  /* overflow: hidden; */
   transition: transform 0.3s ease;
 }
 

@@ -20,7 +20,6 @@
           ></button>
           <div style="padding: 20px">
             <NarrativeWorkspace
-              v-if="userRole == 0"
               @updateGraph="handleGraphUpdate"
             />
           </div>

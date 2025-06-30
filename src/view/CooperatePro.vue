@@ -194,6 +194,7 @@ import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Refresh, Lock, House, User, Plus, Search } from '@element-plus/icons-vue';
 import {createRoom, getRoomList, joinRoom, getCurrentRoom, leaveRoom, getOwnedRooms, enterOwnedRoom} from "../api/room";
+import { socketState,setupWebSocket } from "@/stores/socket";
 
 const router = useRouter();
 
@@ -307,7 +308,10 @@ function create() {
 
 async function enterRoom(room) {
   console.log(`进入房间：${room.name}，房间ID：${room.roomId}`);
-  
+
+  socketState.roomId = room.roomId;
+  socketState.avatar = require(`@/assets/avatar/${Math.floor(Math.random() * 5 + 1)}.jpg`);
+  setupWebSocket();
   // 防止重复点击
   if (joiningRoomId.value !== null) {
     return;

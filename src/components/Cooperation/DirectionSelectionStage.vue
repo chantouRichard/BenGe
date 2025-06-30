@@ -154,7 +154,7 @@ const currentUser = ref({
   name:
     localStorage.getItem("username") ||
     "用户" + Math.floor(Math.random() * 1000),
-  avatar: require(`@/assets/avatar/${Math.floor(Math.random() * 5 + 1)}.jpg`),
+  avatar: socketState.avatar,
   role: false,
 });
 

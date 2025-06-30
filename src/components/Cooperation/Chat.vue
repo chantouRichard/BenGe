@@ -67,7 +67,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import loginImage from "@/assets/login.png";
-import { setupWebSocket, socketState, closeWebSocket, sendMessage } from "@/stores/socket.js";
+import { socketState } from "@/stores/socket.js";
 
 // 接收 props
 const props = defineProps({
@@ -155,16 +155,6 @@ watch(() => props.initialMessages, (newVal) => {
   messages.value = newVal;
 });
 
-// 生命周期钩子
-onMounted(() => {
-  setupWebSocket(props.roomId, props.avatar);
-});
-
-onBeforeUnmount(() => {
-  if (socketState.socket) {
-    closeWebSocket();
-  }
-});
 
 // Refs
 const messagesContainer = ref(null);
