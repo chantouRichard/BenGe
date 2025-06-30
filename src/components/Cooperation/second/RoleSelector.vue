@@ -67,6 +67,9 @@ function selectRole(index) {
   // 如果是当前用户选择角色
   selectedRole.value = props.roles[index];
   emitRoleSelection(roleName);  // 通过 WebSocket 发送角色选择
+  
+  // 发送选择事件给父组件
+  emit('selected', index);
 }
 
 // 发送角色选择到服务器

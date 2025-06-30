@@ -2,6 +2,9 @@
   <div class="canvas-container">
     <VueFlow
       class="vue-flow"
+      :style="{
+    backgroundPosition: `${backgroundX}px ${backgroundY}px`
+  }"
       :nodes="props.nodes"
       :edges="props.edges"
       :node-types="nodeTypes"
@@ -16,10 +19,33 @@
       @node-drag-stop="handleNodeDragStop"
       @connect="handleConnect"
       @edge-update="handleEdgeUpdate"
+      @move="handleMove"
+    
     >
+    <!-- <Background 
+      variant="lines" 
+      gap="20" 
+      size="0.6" 
+      patternColor="#6e28e6" 
+      bgColor="#fafafa" 
+      width="100" 
+      height="100" 
+    /> -->
       <!-- 自定义结点 -->
       <template #node-custom="{ id, type, data, position }">
         <CustomNode
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
+      <!-- 角色卡片节点 -->
+      <template #node-character="{ id, type, data, position }">
+        <CharacterCard
           :key="id"
           :id="id"
           :type="type"
@@ -33,6 +59,11 @@
       <template #edge-custom="edgeProps">
         <CustomEdge v-bind="edgeProps"/>
       </template>
+
+      <!-- 角色关系边 -->
+      <template #edge-relationship="edgeProps">
+        <CharacterRelationEdge v-bind="edgeProps"/>
+      </template>
     </VueFlow>
   </div>
 </template>
@@ -42,6 +73,8 @@ import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { defineProps, defineEmits, defineExpose, markRaw } from 'vue'
 import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
+import CharacterCard from '../CharacterCom/CharacterCard.vue'
+import CharacterRelationEdge from '../CharacterCom/CharacterRelationEdge.vue'
 
 const props = defineProps({
   nodes: {
@@ -71,6 +104,16 @@ const props = defineProps({
 // }, { deep: true })
 
 const emit = defineEmits(['node-select', "edge-select" , 'delete-node' , 'node-position-change', "connect-node"])
+import { ref } from 'vue'
+
+const backgroundX = ref(0)
+const backgroundY = ref(0)
+
+const handleMove = (viewpoint) => {
+  console.log("画布位置:",viewpoint);
+  backgroundX.value = viewpoint.flowTransform.x;
+  backgroundY.value = viewpoint.flowTransform.y;
+}
 
 // 处理节点事件
 const handleNodeClick = (node) => {
@@ -102,11 +145,13 @@ const handleNodeDragStop = (node) => {
 }
 
 const nodeTypes = {
-  custom: CustomNode
+  custom: CustomNode,
+  character: CharacterCard
 }
 
 const edgeTypes = {
-  custom: markRaw(CustomEdge)
+  custom: markRaw(CustomEdge),
+  relationship: markRaw(CharacterRelationEdge)
 }
 
 // 强制刷新结点
@@ -143,15 +188,23 @@ defineExpose({
 
 // 边连接完成事件（拖动新边）
 const handleConnect = (params) => {
-  console.log(params);
+  // 检查源节点类型来决定边类型
+  const sourceNode = props.nodes.find(n => n.id === params.source);
+  const isCharacterNode = sourceNode?.type === 'character';
+  
   const newEdge = {
     id: `edge-${params.source}-${params.target}-${Date.now()}`,
     source: params.source,
     target: params.target,
     sourceHandle: params.sourceHandle, // 指定起点 handle
     targetHandle: params.targetHandle, // 指定终点 handle
-    type: 'custom',
-    data: {
+    type: isCharacterNode ? 'relationship' : 'custom',
+    data: isCharacterNode ? {
+      type: 'friend',
+      label: '关系',
+      strength: 5,
+      status: 'active'
+    } : {
       type: 'dependency',
       label: '新边'
     }
@@ -194,8 +247,10 @@ const handleEdgeUpdate = ({ edge, connection }) => {
 }
 
 .vue-flow {
-  background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px);
+  /* background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px); */
   /* background: transparent; */
+  /* background-color: #F0F1F5; */
+  background-image: url('../../../../../assets/second/canvasback.png');
 }
 
 /* 覆盖VueFlow默认节点样式 */

@@ -18,67 +18,68 @@
 
     <div v-else-if="stage == 1" class="main-area">
       <EditArea
-      v-if="!showOther"
         :roles="roles"
         :userRole="userRole"
         @nextStage="changeStage(1)"
       />
-      <OtherEditArea v-else-if="showOther"
-        :roles="roles"
-        :userRole="userRole"
-        :chooseUser="selectedMember.name"
-        :chooseUserRole="氛围设计师"
-        @enlarge="showOtherPanel = true"
-        @reduce="showOtherPanel = false"
-        @nextStage="changeStage(1)"/>
 
-      <SidePanel
-        :members="members"
-        :user-id="userId"
-        :avatar="userAvatar"
-        :is-member-open="true"
-        @membersUpdated="updateMembers"
-        @clickMember="handleMemberClick"
-      />
-<teleport to="body">
-<transition name="slide-panel">
-  <div v-if="showOtherPanel" class="side-panel-container" :style="{
-      transform: isPanelCollapsed ? 'translateX(0)' : 'translateX(100%)'
-    }"
-  >
-    <!-- SidePanel 内容 -->
-    <div class="side-panel-content">
-      <SidePanel
-        :members="members"
-        :user-id="userId"
-        :avatar="userAvatar"
-        :is-member-open="true"
-        @membersUpdated="updateMembers"
-        @clickMember="handleMemberClick"
-        background-color="white"
-        fontColor="black"
-      />
-    </div>
+      <teleport to="body">
+        <MemberList />
+      </teleport>
+      <teleport to="body">
+        <TaskCard :title="'任务卡片'" :taskText="'你没有任务'" />
+      </teleport>
+      <teleport to="body">
+        <ScollingTips/>
+      </teleport>
+      <teleport to="body">
+        <ChatPanel/>
+      </teleport>
+      <teleport to="body">
+        <transition name="slide-panel">
+          <div
+            class="side-panel-container"
+            :style="{
+              transform: isPanelCollapsed
+                ? 'translateX(0)'
+                : 'translateX(100%)',
+            }"
+          >
+            <!-- SidePanel 内容 -->
+            <div class="side-panel-content">
+              <SidePanel
+                :members="members"
+                :user-id="userId"
+                :avatar="userAvatar"
+                :is-member-open="true"
+                @membersUpdated="updateMembers"
+                @clickMember="handleMemberClick"
+                background-color="white"
+                fontColor="black"
+              />
+            </div>
 
-    <!-- 垂直居中的按钮 -->
-    <button class="side-panel-toggle" @click="isPanelCollapsed = !isPanelCollapsed">
-      {{ isPanelCollapsed ? '>' : '<' }}
-    </button>
-  </div>
-</transition>
-
-</teleport>
-
+            <!-- 垂直居中的按钮 -->
+            <button
+              class="side-panel-toggle"
+              @click="isPanelCollapsed = !isPanelCollapsed"
+            >
+              {{ isPanelCollapsed ? ">" : "<" }}
+            </button>
+          </div>
+        </transition>
+      </teleport>
     </div>
   </div>
 </template>
 
 <script setup>
-// import NarrativeWorkspace from "../roles/NarrativeWorkspace.vue";
 import { onMounted, onBeforeUnmount } from "vue";
-// import Chat from "./Chat.vue";
-// import loginImage from "../../assets/login.png";
 import { ref } from "vue";
+import MemberList from "./second/MemberList.vue";
+import TaskCard from "./second/TaskCard.vue";
+import ScollingTips from "./second/ScollingTips.vue";
+import ChatPanel from "./second/ChatPanel.vue";
 
 import { defineEmits } from "vue";
 
@@ -103,7 +104,6 @@ function handleMemberClick(data) {
 
 // 编辑区
 import EditArea from "./second/EditArea.vue";
-import OtherEditArea from "./second/OtherEditArea.vue";
 
 const emit = defineEmits(["updateStage"]);
 
@@ -116,7 +116,6 @@ const selectedMember = ref(null);
 const showOtherPanel = ref(false);
 const showOther = ref(false);
 const isPanelCollapsed = ref(false);
-
 
 // const isMemberOpen = ref(false);
 
@@ -175,7 +174,6 @@ function updateMembers(membersList) {
 <style scoped>
 /* 折叠面板 */
 
-
 /* 外部容器（包含按钮 + 面板） */
 /* 侧边栏容器（整体一起滑动） */
 .side-panel-container {
@@ -192,9 +190,9 @@ function updateMembers(membersList) {
   flex-direction: row;
 
   /* 亚克力风格核心 */
-  background: rgba(255, 255, 255, 0.15);  /* 半透明白色 */
-  backdrop-filter: blur(12px);           /* 毛玻璃模糊效果 */
-  -webkit-backdrop-filter: blur(12px);   /* Safari 支持 */
+  background: rgba(255, 255, 255, 0.15); /* 半透明白色 */
+  backdrop-filter: blur(12px); /* 毛玻璃模糊效果 */
+  -webkit-backdrop-filter: blur(12px); /* Safari 支持 */
 
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2); /* 柔和阴影 */
   border-left: 1px solid rgba(255, 255, 255, 0.2); /* 细边界线 */
@@ -204,7 +202,6 @@ function updateMembers(membersList) {
   border-top-left-radius: 12px;
   border-bottom-left-radius: 12px;
 }
-
 
 /* SidePanel 区域 */
 .side-panel-content {
@@ -240,9 +237,6 @@ function updateMembers(membersList) {
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
-
-
-
 
 .container {
   width: 100%;

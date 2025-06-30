@@ -14,6 +14,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@vicons/ionicons5": "^0.13.0",
+    "@vue-flow/background": "^1.3.2",
     "@vue-flow/core": "^1.45.0",
     "@vueup/vue-quill": "^1.0.0-beta.11",
     "axios": "^1.8.4",

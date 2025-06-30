@@ -6,7 +6,7 @@
     <!-- <Handle type="target" position="top" id="top" :class="['vue-flow__handle', 'handle-top']" />
     <Handle type="target" position="bottom" id="bottom" :class="['vue-flow__handle', 'handle-bottom']" /> -->
 
-    <Handle type="source" position="left" id="left-srouce" :class="['vue-flow__handle', 'handle-left']" />
+    <Handle type="source" position="left" id="left-source" :class="['vue-flow__handle', 'handle-left']" />
     <Handle type="source" position="right" id="right-source" :class="['vue-flow__handle', 'handle-right']" />
     <!-- <Handle type="source" position="top" id="top-source" :class="['vue-flow__handle', 'handle-top']" />
     <Handle type="source" position="bottom" id="bottom-source" :class="['vue-flow__handle', 'handle-bottom']" /> -->
