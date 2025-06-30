@@ -2,6 +2,9 @@
   <div class="canvas-container">
     <VueFlow
       class="vue-flow"
+      :style="{
+    backgroundPosition: `${backgroundX}px ${backgroundY}px`
+  }"
       :nodes="props.nodes"
       :edges="props.edges"
       :node-types="nodeTypes"
@@ -16,7 +19,18 @@
       @node-drag-stop="handleNodeDragStop"
       @connect="handleConnect"
       @edge-update="handleEdgeUpdate"
+      @move="handleMove"
+    
     >
+    <!-- <Background 
+      variant="lines" 
+      gap="20" 
+      size="0.6" 
+      patternColor="#6e28e6" 
+      bgColor="#fafafa" 
+      width="100" 
+      height="100" 
+    /> -->
       <!-- 自定义结点 -->
       <template #node-custom="{ id, type, data, position }">
         <CustomNode
@@ -42,6 +56,7 @@ import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { defineProps, defineEmits, defineExpose, markRaw } from 'vue'
 import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
+// import { Background } from '@vue-flow/background'
 
 const props = defineProps({
   nodes: {
@@ -71,6 +86,16 @@ const props = defineProps({
 // }, { deep: true })
 
 const emit = defineEmits(['node-select', "edge-select" , 'delete-node' , 'node-position-change', "connect-node"])
+import { ref } from 'vue'
+
+const backgroundX = ref(0)
+const backgroundY = ref(0)
+
+const handleMove = (viewpoint) => {
+  console.log("画布位置:",viewpoint);
+  backgroundX.value = viewpoint.flowTransform.x;
+  backgroundY.value = viewpoint.flowTransform.y;
+}
 
 // 处理节点事件
 const handleNodeClick = (node) => {
@@ -194,8 +219,10 @@ const handleEdgeUpdate = ({ edge, connection }) => {
 }
 
 .vue-flow {
-  background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px);
+  /* background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px); */
   /* background: transparent; */
+  /* background-color: #F0F1F5; */
+  background-image: url('../../../../../assets/second/canvasback.png');
 }
 
 /* 覆盖VueFlow默认节点样式 */

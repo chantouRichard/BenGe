@@ -261,8 +261,7 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 广播节点和边的信息
   const broadcast = () => {
-    console.log("nodes:", nodes);
-    socketState.socket.send(JSON.stringify({type:"canvas", nodes: nodes.value, edges: edges }));
+    socketState.socket.send({nodes:nodes.value,edges:edges});
   };
 
   return {

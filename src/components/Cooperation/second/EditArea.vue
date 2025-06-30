@@ -1,24 +1,12 @@
 <template>
   <div class="edit-area">
-    <!-- 顶部标题 + 按钮 -->
-    <div class="edit-header">
-      <h2>
-        第二阶段:分工设计阶段<br />
-        你的角色是：{{ roles[userRole].name }}
-      </h2>
-      <button class="button" @click="$emit('nextStage')">下一阶段</button>
-    </div>
 
     <!-- 全屏编辑区域 -->
     <teleport to="body">
       <transition name="fullscreen-slide">
-        <div class="canvas fullscreen" v-if="isFullScreen">
-          <button
-            class="canvasButton"
-            @click="isFullScreen = false"
-            :style="{ backgroundImage: `url(${reduceIcon})` }"
-          ></button>
-          <div style="padding: 20px">
+        <div class="canvas fullscreen">
+          <div style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;">第二阶段<br>你的角色是：{{ roles[userRole].name }}</div>
+          <div class="canvas">
             <NarrativeWorkspace
               @updateGraph="handleGraphUpdate"
             />
@@ -26,27 +14,6 @@
         </div>
       </transition>
     </teleport>
-
-    <!-- 常规编辑区域 -->
-    <transition name="canvas-fade">
-      <div class="canvas" v-if="!isFullScreen">
-        <button
-          class="canvasButton"
-          @click="isFullScreen = true"
-          :style="{ backgroundImage: `url(${enlargeIcon})` }"
-        ></button>
-        <div style="padding: 20px; height: 100%">
-          <NarrativeWorkspace
-            v-if="userRole == 0"
-            @updateGraph="handleGraphUpdate"
-          />
-          <CharacterDesign
-            v-if="userRole == 1"
-            @updateGraph="handleGraphUpdate"
-          />
-        </div>
-      </div>
-    </transition>
   </div>
 </template>
 
@@ -73,8 +40,6 @@ export default {
   data() {
     return {
       isFullScreen: false,
-      enlargeIcon: require("@/assets/second/enlarge.png"),
-      reduceIcon: require("@/assets/second/reduce.png"),
 
       sharedNodes: [],
       sharedEdges: [],
@@ -101,10 +66,14 @@ export default {
   box-sizing: border-box;
 }
 .edit-header {
+  position: fixed;
   display: flex;
-  margin: 0px 20px 20px;
+  top: 100px;
+  left: 100px;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+
+  background: transparent;
 }
 
 .canvasButton {
@@ -134,7 +103,7 @@ export default {
 .canvas {
   position: relative;
   width: 100%;
-  height: calc(100% - 100px);
+  height: 100%;
 
   background-image: url(~@/assets/second/canvas.png);
 
@@ -153,7 +122,7 @@ export default {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 9999; /* 保证在最顶层 */
+  z-index: 1000; /* 保证在最顶层 */
   background-color: white; /* 如需白底，或保持透明 */
 
   /* ✅ 关键调整项 */
