@@ -22,7 +22,7 @@ public class UserController {
     }
 
     // 登录接口
-    @PostMapping ("/login")
+    @GetMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
         System.out.println(username);
         // 检查用户名和密码是否为空
