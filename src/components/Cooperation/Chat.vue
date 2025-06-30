@@ -294,39 +294,34 @@ const messagesContainer = ref(null);
 .chat-input-area {
   display: flex;
   align-items: center;
-  padding: 12px;
-  background-color: #f0f0f0;
-  border-top: 1px solid #ddd;
+  padding: 10px 12px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #eee;
 }
 
 .message-input {
-  height: 40px;
   flex: 1;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  outline: none;
+  padding: 10px 16px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
   font-size: 14px;
+  outline: none;
 }
 
 .send-button {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
+  margin-left: 10px;
+  border-radius: 50%;
+  background-color: #3b82f6;
   display: flex;
-  justify-content: center;
   align-items: center;
-
-  margin-left: 12px;
-  padding: 4px 5px;
-  border: none;
-  border-radius: 20px;
+  justify-content: center;
   cursor: pointer;
-  outline: none;
+  transition: all 0.3s ease;
 }
 
 .send-button:hover {
-  background-color: #00c3ff;
-
-  transition: all 0.3s ease;
+  background-color: #2563eb;
 }
 </style>

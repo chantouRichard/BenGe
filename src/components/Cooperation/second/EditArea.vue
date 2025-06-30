@@ -6,7 +6,7 @@
         第二阶段:分工设计阶段<br />
         你的角色是：{{ roles[userRole].name }}
       </h2>
-      <button class="button" @click="$emit('nextStage')">下一阶段</button>
+      <button class="button" @click="$emit('nextStage', 2)">下一阶段</button>
     </div>
 
     <!-- 全屏编辑区域 -->

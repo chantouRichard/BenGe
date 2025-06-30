@@ -1,8 +1,8 @@
 <template>
-  <div v-if="stage == 1">
+  <div v-if="stage == 2">
     <FrameworkDesignStage :stage="stage" @updateStage="updateStage"/>
   </div>
-  <div v-else-if="stage == 2">
+  <div v-else-if="stage == 1">
     <CompleteScriptStage />
   </div>
   <div v-else>
@@ -12,11 +12,10 @@
 
 <script setup>
 import { ref } from "vue";
-import FrameworkDesignStage from "@/components/cooperate-stages/FrameworkDesignStage.vue";
-import CompleteScriptStage from "@/components/cooperate-stages/CompleteScriptStage.vue";
-import DirectionSelectionStage from "@/components/cooperate-stages/DirectionSelectionStage.vue";
+import FrameworkDesignStage from "@/components/Cooperation/FrameworkDesignStage.vue";
+import CompleteScriptStage from "@/components/Cooperation/CompleteScriptStage.vue";
+import DirectionSelectionStage from "@/components/Cooperation/DirectionSelectionStage.vue";
 import { setupWebSocket } from "@/stores/socket";
-// import NarrativeWorkspace from "@/components/roles/NarrativeWorkspace.vue";
 
 const stage = ref(0);
 setupWebSocket();
