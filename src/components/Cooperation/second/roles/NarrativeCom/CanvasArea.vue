@@ -29,9 +29,26 @@
         />
       </template>
 
+      <!-- 角色卡片节点 -->
+      <template #node-character="{ id, type, data, position }">
+        <CharacterCard
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
       <!-- 自定义边 -->
       <template #edge-custom="edgeProps">
         <CustomEdge v-bind="edgeProps"/>
+      </template>
+
+      <!-- 角色关系边 -->
+      <template #edge-relationship="edgeProps">
+        <CharacterRelationEdge v-bind="edgeProps"/>
       </template>
     </VueFlow>
   </div>
@@ -42,12 +59,20 @@ import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { defineProps, defineEmits, defineExpose, markRaw } from 'vue'
 import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
+import CharacterCard from '../CharacterCom/CharacterCard.vue'
+import CharacterRelationEdge from '../CharacterCom/CharacterRelationEdge.vue'
 
 const props = defineProps({
   nodes: {
     type: Array,
     required: true,
-    validator: nodes => nodes.every(n => n.position && typeof n.position.x === 'number')
+    validator: nodes => {
+      console.log('CanvasArea - 验证节点数据:', nodes)
+      return nodes.every(n => {
+        console.log('节点:', n.id, '类型:', n.type, '位置:', n.position)
+        return n.position && typeof n.position.x === 'number'
+      })
+    }
   },
   edges: {
     type: Array,
@@ -102,11 +127,15 @@ const handleNodeDragStop = (node) => {
 }
 
 const nodeTypes = {
-  custom: CustomNode
+  custom: CustomNode,
+  character: CharacterCard
 }
 
+console.log('CanvasArea - 注册的节点类型:', nodeTypes)
+
 const edgeTypes = {
-  custom: markRaw(CustomEdge)
+  custom: markRaw(CustomEdge),
+  relationship: markRaw(CharacterRelationEdge)
 }
 
 // 强制刷新结点

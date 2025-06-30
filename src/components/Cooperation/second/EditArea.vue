@@ -18,8 +18,13 @@
             @click="isFullScreen = false"
             :style="{ backgroundImage: `url(${reduceIcon})` }"
           ></button>
-          <div style="padding: 20px">
+          <div style="padding: 20px; height: 100%">
             <NarrativeWorkspace
+              v-if="userRole == 0"
+              @updateGraph="handleGraphUpdate"
+            />
+            <CharacterDesign
+              v-if="userRole == 1"
               @updateGraph="handleGraphUpdate"
             />
           </div>
