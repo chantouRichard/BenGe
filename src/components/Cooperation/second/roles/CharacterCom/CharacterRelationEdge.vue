@@ -1,42 +1,60 @@
 <template>
   <BaseEdge 
     :id="id"
+    :path="edgePath"
     :style="edgeStyle"
-    :source-x="sourceX"
-    :source-y="sourceY"
-    :target-x="targetX"
-    :target-y="targetY"
-    :label-style="labelStyle"
-    :label-bg-style="labelBgStyle"
-    :label-x="labelX"
-    :label-y="labelY"
     :marker-end="markerEnd"
   >
-    <text 
-      :x="labelX" 
-      :y="labelY" 
-      class="relationship-label"
-      :style="labelTextStyle"
+  </BaseEdge>
+  
+  <!-- 使用EdgeLabelRenderer来渲染标签和强度指示器 -->
+  <EdgeLabelRenderer>
+    <div
+      :style="{
+        position: 'absolute',
+        transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+        pointerEvents: 'all',
+        zIndex: 1000
+      }"
+      class="relationship-label-container"
     >
-      {{ relationshipLabel }}
-    </text>
+      <div
+        class="relationship-label"
+        :style="{
+          backgroundColor: relationshipColor,
+          color: '#ffffff',
+          padding: '2px 8px',
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          whiteSpace: 'nowrap'
+        }"
+      >
+        {{ relationshipLabel }}
+      </div>
+    </div>
     
     <!-- 关系强度指示器 -->
-    <circle
+    <div
       v-for="(dot, index) in strengthDots"
       :key="index"
-      :cx="dot.x"
-      :cy="dot.y"
-      :r="dot.radius"
-      :fill="strengthColor"
-      :opacity="0.7"
+      :style="{
+        position: 'absolute',
+        transform: `translate(-50%, -50%) translate(${dot.x}px, ${dot.y}px)`,
+        width: '6px',
+        height: '6px',
+        borderRadius: '50%',
+        backgroundColor: strengthColor,
+        opacity: 0.7,
+        pointerEvents: 'none'
+      }"
     />
-  </BaseEdge>
+  </EdgeLabelRenderer>
 </template>
 
 <script setup>
 import { computed, defineProps } from 'vue'
-import { BaseEdge } from '@vue-flow/core'
+import { BaseEdge, EdgeLabelRenderer, getBezierPath } from '@vue-flow/core'
 
 const props = defineProps({
   id: String,
@@ -44,10 +62,24 @@ const props = defineProps({
   sourceY: Number,
   targetX: Number,
   targetY: Number,
+  sourcePosition: String,
+  targetPosition: String,
   data: {
     type: Object,
     default: () => ({})
   }
+})
+
+// 计算边路径
+const edgePath = computed(() => {
+  return getBezierPath({
+    sourceX: props.sourceX,
+    sourceY: props.sourceY,
+    sourcePosition: props.sourcePosition,
+    targetX: props.targetX,
+    targetY: props.targetY,
+    targetPosition: props.targetPosition,
+  })[0]
 })
 
 // 关系数据
@@ -119,36 +151,9 @@ const edgeStyle = computed(() => ({
 const labelX = computed(() => (props.sourceX + props.targetX) / 2)
 const labelY = computed(() => (props.sourceY + props.targetY) / 2)
 
-// 标签样式
-const labelStyle = computed(() => ({
-  fill: '#ffffff',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  textAnchor: 'middle',
-  dominantBaseline: 'middle'
-}))
-
-// 标签背景样式
-const labelBgStyle = computed(() => ({
-  fill: relationshipColor.value,
-  fillOpacity: 0.9,
-  rx: 8,
-  ry: 4
-}))
-
-// 标签文字样式
-const labelTextStyle = computed(() => ({
-  fill: '#ffffff',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  textAnchor: 'middle',
-  dominantBaseline: 'middle',
-  pointerEvents: 'none'
-}))
-
-// 箭头标记
+// 箭头标记 - 简化版本
 const markerEnd = computed(() => {
-  return `url(#arrowhead-${relationData.value.type || 'default'})`
+  return 'url(#arrow)'
 })
 
 // 关系强度点

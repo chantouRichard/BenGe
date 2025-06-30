@@ -70,10 +70,6 @@ const emit = defineEmits(['click', 'delete'])
 // 默认头像 - 修复路径问题
 const defaultAvatar = require('@/assets/avatar/1.jpg')
 
-// 调试信息
-console.log('CharacterCard渲染 - 节点数据:', props.data)
-console.log('CharacterCard渲染 - 节点类型:', props.type)
-
 // 角色数据
 const characterData = computed(() => props.data || {})
 

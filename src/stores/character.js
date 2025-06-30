@@ -1,24 +1,27 @@
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 
-export const useCharacter = defineStore('story', () => {
+export const useCharacterStore = defineStore('characterStore', () => {
 
   // 生成结点的ID
   const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
-  // 所有节点数据
+  // 所有角色节点数据
   const nodes = ref([{
     id: generateNodeId(),
-    type: 'custom',
+    type: 'character',
     position: { x: 100, y: 100 },
     data: {
-      title: '测试场景222',
-      timeLabel: 'DAY1 09:00',
-      characters: '张三',
-      clues: '线索A',
-      sceneDescription: '会议室',
-      nodeConnections: '与节点2相关',
-      notes: '注意时间冲突',
+      name: '张三',
+      avatar: require('@/assets/avatar/1.jpg'),
+      age: 28,
+      occupation: '律师',
+      personality: ['冷静', '理性', '正义感强'],
+      background: '毕业于知名法学院，专攻刑事辩护，有着强烈的正义感和敏锐的洞察力。',
+      skills: ['法律知识', '逻辑推理', '谈判技巧'],
+      items: '一支父亲留下的钢笔，法学院毕业证书',
+      notes: '主要推理角色，善于发现细节线索',
+      relationships: []
     }
   }])
 
@@ -55,26 +58,46 @@ export const useCharacter = defineStore('story', () => {
     showEdgeSelector.value = true
   }
 
-  // 用户在边选择器中，确认创建边
-  const handleEdgeConfirm = (edgeType, label) => {
+  // 用户在关系选择器中，确认创建角色关系
+  const handleEdgeConfirm = (relationData) => {
     if (selectedNodesForEdge.value.length === 2) {
       const [sourceNode, targetNode] = selectedNodesForEdge.value;
 
-      // 使用 reactive 包裹新边对象
+      // 创建角色关系边
       const newEdge = reactive({
-        id: `edge-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
+        id: `relationship-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
         source: sourceNode.id,
         target: targetNode.id,
-        sourcePosition: 'right',
-        targetPosition: 'left',
-        type: 'custom',
-        data: reactive({  // 嵌套的 data 也必须是响应式
-          type: edgeType,
-          label: label || ''
+        sourceHandle: 'right-source',
+        targetHandle: 'left',
+        type: 'relationship',
+        data: reactive({
+          type: relationData.type,
+          description: relationData.description,
+          strength: relationData.strength,
+          status: relationData.status,
+          label: relationData.type || '关系'
         })
       });
 
-      edges.push(newEdge); // 直接 push 到 reactive 数组
+      edges.push(newEdge);
+
+      // 同时在角色节点中记录关系
+      const sourceNodeIndex = nodes.value.findIndex(n => n.id === sourceNode.id);
+      const targetNodeIndex = nodes.value.findIndex(n => n.id === targetNode.id);
+      
+      if (sourceNodeIndex !== -1) {
+        if (!nodes.value[sourceNodeIndex].data.relationships) {
+          nodes.value[sourceNodeIndex].data.relationships = [];
+        }
+        nodes.value[sourceNodeIndex].data.relationships.push({
+          targetId: targetNode.id,
+          type: relationData.type,
+          description: relationData.description,
+          strength: relationData.strength,
+          status: relationData.status
+        });
+      }
     }
 
     selectedNodesForEdge.value = [];
@@ -82,18 +105,35 @@ export const useCharacter = defineStore('story', () => {
     showEdgeSelector.value = false;
   };
 
-  // 用户在边选择器中修改边，确认
-  const handleEdgeEditConfirm = (edgeType, label) => {
+  // 用户在关系选择器中修改关系，确认
+  const handleEdgeEditConfirm = (relationData) => {
     if (!editingEdgeId.value) return;
 
     const edge = edges.find(e => e.id === editingEdgeId.value);
     if (edge) {
-      // 直接修改 reactive 对象的属性
-      edge.data.type = edgeType;
-      edge.data.label = label || '';
+      // 更新关系边数据
+      edge.data.type = relationData.type;
+      edge.data.description = relationData.description;
+      edge.data.strength = relationData.strength;
+      edge.data.status = relationData.status;
+      edge.data.label = relationData.type || '关系';
 
-      // 调用 CanvasArea 的更新方法（确保传递最新数据）
-      // canvasRef.value?.forceUpdateEdge(editingEdgeId.value, edge.data);
+      // 同时更新角色节点中的关系记录
+      const sourceNodeIndex = nodes.value.findIndex(n => n.id === edge.source);
+      if (sourceNodeIndex !== -1 && nodes.value[sourceNodeIndex].data.relationships) {
+        const relationIndex = nodes.value[sourceNodeIndex].data.relationships.findIndex(
+          r => r.targetId === edge.target
+        );
+        if (relationIndex !== -1) {
+          nodes.value[sourceNodeIndex].data.relationships[relationIndex] = {
+            targetId: edge.target,
+            type: relationData.type,
+            description: relationData.description,
+            strength: relationData.strength,
+            status: relationData.status
+          };
+        }
+      }
 
       editingEdgeId.value = null;
       showEdgeSelector.value = false;
@@ -105,6 +145,7 @@ export const useCharacter = defineStore('story', () => {
     selectedNodesForEdge.value = []
     isCreatingEdge.value = false
     showEdgeSelector.value = false
+    editingEdgeId.value = null  // 重置编辑状态
   }
 
   // 在边选择器中，删除边
@@ -121,7 +162,6 @@ export const useCharacter = defineStore('story', () => {
 
   // 连接结点
   const handleConnectNode = (newEdge) => {
-    console.log('[DEBUG] 连接结点边：', newEdge)
     edges.push(newEdge)
   }
 
@@ -130,13 +170,11 @@ export const useCharacter = defineStore('story', () => {
     const actualNode = node.node || node; // 处理两种可能的情况
 
     if (isCreatingEdge.value) {
-      console.log("当前选择结点", actualNode)
       if (!selectedNodesForEdge.value.find(n => n.id === actualNode.id)) {
         selectedNodesForEdge.value.push(actualNode);
       }
 
       if (selectedNodesForEdge.value.length === 2) {
-        console.log('已选择两个节点：', selectedNodesForEdge.value);
         showEdgeSelector.value = true;
       }
     } else {
@@ -188,28 +226,30 @@ export const useCharacter = defineStore('story', () => {
   
   
 
-  // 工具栏中添加结点
+  // 工具栏中添加角色
   const handleAddNode = (event) => {
-    const rect = event?.target?.getBoundingClientRect(); // 获取点击位置
-    const x = rect ? event.clientX - rect.left : 200; // 相对画布位置
-    const y = rect ? event.clientY - rect.top : 200;
+    const rect = event?.target?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+    const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
 
     const newNode = {
       id: generateNodeId(),
-      type: 'custom',
-      position: { x, y }, // 动态位置
+      type: 'character',
+      position: { x, y },
       data: {
-        title: '测试场景',
-        timeLabel: '',
-        characters: '',
-        clues: '',
-        sceneDescription: '',
-        nodeConnections: '',
-        notes: ''
+        name: '新角色',
+        avatar: require('@/assets/avatar/1.jpg'),
+        age: null,
+        occupation: '',
+        personality: [],
+        background: '',
+        skills: [],
+        items: '',
+        notes: '',
+        relationships: []
       }
     };
     nodes.value.push(newNode);
-    console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
 
   }
 

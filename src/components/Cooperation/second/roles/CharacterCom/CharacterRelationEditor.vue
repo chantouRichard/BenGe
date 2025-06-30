@@ -57,12 +57,8 @@
                 :options="relationTypeOptions"
                 placeholder="请选择关系类型"
                 clearable
-                @update:value="(value) => console.log('选择的关系类型:', value)"
               />
-              <!-- 调试信息 -->
-              <div style="font-size: 12px; color: #666; margin-top: 4px;">
-                调试: 选项数量 {{ relationTypeOptions.length }}, 当前值: {{ formData.type }}
-              </div>
+
             </n-form-item>
 
             <n-form-item label="关系描述" path="description">
@@ -84,12 +80,11 @@
               />
             </n-form-item>
 
-            <n-form-item label="关系性质" path="status">
+            <n-form-item label="关系状态" path="status">
               <n-radio-group v-model:value="formData.status">
-                <n-radio value="positive">正面</n-radio>
-                <n-radio value="neutral">中性</n-radio>
-                <n-radio value="negative">负面</n-radio>
-                <n-radio value="complex">复杂</n-radio>
+                <n-radio value="active">活跃</n-radio>
+                <n-radio value="passive">潜在</n-radio>
+                <n-radio value="conflict">冲突</n-radio>
               </n-radio-group>
             </n-form-item>
           </n-form>
@@ -174,7 +169,7 @@ const showSelector = computed(() => props.source && props.target);
 const sourceCharacter = computed(() => props.source?.data || {});
 const targetCharacter = computed(() => props.target?.data || {});
 
-// 关系类型选项
+// 关系类型选项 - 使用常量确保在teleport后也能正常工作
 const relationTypeOptions = [
   { label: '朋友', value: 'friend' },
   { label: '恋人', value: 'lover' },

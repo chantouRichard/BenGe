@@ -11,7 +11,7 @@
     <!-- 主画布 -->
     <CanvasArea
       ref="canvasRef"
-      v-if="effectiveNodes && effectiveNodes.length > 0"
+      v-if="effectiveNodes.length > 0"
       :nodes="effectiveNodes"
       :edges="effectiveEdges"
       @delete-node="characterStore.handleDeleteNode"
@@ -32,7 +32,7 @@
 
       <!-- 角色关系编辑器 -->
       <CharacterRelationEditor 
-        v-if="characterStore.showEdgeSelector" 
+        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId" 
         :source="characterStore.selectedNodesForEdge[0]" 
         :target="characterStore.selectedNodesForEdge[1]"
         @confirm="characterStore.handleEdgeConfirm" 
@@ -63,10 +63,10 @@ import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import CharacterDetailPanel from './CharacterCom/CharacterDetailPanel.vue'
 import CharacterRelationEditor from './CharacterCom/CharacterRelationEditor.vue'
 import { useCharacterStore } from '@/stores/character'
-import { ref , computed } from 'vue'
+import { ref , computed, watch } from 'vue'
 
 // 传入参数
-import { defineProps } from 'vue'
+// defineProps 是编译宏，不需要导入
 
 const props = defineProps({
   nodes: Array,
@@ -77,19 +77,19 @@ const props = defineProps({
 const characterStore = useCharacterStore()
 const canvasRef = ref(null)
 
+// 监听边数组变化（用于调试时可以取消注释）
+// watch(() => characterStore.edges, (newEdges) => {
+//   console.log('[DEBUG] CharacterDesign - 边数组变化:', newEdges)
+// }, { deep: true })
+
 // 然后定义计算属性
 const effectiveNodes = computed(() => {
-  const result = props.nodes || characterStore.nodes
-  console.log('CharacterDesign - 有效节点数据:', result)
-  return result
+  return props.nodes || characterStore.nodes
 })
 const effectiveEdges = computed(() => props.edges || characterStore.edges)
 
 // 直接使用 store 中的数据驱动画布
-const nodes = computed(() => {
-  console.log('CharacterDesign - store中的节点:', characterStore.nodes)
-  return characterStore.nodes
-})
+const nodes = computed(() => characterStore.nodes)
 
 // 获取当前编辑的边
 const getCurrentEdge = () => {

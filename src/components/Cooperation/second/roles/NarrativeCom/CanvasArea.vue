@@ -66,13 +66,7 @@ const props = defineProps({
   nodes: {
     type: Array,
     required: true,
-    validator: nodes => {
-      console.log('CanvasArea - 验证节点数据:', nodes)
-      return nodes.every(n => {
-        console.log('节点:', n.id, '类型:', n.type, '位置:', n.position)
-        return n.position && typeof n.position.x === 'number'
-      })
-    }
+    validator: nodes => nodes.every(n => n.position && typeof n.position.x === 'number')
   },
   edges: {
     type: Array,
@@ -131,8 +125,6 @@ const nodeTypes = {
   character: CharacterCard
 }
 
-console.log('CanvasArea - 注册的节点类型:', nodeTypes)
-
 const edgeTypes = {
   custom: markRaw(CustomEdge),
   relationship: markRaw(CharacterRelationEdge)
@@ -172,15 +164,23 @@ defineExpose({
 
 // 边连接完成事件（拖动新边）
 const handleConnect = (params) => {
-  console.log(params);
+  // 检查源节点类型来决定边类型
+  const sourceNode = props.nodes.find(n => n.id === params.source);
+  const isCharacterNode = sourceNode?.type === 'character';
+  
   const newEdge = {
     id: `edge-${params.source}-${params.target}-${Date.now()}`,
     source: params.source,
     target: params.target,
     sourceHandle: params.sourceHandle, // 指定起点 handle
     targetHandle: params.targetHandle, // 指定终点 handle
-    type: 'custom',
-    data: {
+    type: isCharacterNode ? 'relationship' : 'custom',
+    data: isCharacterNode ? {
+      type: 'friend',
+      label: '关系',
+      strength: 5,
+      status: 'active'
+    } : {
       type: 'dependency',
       label: '新边'
     }
