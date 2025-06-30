@@ -43,9 +43,26 @@
         />
       </template>
 
+      <!-- 角色卡片节点 -->
+      <template #node-character="{ id, type, data, position }">
+        <CharacterCard
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
       <!-- 自定义边 -->
       <template #edge-custom="edgeProps">
         <CustomEdge v-bind="edgeProps"/>
+      </template>
+
+      <!-- 角色关系边 -->
+      <template #edge-relationship="edgeProps">
+        <CharacterRelationEdge v-bind="edgeProps"/>
       </template>
     </VueFlow>
   </div>
@@ -56,7 +73,8 @@ import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { defineProps, defineEmits, defineExpose, markRaw } from 'vue'
 import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
-// import { Background } from '@vue-flow/background'
+import CharacterCard from '../CharacterCom/CharacterCard.vue'
+import CharacterRelationEdge from '../CharacterCom/CharacterRelationEdge.vue'
 
 const props = defineProps({
   nodes: {
@@ -127,11 +145,13 @@ const handleNodeDragStop = (node) => {
 }
 
 const nodeTypes = {
-  custom: CustomNode
+  custom: CustomNode,
+  character: CharacterCard
 }
 
 const edgeTypes = {
-  custom: markRaw(CustomEdge)
+  custom: markRaw(CustomEdge),
+  relationship: markRaw(CharacterRelationEdge)
 }
 
 // 强制刷新结点
@@ -168,15 +188,23 @@ defineExpose({
 
 // 边连接完成事件（拖动新边）
 const handleConnect = (params) => {
-  console.log(params);
+  // 检查源节点类型来决定边类型
+  const sourceNode = props.nodes.find(n => n.id === params.source);
+  const isCharacterNode = sourceNode?.type === 'character';
+  
   const newEdge = {
     id: `edge-${params.source}-${params.target}-${Date.now()}`,
     source: params.source,
     target: params.target,
     sourceHandle: params.sourceHandle, // 指定起点 handle
     targetHandle: params.targetHandle, // 指定终点 handle
-    type: 'custom',
-    data: {
+    type: isCharacterNode ? 'relationship' : 'custom',
+    data: isCharacterNode ? {
+      type: 'friend',
+      label: '关系',
+      strength: 5,
+      status: 'active'
+    } : {
       type: 'dependency',
       label: '新边'
     }

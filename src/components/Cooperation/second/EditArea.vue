@@ -8,6 +8,11 @@
           <div style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;">第二阶段<br>你的角色是：{{ roles[userRole].name }}</div>
           <div class="canvas">
             <NarrativeWorkspace
+              v-if="userRole == 0"
+              @updateGraph="handleGraphUpdate"
+            />
+            <CharacterDesign
+              v-if="userRole == 1"
               @updateGraph="handleGraphUpdate"
             />
           </div>

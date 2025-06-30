@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 
-export const useCharacter = defineStore('story', () => {
+export const useClueStore = defineStore('clueStore', () => {
 
   // 生成结点的ID
   const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);

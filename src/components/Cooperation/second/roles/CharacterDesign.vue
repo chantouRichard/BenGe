@@ -1,61 +1,131 @@
 <template>
   <div class="workspace-container">
-    <!-- 悬浮工具球 -->
-    <FloatingToolball @add-node="canvasStore.handleAddNode" @add-edge="canvasStore.handleCreateEdgeClick" @export="handleExport" />
+    <!-- 角色设计师专用工具栏 -->
+    <CharacterToolbar 
+      @add-character="characterStore.handleAddNode" 
+      @add-relationship="characterStore.handleCreateEdgeClick" 
+      @character-template="handleCharacterTemplate"
+      @export-characters="handleExportCharacters"
+    />
 
     <!-- 主画布 -->
-    <CanvasArea ref="canvasRef" v-if="effectiveNodes.length > 0" :nodes="effectiveNodes" :edges="effectiveEdges" @delete-node="canvasStore.handleDeleteNode"
-      @node-select="canvasStore.handleNodeClick" @edge-select="canvasStore.handleEdgeSelect"
-      @node-position-change="canvasStore.handlePositionChange" @connect-node="canvasStore.handleConnectNode" />
+    <CanvasArea
+      ref="canvasRef"
+      v-if="effectiveNodes.length > 0"
+      :nodes="effectiveNodes"
+      :edges="effectiveEdges"
+      @delete-node="characterStore.handleDeleteNode"
+      @node-select="characterStore.handleNodeClick"
+      @edge-select="characterStore.handleEdgeSelect"
+      @node-position-change="characterStore.handlePositionChange"
+      @connect-node="characterStore.handleConnectNode"
+    />
 
-    <!-- 节点详情抽屉 -->
+    <!-- 角色详情面板 -->
     <div style="height: 100%;width: 100%;">
-      <NodeDetailDrawer :visible="canvasStore.selectedNode" :nodeData="canvasStore.selectedNode" @save="handleDetailSave"
-        @close="canvasStore.selectedNode = null" />
+      <CharacterDetailPanel 
+        :visible="characterStore.selectedNode" 
+        :nodeData="characterStore.selectedNode" 
+        @save="handleDetailSave"
+        @close="characterStore.selectedNode = null" 
+      />
 
-      <EdgeTypeSelector v-if="canvasStore.showEdgeSelector" :source="canvasStore.selectedNodesForEdge[0]" :target="canvasStore.selectedNodesForEdge[1]"
-        @confirm="canvasStore.handleEdgeConfirm" @cancel="canvasStore.handleEdgeCancel" />
+      <!-- 角色关系编辑器 -->
+      <CharacterRelationEditor 
+        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId" 
+        :source="characterStore.selectedNodesForEdge[0]" 
+        :target="characterStore.selectedNodesForEdge[1]"
+        @confirm="characterStore.handleEdgeConfirm" 
+        @cancel="characterStore.handleEdgeCancel" 
+      />
 
-      <EdgeTypeSelector v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId"
-        :initialType="canvasStore.edges.find(e => e.id === canvasStore.editingEdgeId)?.data?.type || null"
-        :initialLabel="canvasStore.edges.find(e => e.id === canvasStore.editingEdgeId)?.data?.label || ''"
+      <!-- 编辑现有关系 -->
+      <CharacterRelationEditor 
+        v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId"
+        :source="getEdgeSourceNode()"
+        :target="getEdgeTargetNode()"
+        :initialType="getCurrentEdge()?.data?.type || ''"
+        :initialDescription="getCurrentEdge()?.data?.description || ''"
+        :initialStrength="getCurrentEdge()?.data?.strength || 5"
+        :initialStatus="getCurrentEdge()?.data?.status || 'active'"
         :showDelete="true"
-        @confirm="canvasStore.handleEdgeEditConfirm"
-        @cancel="canvasStore.handleEdgeCancel" @delete-edge="canvasStore.handleDeleteEdge" />
+        @confirm="characterStore.handleEdgeEditConfirm"
+        @cancel="characterStore.handleEdgeCancel" 
+        @delete-relation="characterStore.handleDeleteEdge" 
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import FloatingToolball from './NarrativeCom/FloatingToolball.vue'
+import CharacterToolbar from './CharacterCom/CharacterToolbar.vue'
 import CanvasArea from './NarrativeCom/CanvasArea.vue'
-import NodeDetailDrawer from './NarrativeCom/NodeDetailDrawer.vue'
-import EdgeTypeSelector from './NarrativeCom/EdgeTypeSelector.vue'
-import { useCharacter } from '@/stores/character'
-import { ref , computed } from 'vue'
+import CharacterDetailPanel from './CharacterCom/CharacterDetailPanel.vue'
+import CharacterRelationEditor from './CharacterCom/CharacterRelationEditor.vue'
+import { useCharacterStore } from '@/stores/character'
+import { ref , computed, watch } from 'vue'
 
 // 传入参数
-import { defineProps } from 'vue'
+// defineProps 是编译宏，不需要导入
 
 const props = defineProps({
   nodes: Array,
   edges: Array,
 })
-const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
-const effectiveEdges = computed(() => props.edges || canvasStore.edges)
 
-
-const canvasStore = useCharacter()
+// 先初始化store
+const characterStore = useCharacterStore()
 const canvasRef = ref(null)
 
-// // 直接使用 store 中的数据驱动画布
-const nodes = computed(() => canvasStore.nodes)
-// const edges = computed(() => canvasStore.edges)
+// 监听边数组变化（用于调试时可以取消注释）
+// watch(() => characterStore.edges, (newEdges) => {
+//   console.log('[DEBUG] CharacterDesign - 边数组变化:', newEdges)
+// }, { deep: true })
+
+// 然后定义计算属性
+const effectiveNodes = computed(() => {
+  return props.nodes || characterStore.nodes
+})
+const effectiveEdges = computed(() => props.edges || characterStore.edges)
+
+// 直接使用 store 中的数据驱动画布
+const nodes = computed(() => characterStore.nodes)
+
+// 获取当前编辑的边
+const getCurrentEdge = () => {
+  return characterStore.edges.find(e => e.id === characterStore.editingEdgeId)
+}
+
+// 获取边的源节点
+const getEdgeSourceNode = () => {
+  const edge = getCurrentEdge()
+  return edge ? characterStore.nodes.find(n => n.id === edge.source) : null
+}
+
+// 获取边的目标节点
+const getEdgeTargetNode = () => {
+  const edge = getCurrentEdge()
+  return edge ? characterStore.nodes.find(n => n.id === edge.target) : null
+}
+
+// 角色详情保存
 const handleDetailSave = (updatedData) => {
-  const index = canvasStore.handleDetailSave(updatedData);
+  const index = characterStore.handleDetailSave(updatedData);
   console.log("接受到的索引",index);
   console.log("当前节点数据",nodes.value)
   canvasRef.value?.forceUpdateNode(updatedData.id, nodes.value[index].data);
+}
+
+// 角色模板功能
+const handleCharacterTemplate = () => {
+  console.log('打开角色模板选择')
+  // TODO: 实现角色模板功能
+}
+
+// 导出角色表功能
+const handleExportCharacters = () => {
+  console.log('导出角色表')
+  // TODO: 实现角色表导出功能
 }
 
 </script>
