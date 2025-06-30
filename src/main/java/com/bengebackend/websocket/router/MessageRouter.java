@@ -81,6 +81,15 @@ public class MessageRouter {
         }
         
         message.setUsername(getTextValue(jsonNode, "username"));
+
+        // 新增对nodes和edges的处理
+        if (jsonNode.has("nodes")) {
+            message.setNodes(parseNodes(jsonNode.get("nodes")));
+        }
+
+        if (jsonNode.has("edges")) {
+            message.setEdges(parseEdges(jsonNode.get("edges")));
+        }
         
         return message;
     }
@@ -91,5 +100,41 @@ public class MessageRouter {
     private String getTextValue(JsonNode jsonNode, String fieldName) {
         JsonNode fieldNode = jsonNode.get(fieldName);
         return (fieldNode != null && !fieldNode.isNull()) ? fieldNode.asText() : null;
+    }
+
+    /**
+     * 解析节点数据
+     */
+    private List<WebSocketMessage.NodeData> parseNodes(JsonNode nodesNode) {
+        try {
+            return objectMapper.readValue(
+                    nodesNode.toString(),
+                    objectMapper.getTypeFactory().constructCollectionType(
+                            List.class,
+                            WebSocketMessage.NodeData.class
+                    )
+            );
+        } catch (Exception e) {
+            log.error("解析节点数据失败", e);
+            return null;
+        }
+    }
+
+    /**
+     * 解析边数据
+     */
+    private List<WebSocketMessage.EdgeData> parseEdges(JsonNode edgesNode) {
+        try {
+            return objectMapper.readValue(
+                    edgesNode.toString(),
+                    objectMapper.getTypeFactory().constructCollectionType(
+                            List.class,
+                            WebSocketMessage.EdgeData.class
+                    )
+            );
+        } catch (Exception e) {
+            log.error("解析边数据失败", e);
+            return null;
+        }
     }
 }
