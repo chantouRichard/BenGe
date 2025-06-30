@@ -395,6 +395,7 @@ const confirmAndProceed = async () => {
     });
   } finally {
     scrollToBottom();
+    emit('next-stage', {});
   }
 };
 
@@ -454,6 +455,11 @@ const submitSelectedDirections = async () => {
   } finally {
     isProcessing.value = false;
     scrollToBottom();
+
+    emit('submission', {
+      directions: selectedDirections.value,
+      username: props.userInfo.name || '用户' + Math.floor(Math.random() * 1000)
+    });
   }
 };
 

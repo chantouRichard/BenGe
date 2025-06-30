@@ -4,32 +4,55 @@
     <div class="main-content">
       <!-- 左侧工作区 -->
       <div class="left-panel">
-        <h2 class="stage-title">{{ currentStage === 'direction' ? '第一阶段：方向确定' : '第二阶段：投票确认' }}</h2>
+        <div style="display: flex">
+          <h2 class="stage-title">
+            {{
+              currentStage === "direction"
+                ? "第一阶段：方向确定"
+                : "第二阶段：投票确认"
+            }}
+          </h2>
+          <!-- 按钮：只有在 direction 阶段并且 currentUser.role 为 true 时显示 -->
+          <el-button
+            v-if="currentStage != 'direction'"
+            :disabled="!currentUser.role"
+            @click="$emit('updateStage',1)"
+            type="primary"
+            style="margin-left: 20px;"
+          >
+            阶段按钮
+          </el-button>
+        </div>
 
         <!-- 工作区 -->
-        <div class="section" style="flex: 1; display: flex; flex-direction: column;min-height: 0">
+        <div
+          class="section"
+          style="flex: 1; display: flex; flex-direction: column; min-height: 0"
+        >
           <h3 class="section-title">
-            {{ currentStage === 'direction' ? '个人工作区' : '投票区' }}
+            {{ currentStage === "direction" ? "个人工作区" : "投票区" }}
           </h3>
 
-
-          <div  class="direction-stage-container"
-                style="flex:1;
-                min-height: 0;
-                overflow: hidden">
+          <div
+            class="direction-stage-container"
+            style="flex: 1; min-height: 0; overflow: hidden"
+          >
             <!--方向选择-->
             <DirectionSelect
-                v-if="currentStage === 'direction'"
-                :userInfo="currentUser"
-                @submission="handleDirectionSubmission"
-                @confirm-submit="handleConfirmSubmit"/>
+              v-if="currentStage === 'direction'"
+              :userInfo="currentUser"
+              @submission="handleConfirmSubmit"
+              @confirm-submit="handleConfirmSubmit"
+              @next-stage="handleConfirmSubmit"
+            />
 
             <VoteStage
-                v-else-if="currentStage === 'vote'"
-                :aiSuggestion="aiSuggestion"
-                :isGenerating="isGenerating"
-                @regenerate="handleRegenerate"
-                @accept="handleAcceptSuggestion" />
+              v-else-if="currentStage === 'vote'"
+              :aiSuggestion="aiSuggestion"
+              :isGenerating="isGenerating"
+              @regenerate="handleRegenerate"
+              @accept="handleAcceptSuggestion"
+            />
           </div>
         </div>
       </div>
@@ -47,24 +70,33 @@
           <transition name="fade">
             <div v-show="isMemberOpen" class="member-list">
               <div
-                  class="member-item"
-                  v-for="member in members"
-                  :key="member.id"
+                class="member-item"
+                v-for="member in socketState.members"
+                :key="member.id"
               >
                 <div class="member-avatar-container">
-                  <img :src="member.avatar" alt="avatar" class="member-avatar" />
+                  <img
+                    :src="member.avatar"
+                    alt="avatar"
+                    class="member-avatar"
+                  />
                   <div class="online-indicator"></div>
                 </div>
                 <div class="member-info">
                   <span class="member-name">{{ member.name }}</span>
-                  <div v-if="member.selections && member.selections.length > 0" class="member-directions">
-                    <div class="direction-tag" v-for="(direction, idx) in member.selections" :key="idx">
-                      {{ direction.content }}
+                  <div
+                    v-if="member.selections && member.selections.length > 0"
+                    class="member-directions"
+                  >
+                    <div
+                      class="direction-tag"
+                      v-for="(direction, idx) in member.selections"
+                      :key="idx"
+                    >
+                      <!-- {{ direction.content }} -->
                     </div>
                   </div>
-                  <div v-else class="no-directions">
-                    尚未选择方向
-                  </div>
+                  <div v-else class="no-directions">尚未选择方向</div>
                 </div>
               </div>
               <div v-if="members.length === 0" class="no-members">
@@ -76,23 +108,27 @@
 
         <!-- 聊天区域 -->
         <div
-            class="chat-area"
-            :style="{height: isMemberOpen ? '80%' : '95%' }"
+          class="chat-area"
+          :style="{ height: isMemberOpen ? '80%' : '95%' }"
         >
           <div>
             <h2>聊天区</h2>
           </div>
           <div
-              style="
+            style="
               width: 100%;
               height: 100%;
               margin-left: auto;
               margin-right: auto;
               position: relative;
               overflow: hidden;
-              "
+            "
           >
-            <Chat :userId="currentUser.id" @membersUpdated="updateMembers" :avatar="currentUser.avatar" />
+            <Chat
+              :userId="currentUser.id"
+              @membersUpdated="updateMembers"
+              :avatar="currentUser.avatar"
+            />
           </div>
         </div>
       </div>
@@ -101,23 +137,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import Chat from './Chat.vue';
+import { ref, onMounted } from "vue";
+import Chat from "./Chat.vue";
 import DirectionSelect from "@/components/cooperate-stages/first/DirectionSelect.vue";
 import VoteStage from "@/components/cooperate-stages/first/VoteStage.vue";
+import { isOwner, getCurrentRoom } from "@/api/room.js";
+import { ElButton } from "element-plus";
+import { socketState } from "@/stores/socket";
 
 // 当前阶段状态
-const currentStage = ref('direction');
+const currentStage = ref("direction");
 
 // 当前用户信息
 const currentUser = ref({
   id: "user_" + Math.floor(Math.random() * 1000),
-  name: localStorage.getItem('username') || '用户' + Math.floor(Math.random() * 1000),
-  avatar: require(`@/assets/avatar/${Math.floor(Math.random() * 5 + 1)}.jpg`)
+  name:
+    localStorage.getItem("username") ||
+    "用户" + Math.floor(Math.random() * 1000),
+  avatar: require(`@/assets/avatar/${Math.floor(Math.random() * 5 + 1)}.jpg`),
+  role: false,
 });
 
 // AI生成的建议
-const aiSuggestion = ref('');
+const aiSuggestion = ref("");
 const isGenerating = ref(false);
 
 // 成员区状态
@@ -131,6 +173,8 @@ const memberSelections = ref({});
 const selectedDirections = ref([]);
 
 // 处理方向提交
+/* eslint-disable no-unused-vars */
+
 const handleDirectionSubmission = (info) => {
   memberSelections.value[currentUser.value.id] = info.directions;
   updateMemberList();
@@ -142,19 +186,21 @@ const handleConfirmSubmit = async (data) => {
 
   // 模拟生成AI建议
   isGenerating.value = true;
-  aiSuggestion.value = '';
+  aiSuggestion.value = "";
 
   // 这里应该是调用API生成建议
   setTimeout(() => {
-    aiSuggestion.value = `基于您选择的方向，建议创作一个关于：
-${data.directions.map(d => `- ${d.content}`).join('\n')}
+//     aiSuggestion.value = `基于您选择的方向，建议创作一个关于：
+// ${data.directions.map((d) => `- ${d.content}`).join("\n")}
 
-故事梗概：
-主角在${data.directions[0].content}背景下，面临${data.directions[1].content}的挑战，最终通过${data.directions[2].content}解决问题。`;
-    isGenerating.value = false;
+// 故事梗概：
+// 主角在${data.directions[0].content}背景下，面临${
+//       data.directions[1].content
+//     }的挑战，最终通过${data.directions[2].content}解决问题。`;
+//     isGenerating.value = false;
   }, 1500);
 
-  currentStage.value = 'vote';
+  currentStage.value = "vote";
   // WebSocket
   // socket.emit('start-vote-stage', {
   //   directions: data.directions,
@@ -165,37 +211,40 @@ ${data.directions.map(d => `- ${d.content}`).join('\n')}
 // 处理重新生成建议
 const handleRegenerate = (feedback) => {
   isGenerating.value = true;
-  aiSuggestion.value = '';
+  aiSuggestion.value = "";
 
   // 模拟根据反馈重新生成
   setTimeout(() => {
-    aiSuggestion.value = `根据您的反馈"${feedback}"，重新生成的建议：
-${selectedDirections.value.map(d => `- ${d.content}`).join('\n')}
+//     aiSuggestion.value = `根据您的反馈"${feedback}"，重新生成的建议：
+// ${selectedDirections.value.map((d) => `- ${d.content}`).join("\n")}
 
-调整后的故事：
-加入了${feedback || '更多细节'}，使情节更加丰富。`;
-    isGenerating.value = false;
+// 调整后的故事：
+// 加入了${feedback || "更多细节"}，使情节更加丰富。`;
+//     isGenerating.value = false;
   }, 1500);
 };
 
 // 处理接受建议
 const handleAcceptSuggestion = () => {
-  console.log('接受建议:', aiSuggestion.value);
+  console.log("接受建议:", aiSuggestion.value);
   // 这里可以进入下一阶段或保存结果
   // emit('next-stage', { suggestion: aiSuggestion.value });
 };
 
 // 更新成员列表
 const updateMemberList = () => {
-  const currentMemberIndex = members.value.findIndex(m => m.id === currentUser.value.id);
+  const currentMemberIndex = members.value.findIndex(
+    (m) => m.id === currentUser.value.id
+  );
   if (currentMemberIndex !== -1) {
-    members.value[currentMemberIndex].selections = memberSelections.value[currentUser.value.id] || [];
+    members.value[currentMemberIndex].selections =
+      memberSelections.value[currentUser.value.id] || [];
   } else {
     members.value.push({
       id: currentUser.value.id,
       name: currentUser.value.name,
       avatar: currentUser.value.avatar,
-      selections: memberSelections.value[currentUser.value.id] || []
+      selections: memberSelections.value[currentUser.value.id] || [],
     });
   }
 };
@@ -204,28 +253,27 @@ const updateMemberList = () => {
 function updateMembers(membersList) {
   // 合并新成员列表与现有选择信息
   members.value = membersList.map((member) => {
-  // 确保 member.id 是字符串，避免调用 slice 报错
-  const memberId = String(member.id);  // 强制转换为字符串
+    // 确保 member.id 是字符串，避免调用 slice 报错
+    const memberId = String(member.id); // 强制转换为字符串
 
-  // 保留原有的选择信息
-  const existingSelections = memberSelections.value[memberId] || [];
+    // 保留原有的选择信息
+    const existingSelections = memberSelections.value[memberId] || [];
 
-  return {
-    id: memberId,
-    name: member.name || `用户${memberId.slice(5)}`, // 这里使用转换后的 memberId
-    avatar: member.avatar || currentUser.value.avatar,
-    selections: existingSelections
-  };
-});
-
+    return {
+      id: memberId,
+      name: member.name || `用户${memberId.slice(5)}`, // 这里使用转换后的 memberId
+      avatar: member.avatar || currentUser.value.avatar,
+      selections: existingSelections,
+    };
+  });
 
   // 确保当前用户在成员列表中
-  if (!members.value.some(m => m.id === currentUser.value.id)) {
+  if (!members.value.some((m) => m.id === currentUser.value.id)) {
     members.value.push({
       id: currentUser.value.id,
       name: currentUser.value.name,
       avatar: currentUser.value.avatar,
-      selections: memberSelections.value[currentUser.value.id] || []
+      selections: memberSelections.value[currentUser.value.id] || [],
     });
   }
 
@@ -244,29 +292,33 @@ onMounted(() => {
     id: currentUser.value.id,
     name: currentUser.value.name,
     avatar: currentUser.value.avatar,
-    selections: []
+    selections: [],
   });
 
-  // 模拟WebSocket接收其他用户的选择信息
-  // 通过WebSocket监听
-  /*
-  socket.on('receive-direction-selection', (data) => {
-    memberSelections.value[data.userId] = data.selections;
-
-    const memberIndex = members.value.findIndex(m => m.id === data.userId);
-    if (memberIndex !== -1) {
-      members.value[memberIndex].selections = data.selections;
-    } else {
-      members.value.push({
-        id: data.userId,
-        name: data.username,
-        avatar: data.avatar,
-        selections: data.selections
-      });
-    }
-  });
-  */
+  currentUser.value.role = isHost();
 });
+
+// 判断是否房主
+async function isHost() {
+  try {
+    const currentRoom = await getCurrentRoom();
+    console.log("currentRoom:", currentRoom);
+    if (currentRoom.id) {
+      try {
+        const response = await isOwner(currentRoom.id);
+
+        console.log("用户是不是房主：", response);
+        return response.data;
+      } catch (error) {
+        console.error("Error checking if user is host:", error);
+        return false;
+      }
+    }
+  } catch (err) {
+    console.log("错误：", err);
+  }
+  return false;
+}
 </script>
 
 <style scoped>

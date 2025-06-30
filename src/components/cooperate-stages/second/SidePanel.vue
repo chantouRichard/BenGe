@@ -11,7 +11,7 @@
         <div v-if="isMemberOpen" class="member-list">
           <div
             class="member-item"
-            v-for="(member,index) in members"
+            v-for="(member,index) in socketState.members"
             :key="index"
             @click="$emit('clickMember', {member,index})"
           >
@@ -39,46 +39,60 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed, ref } from 'vue';
 import Chat from '../Chat.vue';
+import { socketState } from '@/stores/socket';
 
-export default {
-  name: 'SidePanel',
-  components: {
-    Chat,
+// Props 直接通过 `defineProps` 获取
+const props = defineProps({
+  fontColor: {
+    type: String,
+    default: 'white',
   },
-  props: {
-    fontColor: {
-        type:String,
-        default: "white"
-    },
-    backgroundColor: {
-      type: String,
-      default: "black",
-    },
-    members: {
-      type: Array,
-      required: true,
-    },
-    userId: {
-      type: String,
-      required: true,
-    },
-    avatar: {
-      type: String,
-      required: true,
-    },
-    roomId: {
-      type: [Number, String],
-      required: true,
-    },
-    isMemberOpen: {
-      type: Boolean,
-      default: true,
-    },
+  backgroundColor: {
+    type: String,
+    default: 'black',
   },
+  members: {
+    type: Array,
+    required: true,
+  },
+  userId: {
+    type: String,
+    required: true,
+  },
+  avatar: {
+    type: String,
+    required: true,
+  },
+  roomId: {
+    type: [Number, String],
+    required: true,
+  },
+  isMemberOpen: {
+    type: Boolean,
+    default: true,
+  },
+});
+
+// 响应式变量
+const isMemberListVisible = ref(props.isMemberOpen);
+
+// 计算属性
+const fontColor = computed(() => props.fontColor);
+const backgroundColor = computed(() => props.backgroundColor);
+const members = computed(() => props.members);
+const userId = computed(() => props.userId);
+const avatar = computed(() => props.avatar);
+const roomId = computed(() => props.roomId);
+
+// 切换成员列表显示
+const toggleMemberListVisibility = () => {
+  isMemberListVisible.value = !isMemberListVisible.value;
 };
 </script>
+
 
 <style scoped>
 .right-area{

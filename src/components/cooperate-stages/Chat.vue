@@ -1,32 +1,5 @@
 <template>
   <div class="chat-container">
-    <!-- 顶部标题栏 -->
-    <!-- <div class="chat-header">
-      <button class="member-toggle" @click="toggleMemberList">
-        <i class="toggle-icon">{{ isMemberListVisible ? "×" : "≡" }}</i>
-      </button>
-      <h2 class="room-name">{{ roomName }}</h2>
-    </div> -->
-
-    <!-- 成员列表侧边栏 -->
-    <!-- <div
-      class="member-list-overlay"
-      :class="{ visible: isMemberListVisible }"
-      @click="toggleMemberList"
-    ></div>
-    <div
-      class="member-list"
-      :class="{ 'member-list-visible': isMemberListVisible }"
-    >
-      <h3>群成员 ({{ members.length }})</h3>
-      <ul>
-        <li v-for="member in members" :key="member.id" class="member-item">
-          <div class="avatar-placeholder"></div>
-          <img :src="member.avatar" alt="头像" class="avatar" />
-          <span>{{ member.name }}</span>
-        </li>
-      </ul>
-    </div> -->
     <div
       style="
         width: 100px;
@@ -43,7 +16,7 @@
     <!-- 聊天内容区域 -->
     <div class="chat-messages" ref="messagesContainer">
       <div
-        v-for="(message, index) in messages"
+        v-for="(message, index) in socketState.messages"
         :key="index"
         :class="[
           'message',
@@ -78,207 +51,125 @@
       <input
         type="text"
         v-model="newMessage"
-        @keyup.enter="sendMessage"
+        @keyup.enter="sendChatMessage"
         placeholder="输入消息..."
         class="message-input"
       />
       <img
         src="../../assets/send.png"
-        @click="sendMessage"
+        @click="sendChatMessage"
         class="send-button"
       />
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import loginImage from "@/assets/login.png";
+import { setupWebSocket, socketState, closeWebSocket, sendMessage } from "@/stores/socket.js";
 
-export default {
-  name: "ChatComponent",
-  props: {
-    roomId: {
-      type: [Number, String],
-      default: 1,
-    },
-    roomName: {
-      type: String,
-      default: "群聊房间",
-    },
-    members: {
-      type: Array,
-      default: () => [],
-    },
-    userId: {
-      type: String,
-      default: "anonymous",
-    },
-    userName: {
-      type: String,
-      default: "匿名用户",
-    },
-    avatar: {
-      type: String,
-      default: loginImage,
-    },
-    initialMessages: {
-      type: Array,
-      default: () => [],
-    },
+// 接收 props
+const props = defineProps({
+  roomId: {
+    type: [Number, String],
+    default: 1,
   },
-  data() {
-    return {
-      isMemberListVisible: false,
-      newMessage: "",
-      messages: this.initialMessages,
-      socket: null,
-      currentUserId: null,
-      currentUsername: null,
-    };
+  roomName: {
+    type: String,
+    default: "群聊房间",
   },
-  methods: {
-    toggleMemberList() {
-      this.isMemberListVisible = !this.isMemberListVisible;
-    },
-
-    sendMessage() {
-      if (this.newMessage.trim() === "") return;
-
-      const messageData = {
-        type: "chat",
-        content: this.newMessage,
-        time: this.getCurrentTime(),
-        avatar: this.avatar,
-      };
-
-      // 通过 WebSocket 发送
-      if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-        this.socket.send(JSON.stringify(messageData));
-      } else {
-        console.error("WebSocket连接未就绪");
-      }
-
-      this.newMessage = "";
-    },
-    scrollToBottom() {
-      this.$nextTick(() => {
-        this.$refs.messagesContainer.scrollTop =
-          this.$refs.messagesContainer.scrollHeight;
-      });
-    },
-    getCurrentTime() {
-      const now = new Date();
-      return `${now.getHours()}:${now
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}`;
-    },
-    setupWebSocket() {
-      // 获取token
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("未找到token，无法建立WebSocket连接");
-        return;
-      }
-
-      this.socket = new WebSocket("ws://localhost:7122/ws");
-
-      this.socket.onopen = () => {
-        console.log("WebSocket连接已建立");
-        // 连接建立后发送认证信息，使用传入的roomId
-        this.socket.send(
-          JSON.stringify({
-            type: "auth",
-            token: token,
-            roomId: this.roomId,
-            avatar: this.avatar,
-          })
-        );
-      };
-
-      this.socket.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "userInfo") {
-          this.currentUserId = msg.userId;
-          this.currentUsername = msg.username;
-          console.log(
-            "接收到用户信息:",
-            this.currentUserId,
-            this.currentUsername
-          );
-        } else if (msg.type === "chat") {
-          this.messages.push({
-            ...msg,
-            isMe: msg.userId === this.currentUserId,
-            sender: msg.username,
-            content: msg.content,
-            time: msg.time,
-            avatar: msg.avatar || this.avatar,
-          });
-          this.scrollToBottom();
-        } else if (msg.type === "system") {
-          this.messages.push({
-            type: "system",
-            content: msg.message,
-            time: this.getCurrentTime(),
-            isMe: false,
-            isSystem: true,
-          });
-          this.scrollToBottom();
-        } else if (msg.type === "members") {
-          // 处理成员列表更新
-          const incoming = msg.members || [];
-          const existing = this.members || [];
-
-          // 使用 Map 根据 id 去重（新来的会覆盖旧的）
-          const mergedMap = new Map();
-
-          // 先加已有成员
-          existing.forEach((member) => {
-            mergedMap.set(member.id, member);
-          });
-
-          // 再加新成员（会自动覆盖相同 id 的）
-          incoming.forEach((member) => {
-            mergedMap.set(member.id, member);
-          });
-
-          // 得到去重后的数组
-          const mergedMembers = Array.from(mergedMap.values());
-
-          this.$emit("membersUpdated", mergedMembers);
-          console.log("合并后的成员列表:", mergedMembers);
-        } else if (msg.type === "error") {
-          console.error("WebSocket错误:", msg.message);
-          alert("错误: " + msg.message);
-        }
-      };
-
-      this.socket.onclose = () => {
-        console.log("WebSocket连接已关闭");
-      };
-
-      this.socket.onerror = (err) => {
-        console.error("WebSocket连接错误:", err);
-      };
-    },
+  members: {
+    type: Array,
+    default: () => [],
   },
-  watch: {
-    initialMessages(newVal) {
-      this.messages = newVal;
-    },
+  userId: {
+    type: String,
+    default: "anonymous",
   },
-  mounted() {
-    this.setupWebSocket();
+  userName: {
+    type: String,
+    default: "匿名用户",
   },
-  beforeUnmount() {
-    if (this.socket) {
-      this.socket.close();
-    }
+  avatar: {
+    type: String,
+    default: loginImage,
   },
+  initialMessages: {
+    type: Array,
+    default: () => [],
+  },
+});
+
+// 响应式变量
+const isMemberListVisible = ref(false);
+const newMessage = ref("");
+const messages = ref(props.initialMessages);
+const currentUserId = ref(null);
+const currentUsername = ref(null);
+
+// 切换成员列表显示
+const toggleMemberList = () => {
+  isMemberListVisible.value = !isMemberListVisible.value;
 };
+
+// 获取当前时间
+const getCurrentTime = () => {
+  const now = new Date();
+  return `${now.getHours()}:${now.getMinutes().toString().padStart(2, "0")}`;
+};
+
+// 发送消息
+const sendChatMessage = () => {
+  if (newMessage.value.trim() === "") return;
+  socketState.newMessage = newMessage.value;
+
+  const messageData = {
+    type: "chat",
+    content: newMessage.value,
+    time: getCurrentTime(),
+    avatar: props.avatar,
+  };
+
+  if (socketState.socket && socketState.socket.readyState === WebSocket.OPEN) {
+    socketState.socket.send(JSON.stringify(messageData));
+  } else {
+    console.error("WebSocket连接未就绪");
+  }
+
+  newMessage.value = "";
+};
+
+// 滚动到最底部
+const scrollToBottom = () => {
+  nextTick(() => {
+    // 确保 messagesContainer 已加载
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+    }
+  });
+};
+
+// 监听 props 更新
+watch(() => props.initialMessages, (newVal) => {
+  messages.value = newVal;
+});
+
+// 生命周期钩子
+onMounted(() => {
+  setupWebSocket(props.roomId, props.avatar);
+});
+
+onBeforeUnmount(() => {
+  if (socketState.socket) {
+    closeWebSocket();
+  }
+});
+
+// Refs
+const messagesContainer = ref(null);
 </script>
+
 
 <style>
 .chat-container {

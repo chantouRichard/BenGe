@@ -194,8 +194,8 @@ const handleEdgeUpdate = ({ edge, connection }) => {
 }
 
 .vue-flow {
-  /* background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px); */
-  background: transparent;
+  background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px);
+  /* background: transparent; */
 }
 
 /* 覆盖VueFlow默认节点样式 */
