@@ -139,8 +139,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import Chat from "./Chat.vue";
-import DirectionSelect from "@/components/cooperate-stages/first/DirectionSelect.vue";
-import VoteStage from "@/components/cooperate-stages/first/VoteStage.vue";
+import DirectionSelect from "@/components/Cooperation/first/DirectionSelect.vue";
+import VoteStage from "@/components/Cooperation/first/VoteStage.vue";
 import { isOwner, getCurrentRoom } from "@/api/room.js";
 import { ElButton } from "element-plus";
 import { socketState } from "@/stores/socket";

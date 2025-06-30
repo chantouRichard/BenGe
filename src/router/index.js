@@ -35,7 +35,7 @@ const routes = [
     {
         path: '/canvas',
         name: 'canvas',
-        component: () => import('@/components/roles/NarrativeWorkspace.vue'),
+        component: () => import('@/components/Cooperation/second/roles/NarrativeWorkspace.vue'),
         meta: { requiresAuth: true }
     }
 ];

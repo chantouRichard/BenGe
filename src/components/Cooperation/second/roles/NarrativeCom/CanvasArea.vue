@@ -213,6 +213,6 @@ const handleEdgeUpdate = ({ edge, connection }) => {
   height: 100%;
 }
 
-@import '@vue-flow/core/dist/style.css';
-@import '@vue-flow/core/dist/theme-default.css';
+@import '../../../../../../node_modules/@vue-flow/core/dist/style.css';
+@import '../../../../../../node_modules/@vue-flow/core/dist/theme-default.css';
 </style>

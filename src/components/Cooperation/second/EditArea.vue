@@ -13,48 +13,53 @@
     <teleport to="body">
       <transition name="fullscreen-slide">
         <div class="canvas fullscreen" v-if="isFullScreen">
-        <div class="other">您正在查看<b>{{ chooseUserRole }}</b>{{ chooseUser }}的工作区</div>
-
           <button
             class="canvasButton"
-            @click="isFullScreen = false;$emit('reduce')"
+            @click="isFullScreen = false"
             :style="{ backgroundImage: `url(${reduceIcon})` }"
           ></button>
           <div style="padding: 20px">
-            <NarrativeWorkspace :nodes="sharedNodes"
-  :edges="sharedEdges"
-  @updateGraph="handleGraphUpdate"/>
+            <NarrativeWorkspace
+              @updateGraph="handleGraphUpdate"
+            />
           </div>
         </div>
       </transition>
     </teleport>
 
     <!-- 常规编辑区域 -->
-    <div class="canvas">
-        <div class="other">您正在查看<b>{{ chooseUserRole }}</b>{{ chooseUser }}的工作区</div>
-      <button
-        class="canvasButton"
-        @click="isFullScreen = true;$emit('enlarge')"
-        :style="{ backgroundImage: `url(${enlargeIcon})` }"
-      ></button>
-      <div style="padding: 20px; height: 100%">
-        <NarrativeWorkspace :nodes="sharedNodes"
-  :edges="sharedEdges"
-  @updateGraph="handleGraphUpdate"/>
+    <transition name="canvas-fade">
+      <div class="canvas" v-if="!isFullScreen">
+        <button
+          class="canvasButton"
+          @click="isFullScreen = true"
+          :style="{ backgroundImage: `url(${enlargeIcon})` }"
+        ></button>
+        <div style="padding: 20px; height: 100%">
+          <NarrativeWorkspace
+            v-if="userRole == 0"
+            @updateGraph="handleGraphUpdate"
+          />
+          <CharacterDesign
+            v-if="userRole == 1"
+            @updateGraph="handleGraphUpdate"
+          />
+        </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
 <script>
-import NarrativeWorkspace from '@/components/roles/NarrativeWorkspace.vue';
+import NarrativeWorkspace from "@/components/Cooperation/second/roles/NarrativeWorkspace.vue";
+import CharacterDesign from "@/components/Cooperation/second/roles/CharacterDesign.vue";
 
 export default {
   name: "EditArea",
   components: {
     NarrativeWorkspace,
+    CharacterDesign,
   },
-  emits: ['enlarge', 'reduce'],
   props: {
     roles: {
       type: Array,
@@ -64,14 +69,6 @@ export default {
       type: Number,
       required: true,
     },
-    chooseUser: {
-      type: String,
-      required: true,
-    },
-    chooseUserRole:{
-        type: Number,
-        required: true
-    }
   },
   data() {
     return {
@@ -80,35 +77,19 @@ export default {
       reduceIcon: require("@/assets/second/reduce.png"),
 
       sharedNodes: [],
-    sharedEdges: [],
+      sharedEdges: [],
     };
   },
   methods: {
     handleGraphUpdate(newGraph) {
-    this.sharedNodes = newGraph.nodes;
-    this.sharedEdges = newGraph.edges;
-  }
-  }
+      this.sharedNodes = newGraph.nodes;
+      this.sharedEdges = newGraph.edges;
+    },
+  },
 };
 </script>
 
 <style scoped>
-.other {
-  position: absolute; /* 悬浮，不占据空间 */
-  top: 30px;
-  left: 30px;
-  margin: auto;
-  width: fit-content; /* 宽度自适应内容 */
-  
-  color: black;
-  font-size: 20px;
-
-  pointer-events: none;
-  user-select: none;
-
-  z-index: 10; /* 确保在上方但不挡内容 */
-}
-
 .edit-area {
   width: 66%;
   min-width: 442px;
@@ -172,7 +153,7 @@ export default {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 1000; /* 保证在最顶层 */
+  z-index: 9999; /* 保证在最顶层 */
   background-color: white; /* 如需白底，或保持透明 */
 
   /* ✅ 关键调整项 */
@@ -180,6 +161,14 @@ export default {
   background-position: center center; /* 始终聚焦中心 */
   background-repeat: no-repeat;
 
+  transition: all 0.5s ease;
+}
+.canvas-fade-enter-active {
+  opacity: 1;
+  transition: all 0.5s ease;
+}
+.canvas-fade-leave-active {
+  opacity: 0;
   transition: all 0.5s ease;
 }
 /* 动画进入 */

@@ -31,7 +31,7 @@
           @click="scriptStore.handleSelectScript(script.id)"
         >
           <div class="script-icon user-script-icon">
-            <img src="../assets/user-menu-script.png" alt="Script" class="script-icon"/>
+            <img src="../../assets/user-menu-script.png" alt="Script" class="script-icon"/>
           </div>
           <div class="script-info">
             <div class="script-title">{{ script.title || '未命名剧本' }}</div>
@@ -39,14 +39,14 @@
           </div>
           <div class="script-actions">
             <button class="script-action-btn" @click.stop="() => scriptStore.deleteScript(script.id)" title="删除">
-              <img src="../assets/delete.png" alt="Delete" class="delete-icon"/>
+              <img src="../../assets/delete.png" alt="Delete" class="delete-icon"/>
             </button>
           </div>
         </div>
         
         <div v-if="scriptStore.filteredScripts.length === 0" class="empty-scripts">
           <div class="empty-scripts-icon">
-            <img src="../assets/user-menu-script.png" alt="Script" class="empty-scripts-icon">
+            <img src="../../assets/user-menu-script.png" alt="Script" class="empty-scripts-icon">
           </div>
           <div class="empty-scripts-text">没有找到剧本</div>
         </div>
@@ -54,7 +54,7 @@
 
       <div class="script-item create-new-script-item" @click="scriptStore.createNewScript">
           <div class="script-icon user-script-icon">
-            <img src="../assets/create-script.png" alt="Add" class="script-icon"/>
+            <img src="../../assets/create-script.png" alt="Add" class="script-icon"/>
           </div>
           <div class="script-info">
             <div class="script-title">创建新剧本</div>
@@ -66,7 +66,7 @@
 
 <script setup>
 import { onMounted } from 'vue';
-import { usescriptStore  } from '../stores/scriptStore';
+import { usescriptStore  } from '@/stores/scriptStore';
 
 const scriptStore = usescriptStore();
 
