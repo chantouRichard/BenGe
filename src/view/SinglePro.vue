@@ -88,8 +88,8 @@
 import { ref , onMounted , onUnmounted } from 'vue'
 import { useRouter } from 'vue-router';
 import { userLoadingStore } from '@/stores/userLoadingStore';
-import ScriptsList from '@/components/ScriptsList.vue';
-import ScriptWorkspace from '@/components/ScriptWorkspace.vue';
+import ScriptsList from '@/components/Single/ScriptsList.vue';
+import ScriptWorkspace from '@/components/Single/ScriptWorkspace.vue';
 
 const router = useRouter();
 

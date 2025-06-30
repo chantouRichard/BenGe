@@ -64,8 +64,8 @@
 </template>
 
 <script>
-import NarrativeWorkspace from "@/components/roles/NarrativeWorkspace.vue";
-import CharacterDesign from "@/components/roles/CharacterDesign.vue";
+import NarrativeWorkspace from "@/components/Cooperation/second/roles/NarrativeWorkspace.vue";
+import CharacterDesign from "@/components/Cooperation/second/roles/CharacterDesign.vue";
 
 export default {
   name: "EditArea",

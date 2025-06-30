@@ -46,7 +46,7 @@ import { ref } from 'vue';
 import { usescriptStore } from '@/stores/scriptStore';
 import { marked } from 'marked';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import VisualWorkspace from '@/components/VisualWorkspace.vue';
+import VisualWorkspace from '@/components/Single/VisualWorkspace.vue';
 
 const scriptStore = usescriptStore();
 

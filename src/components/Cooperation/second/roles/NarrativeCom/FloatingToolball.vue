@@ -8,7 +8,7 @@
   >
     <!-- 主按钮 -->
     <button class="main-button">
-      <img src="@/assets/icons/magic-wand.svg" alt="工具栏" class="icon-main" />
+      <img src="../../../../../assets/icons/magic-wand.svg" alt="工具栏" class="icon-main" />
     </button>
 
     <!-- 展开面板 -->
