@@ -18,7 +18,7 @@
           >
             <img :src="member.avatar" alt="avatar" class="member-avatar" />
             <div class="member-info">
-              <span class="member-name" :style="{ color: fontColor }">{{ member.name }}</span>
+              <span class="member-name" >{{ member.username }}</span>
             </div>
           </div>
         </div>
@@ -60,6 +60,7 @@ const isMemberOpen = ref(props.isMemberOpen);
 // 切换成员列表显示
 const toggleMemberListVisibility = () => {
   isMemberOpen.value = !isMemberOpen.value;
+  console.log("成员列表：",socketState.members);
 };
 </script>
 
@@ -131,7 +132,7 @@ const toggleMemberListVisibility = () => {
 
 .member-name {
   font-size: 12px;
-  color: white;
+  color: black;
   width: 54px;
   overflow: hidden;
   text-overflow: ellipsis;
