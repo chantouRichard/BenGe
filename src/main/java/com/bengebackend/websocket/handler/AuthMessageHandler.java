@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.util.logging.Logger;
+
 /**
  * 认证消息处理器
  */
@@ -35,6 +37,7 @@ public class AuthMessageHandler implements MessageHandler {
     public void handleMessage(WebSocketSession session, WebSocketMessage message) {
         String token = message.getToken();
         String roomId = message.getRoomId();
+        String avatar = message.getAvatar();
         
         // 验证必要参数
         if (token == null || token.isEmpty()) {
@@ -64,12 +67,13 @@ public class AuthMessageHandler implements MessageHandler {
         // 认证成功，注册会话
         sessionRegistry.registerUserSession(session.getId(), authResult.getUser().getId());
         sessionRegistry.registerRoomSession(session.getId(), roomId);
+        sessionRegistry.registerAvatarSession(session.getId(),avatar);
         
         // 加入房间
         roomManager.joinRoom(roomId, session);
-        
-        log.info("用户认证成功并加入房间: userId={}, username={}, roomId={}, sessionId={}", 
-                authResult.getUser().getId(), authResult.getUser().getUsername(), roomId, session.getId());
+
+        log.info("用户认证成功并加入房间: userId={}, username={}, roomId={}, sessionId={},avatar={}",
+                authResult.getUser().getId(), authResult.getUser().getUsername(), roomId, session.getId(),sessionRegistry.getAvatar(session.getId()));
         
         // 发送用户信息
         messageUtil.sendUserInfo(session, authResult.getUser());
