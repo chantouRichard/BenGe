@@ -55,6 +55,11 @@ public class WebSocketMessage {
     private String token;
 
     /**
+     * 角色名称
+     */
+    private String roleName;
+
+    /**
      * 节点数据列表(用于剧情设计师的节点更新)
      */
     private List<NodeData> nodes;
