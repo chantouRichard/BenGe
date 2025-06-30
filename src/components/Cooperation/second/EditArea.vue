@@ -23,18 +23,6 @@
               v-if="userRole == 0"
               @updateGraph="handleGraphUpdate"
             />
-            <CharacterDesign
-              v-if="userRole == 1"
-              @updateGraph="handleGraphUpdate"
-            />
-            <CharacterDesign
-              v-if="userRole == 2"
-              @updateGraph="handleGraphUpdate"
-            />
-            <CharacterDesign
-              v-if="userRole == 3"
-              @updateGraph="handleGraphUpdate"
-            />
           </div>
         </div>
       </transition>
@@ -53,10 +41,6 @@
             v-if="userRole == 0"
             @updateGraph="handleGraphUpdate"
           />
-          <CharacterDesign
-            v-if="userRole == 1"
-            @updateGraph="handleGraphUpdate"
-          />
         </div>
       </div>
     </transition>
@@ -65,13 +49,11 @@
 
 <script>
 import NarrativeWorkspace from "@/components/Cooperation/second/roles/NarrativeWorkspace.vue";
-import CharacterDesign from "@/components/Cooperation/second/roles/CharacterDesign.vue";
 
 export default {
   name: "EditArea",
   components: {
-    NarrativeWorkspace,
-    CharacterDesign,
+    NarrativeWorkspace
   },
   props: {
     roles: {
