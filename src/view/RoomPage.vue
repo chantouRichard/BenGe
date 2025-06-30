@@ -15,9 +15,11 @@ import { ref } from "vue";
 import FrameworkDesignStage from "@/components/cooperate-stages/FrameworkDesignStage.vue";
 import CompleteScriptStage from "@/components/cooperate-stages/CompleteScriptStage.vue";
 import DirectionSelectionStage from "@/components/cooperate-stages/DirectionSelectionStage.vue";
+import { setupWebSocket } from "@/stores/socket";
 // import NarrativeWorkspace from "@/components/roles/NarrativeWorkspace.vue";
 
 const stage = ref(0);
+setupWebSocket();
 
 const updateStage = (newStage) => {
   stage.value = newStage;

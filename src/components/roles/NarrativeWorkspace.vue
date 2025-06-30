@@ -4,7 +4,7 @@
     <FloatingToolball @add-node="canvasStore.handleAddNode" @add-edge="canvasStore.handleCreateEdgeClick" @export="handleExport" />
 
     <!-- 主画布 -->
-    <CanvasArea ref="canvasRef" v-if="effectiveNodes.length > 0" :nodes="effectiveNodes" :edges="effectiveEdges" @delete-node="canvasStore.handleDeleteNode"
+    <CanvasArea ref="canvasRef" v-if="canvasStore.nodes.length > 0" :nodes="canvasStore.nodes" :edges="canvasStore.edges" @delete-node="canvasStore.handleDeleteNode"
       @node-select="canvasStore.handleNodeClick" @edge-select="canvasStore.handleEdgeSelect"
       @node-position-change="canvasStore.handlePositionChange" @connect-node="canvasStore.handleConnectNode" />
 
@@ -37,12 +37,8 @@ import { ref , computed } from 'vue'
 // 传入参数
 import { defineProps } from 'vue'
 
-const props = defineProps({
-  nodes: Array,
-  edges: Array,
-})
-const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
-const effectiveEdges = computed(() => props.edges || canvasStore.edges)
+// const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
+// const effectiveEdges = computed(() => props.edges || canvasStore.edges)
 
 
 const canvasStore = useCanvasStore()

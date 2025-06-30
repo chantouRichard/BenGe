@@ -2,7 +2,7 @@
   <div class="choose-area">
     <div class="choose-header">
       <h2 style="color: white">请选择你的角色</h2>
-      <button class="button" style="margin-left: auto" @click="confi">
+      <button class="button" style="margin-left: auto" @click="confirmSelection">
         选择完毕
       </button>
     </div>
@@ -10,8 +10,8 @@
       <div v-for="(role, index) in roles" :key="index" class="role-wrapper">
         <div class="card-container">
           <!-- 显示已选择角色的用户名 -->
-          <div v-if="socketState.roleSelections[index]" class="role-username">
-            {{ socketState.roleSelections[index] }}
+          <div v-if="socketState.roleSelections[roles[index].name]" class="role-username">
+            {{ socketState.roleSelections[roles[index].name] }}
           </div>
           <img
             :src="getRoleImage(index)"
@@ -30,6 +30,7 @@
 <script setup>
 import { ref, defineProps, defineEmits } from 'vue';
 import { socketState } from '@/stores/socket';
+import { ElMessage } from 'element-plus';
 
 // 定义 props
 const props = defineProps({
@@ -56,7 +57,7 @@ function selectRole(index) {
 
   // 如果该角色已被其他成员选择，则弹出提示
   if (socketState.roleSelections[roleName]) {
-    this.$message({
+    ElMessage({
       message: `${socketState.roleSelections[roleName]} 已选择该角色！`,
       type: 'warning',
     });
@@ -72,13 +73,13 @@ function selectRole(index) {
 function emitRoleSelection(roleName) {
   socketState.socket.send(
     JSON.stringify({
-      type: "roleSelection",
+      type: "role",
       roleName,
       username: socketState.currentUsername,
     })
   );
   console.log("发送了选择角色消息：", {
-    type: "roleSelection",
+    type: "role",
     roleName,
     username: socketState.currentUsername,
   });
@@ -138,7 +139,7 @@ function confirmSelection() {
   background: rgba(0, 0, 0, 0.5);
   color: white;
   padding: 2px 8px;
-  font-size: 12px;
+  font-size: 16px;
   border-radius: 3px;
 }
 
@@ -162,7 +163,7 @@ function confirmSelection() {
   background-size: cover;
   background-repeat: no-repeat;
   border-radius: 10px;
-  overflow: hidden;
+  /* overflow: hidden; */
   transition: transform 0.3s ease;
 }
 
