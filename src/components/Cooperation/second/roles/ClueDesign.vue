@@ -1,16 +1,20 @@
 <template>
   <div class="workspace-container">
     <!-- 悬浮工具球 -->
-    <FloatingToolball @add-node="canvasStore.handleAddNode" @add-edge="canvasStore.handleCreateEdgeClick" @export="handleExport" />
+    <ClueToolbar @add-clue="canvasStore.handleAddClueNode" @add-inference="canvasStore.handleAddInferenceNode" @add-person="canvasStore.handleAddPersonNode" @add-relationship="canvasStore.handleCreateClueEdgeClick" @export="handleExport" />
 
     <!-- 主画布 -->
-    <CanvasArea ref="canvasRef" v-if="effectiveNodes.length > 0" :nodes="effectiveNodes" :edges="effectiveEdges" @delete-node="canvasStore.handleDeleteNode"
+    <CanvasArea ref="canvasRef" v-if="canvasStore.nodes.length > 0" :nodes="canvasStore.nodes" :edges="canvasStore.edges" @delete-node="canvasStore.handleDeleteNode"
       @node-select="canvasStore.handleNodeClick" @edge-select="canvasStore.handleEdgeSelect"
       @node-position-change="canvasStore.handlePositionChange" @connect-node="canvasStore.handleConnectNode" />
 
     <!-- 节点详情抽屉 -->
     <div style="height: 100%;width: 100%;">
-      <NodeDetailDrawer :visible="canvasStore.selectedNode" :nodeData="canvasStore.selectedNode" @save="handleDetailSave"
+      <ClueDetailPanel :visible="canvasStore.selectedNode?.type == 'clue' || false" :clueData="canvasStore.selectedNode" @save="handleDetailSave"
+        @close="canvasStore.selectedNode = null" />
+      <InferenceDetailPanel :visible="canvasStore.selectedNode?.type == 'inference' || false" :nodeData="canvasStore.selectedNode" @save="handleDetailSave"
+        @close="canvasStore.selectedNode = null" />
+      <PersonDetailPanel :visible="canvasStore.selectedNode?.type == 'person' || false" :nodeData="canvasStore.selectedNode" @save="handleDetailSave"
         @close="canvasStore.selectedNode = null" />
 
       <EdgeTypeSelector v-if="canvasStore.showEdgeSelector" :source="canvasStore.selectedNodesForEdge[0]" :target="canvasStore.selectedNodesForEdge[1]"
@@ -27,25 +31,20 @@
 </template>
 
 <script setup>
-import FloatingToolball from './NarrativeCom/FloatingToolball.vue'
+import ClueToolbar from './ClueCom/ClueToolbar.vue'
 import CanvasArea from './NarrativeCom/CanvasArea.vue'
-import NodeDetailDrawer from './NarrativeCom/NodeDetailDrawer.vue'
-import EdgeTypeSelector from './NarrativeCom/EdgeTypeSelector.vue'
-import { useClueStore } from '@/stores/clue'
+import ClueDetailPanel from './ClueCom/ClueDetailPanel.vue'
+import InferenceDetailPanel from './ClueCom/InferenceDetailPanel.vue'
+import PersonDetailPanel from './ClueCom/PersonDetailPanel.vue'
+import EdgeTypeSelector from './ClueCom/EdgeTypeSelector.vue'
+import { useCanvasStore } from '@/stores/canvasStore'
 import { ref , computed } from 'vue'
 
 // 传入参数
 import { defineProps } from 'vue'
 
-const props = defineProps({
-  nodes: Array,
-  edges: Array,
-})
-const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
-const effectiveEdges = computed(() => props.edges || canvasStore.edges)
 
-
-const canvasStore = useClueStore()
+const canvasStore = useCanvasStore()
 const canvasRef = ref(null)
 
 // // 直接使用 store 中的数据驱动画布
