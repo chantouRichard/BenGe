@@ -6,12 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.bengebackend.entity.AIMsgDevide;
+import com.bengebackend.entity.Slogan;
+import com.bengebackend.entity.SloganRequestEntity;
+import com.bengebackend.entity.StreamResponse;
 import com.bengebackend.service.*;
 
 import org.springframework.stereotype.Service;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -30,6 +35,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,6 +54,20 @@ public class AIServicelmpl implements AIService {
 
     private static final String HIDREAM_CREATE_URL = "https://cn-huadong-1.xf-yun.com/v1/private/s3fd61810/create";
     private static final String HIDREAM_QUERY_URL = "https://cn-huadong-1.xf-yun.com/v1/private/s3fd61810/query";
+
+    // 星火X1 API认证信息(第一阶段)
+    private static final String X1_HTTP_API_PASSWORD = "cYcztSMumlkSHwUCtJDK:TGLbxtRdJiyPEuudsULa";
+    private static final String X1_HTTP_API_URL = "https://spark-api-open.xf-yun.com/v2/chat/completions";
+
+    // Slogan生成系统提示词
+    private static final String SLOGAN_SYSTEM_PROMPT = """
+            你是一名专业的剧本杀创作助手，擅长生成吸引人的标语和核心创意。
+            请根据用户提供的内容生成多个不同风格的标语，每个标语都应该：
+            1. 简洁有力，能够抓住读者注意力
+            2. 体现剧本的核心主题和氛围
+            3. 具有悬疑感和吸引力
+            请以自然的方式分段输出多个标语建议。
+            """;
 
     public AIServicelmpl() {
     }
@@ -627,6 +647,147 @@ public class AIServicelmpl implements AIService {
                     }
                     throw new RuntimeException("HTTP错误: " + response.statusCode());
                 });
+    }
+
+    @Override
+    public CompletableFuture<Void> GenerateSloganStreamAsync(SloganRequestEntity request, Consumer<Slogan> callback) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                // 构建请求消息
+                List<Map<String, String>> messages = new ArrayList<>();
+                messages.add(Map.of("role", "system", "content", SLOGAN_SYSTEM_PROMPT));
+                messages.add(Map.of("role", "user", "content", request.getPrompt()));
+
+                // 执行流式请求
+                executeStreamRequest(messages, content -> {
+                    // 处理内容并生成Slogan对象
+                    if (content != null && !content.trim().isEmpty()) {
+                        String coreIdea = extractCoreIdea(content);
+                        Slogan slogan = new Slogan(content.trim(), coreIdea);
+                        callback.accept(slogan);
+                    }
+                });
+
+            } catch (Exception e) {
+                System.err.println("生成Slogan流式输出时发生错误: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> ChatStreamAsync(List<Map<String, String>> messages, Consumer<String> callback) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                executeStreamRequest(messages, callback);
+            } catch (Exception e) {
+                System.err.println("AI助手流式聊天时发生错误: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * 执行流式请求的核心方法 - 改进版使用实际的HTTP流式处理
+     */
+    private void executeStreamRequest(List<Map<String, String>> messages, Consumer<String> callback) {
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            // 构建请求体
+            String requestBody = mapper.writeValueAsString(Map.of(
+                    "model", "x1",
+                    "user", "user_id",
+                    "messages", messages,
+                    "stream", true,
+                    "max_tokens", 32768));
+
+            // 使用HttpURLConnection进行流式处理
+            java.net.URL url = new java.net.URL(X1_HTTP_API_URL);
+            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Authorization", "Bearer " + X1_HTTP_API_PASSWORD);
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Accept", "text/event-stream");
+            connection.setDoOutput(true);
+
+            // 发送请求数据
+            try (java.io.OutputStream os = connection.getOutputStream()) {
+                os.write(requestBody.getBytes(StandardCharsets.UTF_8));
+                os.flush();
+            }
+
+            // 读取流式响应
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    processStreamLine(line, callback, mapper);
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("执行流式请求时发生错误: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 处理单行流式响应
+     */
+    private void processStreamLine(String line, Consumer<String> callback, ObjectMapper mapper) {
+        if (line.startsWith("data:")) {
+            String jsonData = line.substring(5).trim();
+
+            // 检查是否是结束标记
+            if ("[DONE]".equals(jsonData)) {
+                return;
+            }
+
+            try {
+                // 解析JSON响应
+                StreamResponse streamResponse = mapper.readValue(jsonData, StreamResponse.class);
+
+                // 检查错误码
+                if (streamResponse.getCode() != 0) {
+                    System.err.println("API返回错误: " + streamResponse.getMessage());
+                    return;
+                }
+
+                // 提取内容
+                if (streamResponse.getChoices() != null && !streamResponse.getChoices().isEmpty()) {
+                    var choice = streamResponse.getChoices().get(0);
+                    if (choice.getDelta() != null) {
+                        String content = choice.getDelta().getContent();
+                        if (content != null && !content.isEmpty()) {
+                            callback.accept(content);
+                        }
+                    }
+                }
+
+            } catch (JsonProcessingException e) {
+                System.err.println("解析流式响应JSON时发生错误: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 从内容中提取核心创意
+     */
+    private String extractCoreIdea(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return "";
+        }
+
+        // 简单的核心创意提取逻辑，可以根据实际需求优化
+        String[] sentences = content.split("[。！？.!?]");
+        if (sentences.length > 0) {
+            return sentences[0].trim();
+        }
+
+        return content.length() > 50 ? content.substring(0, 50) + "..." : content;
     }
 
     private static final String[] GenDetailSysPrompt = {
