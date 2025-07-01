@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * 画布消息处理器 - 处理节点和边的更新
+ * 剧情设计师画布消息处理器 - 处理节点和边的更新
  */
 @Slf4j
 @Component

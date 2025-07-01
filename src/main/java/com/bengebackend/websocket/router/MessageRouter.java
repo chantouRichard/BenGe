@@ -94,6 +94,14 @@ public class MessageRouter {
         if (jsonNode.has("edges")) {
             message.setEdges(parseEdges(jsonNode.get("edges")));
         }
+
+        if (jsonNode.has("characterNodes")) {
+            message.setCharacterNodes(parseCharacterNodes(jsonNode.get("characterNodes")));
+        }
+
+        if(jsonNode.has("characterEdges")){
+            message.setCharacterEdges(parseCharacterEdges(jsonNode.get("characterEdges")));
+        }
         
         return message;
     }
@@ -107,7 +115,7 @@ public class MessageRouter {
     }
 
     /**
-     * 解析节点数据
+     * 解析剧情设计师节点数据
      */
     private List<WebSocketMessage.NodeData> parseNodes(JsonNode nodesNode) {
         try {
@@ -125,7 +133,7 @@ public class MessageRouter {
     }
 
     /**
-     * 解析边数据
+     * 解析剧情设计师边数据
      */
     private List<WebSocketMessage.EdgeData> parseEdges(JsonNode edgesNode) {
         try {
@@ -141,4 +149,43 @@ public class MessageRouter {
             return null;
         }
     }
+
+    /**
+     * 解析人物设计师节点数据
+     */
+    private List<WebSocketMessage.CharacterNode> parseCharacterNodes(JsonNode characterNodesNode) {
+        try {
+            return objectMapper.readValue(
+                    characterNodesNode.toString(),
+                    objectMapper.getTypeFactory().constructCollectionType(
+                            List.class,
+                            WebSocketMessage.CharacterNode.class
+                    )
+            );
+        } catch (Exception e) {
+            log.error("解析人物节点数据失败", e);
+            return null;
+        }
+    }
+
+    /**
+     * 解析人物设计师边数据
+     */
+    private List<WebSocketMessage.CharacterEdge> parseCharacterEdges(JsonNode characterEdgesNode) {
+        try {
+            return objectMapper.readValue(
+                    characterEdgesNode.toString(),
+                    objectMapper.getTypeFactory().constructCollectionType(
+                            List.class,
+                            WebSocketMessage.CharacterEdge.class
+                    )
+            );
+        } catch (Exception e) {
+            log.error("解析人物边数据失败", e);
+            return null;
+        }
+    }
+
 }
+
+
