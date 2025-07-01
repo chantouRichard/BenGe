@@ -30,12 +30,12 @@ export const usescriptStore = defineStore('script', () => {
     const loadScripts = async () => {
       try {  
         const response = await getAllScript();
-
+        
         console.log("获取用户对应的剧本列表成功", response);
 
-        if(response && response.data){
-          scripts.value = response.data;
-          filteredScripts.value = response.data;
+        if(response){
+          scripts.value = response;
+          filteredScripts.value = response;
         }
       } catch (error) {
         console.error("获取用户对应的剧本列表出错");
@@ -111,21 +111,21 @@ export const usescriptStore = defineStore('script', () => {
 
             console.log("获取剧本详情成功", response);
 
-            if (response.data){
-                if(response.data.history){
-                    console.log("获取剧本历史记录成功", response.data.history);
-                    chatHistory.value = convertScriptHistories(response.data.history);
+            if (response){
+                if(response.history){
+                    console.log("获取剧本历史记录成功", response.history);
+                    chatHistory.value = convertScriptHistories(response.history);
                 }
-                if(response.data.visualElements)
-                    visualElements.value = response.data.visualElements;
+                if(response.visualElements)
+                    visualElements.value = response.visualElements;
                   
-                if(response.data.analysis && response.data.analysis.analysisResult)
-                    analysis.value = response.data.analysis.analysisResult;
+                if(response.analysis && response.analysis.analysisResult)
+                    analysis.value = response.analysis.analysisResult;
                 else
                     analysis.value = [];
                 // 设置剧本阶段
-                if(response.data.script && response.data.script.stage) {
-                    scriptStage.value = response.data.script.stage;
+                if(response.script && response.script.stage) {
+                    scriptStage.value = response.script.stage;
                 } else {
                     // 如果没有阶段信息，默认为第一阶段
                     scriptStage.value = 1;
@@ -150,8 +150,8 @@ export const usescriptStore = defineStore('script', () => {
 
         console.log("创建新剧本成功", response);
 
-        if(response && response.data){
-          const responseScript = response.data.script;
+        if(response){
+          const responseScript = response.script;
           const newScript = {
             id: responseScript.id,
             title: responseScript.title,
@@ -271,9 +271,9 @@ export const usescriptStore = defineStore('script', () => {
         // 调用API更新剧本内容和阶段
         const response = await updateScriptContent(selectScriptId.value, content + coreIdea, 2);
         
-        if (response && response.data && response.data.script) {
+        if (response && response.script) {
           // 更新剧本内容和阶段
-          const updatedScript = response.data.script;
+          const updatedScript = response.script;
           
           // 更新本地剧本数据
           const scriptIndex = scripts.value.findIndex(s => s.id === selectScriptId.value);
@@ -307,8 +307,8 @@ export const usescriptStore = defineStore('script', () => {
       try{
         const response = await updateScriptContent2(selectScriptId.value, messageInput);
 
-        if(response && response.data && response.data.script){
-          const updatedScript = response.data.script;
+        if(response && response.script){
+          const updatedScript = response.script;
 
           // 更新本地剧本数据
           const scriptIndex = scripts.value.findIndex(s => s.id === selectScriptId.value);
@@ -322,7 +322,7 @@ export const usescriptStore = defineStore('script', () => {
             filteredScripts.value[filteredIndex] = updatedScript;
           }
 
-          chatHistory.value = convertScriptHistories(response.data.script.scriptHistories);
+          chatHistory.value = convertScriptHistories(response.script.scriptHistories);
           return true;
         }
       } catch (error){
@@ -340,8 +340,8 @@ export const usescriptStore = defineStore('script', () => {
       try{
         const response = await analyzeScript(selectScriptId.value, scriptContent.value);
 
-        if(response && response.data && response.data.analysisResult){
-          analysis.value = response.data.analysisResult;
+        if(response && response.analysisResult){
+          analysis.value = response.analysisResult;
         }
       } catch (error){
         console.error("更新剧本分析失败", error);
@@ -360,9 +360,9 @@ export const usescriptStore = defineStore('script', () => {
       try{
         const response = await generateCompleteScript(selectScriptId.value, scriptContent.value);
         console.log("生成完整内容成功", response);
-        if(response && response.data && response.data.script){
+        if(response && response.script){
           // 用返回的script更新本地的scripts和filteredScripts
-          const updatedScript = response.data.script;
+          const updatedScript = response.script;
           const scriptIndex = scripts.value.findIndex(s => s.id === selectScriptId.value);
           if (scriptIndex!== -1) {
             scripts.value[scriptIndex] = updatedScript;
@@ -376,8 +376,8 @@ export const usescriptStore = defineStore('script', () => {
           // 更新剧本阶段
           scriptStage.value = updatedScript.stage || 3;
 
-          if(response.data.script.scriptVisualElements){
-            visualElements.value = response.data.scriptVisualElements;          
+          if(response.script.scriptVisualElements){
+            visualElements.value = response.scriptVisualElements;          
           }
         }
       } catch (error){
@@ -410,17 +410,17 @@ export const usescriptStore = defineStore('script', () => {
         if(element){
           const response = await generateElementImage(selectScriptId.value, visualElementId);
           console.log("生成可视化元素图片成功", response);
-          if(response && response.data && response.data.imageUrl){
+          if(response && response.imageUrl){
             const index = visualElements.value.findIndex(el => el.id === visualElementId);
             if(index !== -1){
               visualElements.value[index] = {
                 ...visualElements.value[index],
-                imageUrl: response.data.imageUrl,
-                imageGeneratedAt: response.data.imageGeneratedAt || new Date()
+                imageUrl: response.imageUrl,
+                imageGeneratedAt: response.imageGeneratedAt || new Date()
               };
             }
           }
-          return response.data.imageUrl;
+          return response.imageUrl;
         }
         return null;
       } catch (error){

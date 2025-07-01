@@ -87,7 +87,6 @@ function setupWebSocket() {
       console.error("WebSocket 错误:", msg.message);
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
-      // 这里更新角色选择的用户名
       handleRoleSelection(msg.roleName, msg.username);
     } else if(msg.type === "canvas"){
         handleCanvas(msg);

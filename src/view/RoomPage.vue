@@ -1,8 +1,8 @@
 <template>
-  <div v-if="stage == 1">
+  <div v-if="stage == 0">
     <FrameworkDesignStage :stage="stage" @updateStage="updateStage"/>
   </div>
-  <div v-else-if="stage == 0">
+  <div v-else-if="stage == 1">
     <CompleteScriptStage />
   </div>
   <div v-else>
