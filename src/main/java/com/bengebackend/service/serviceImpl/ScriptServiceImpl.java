@@ -24,13 +24,13 @@ public class ScriptServiceImpl implements ScriptService {
 
     @Autowired
     private ScriptMapper scriptMapper;
-    
+
     @Autowired
     private ScriptHistoryService scriptHistoryService;
-    
+
     @Autowired
     private ScriptAnalysisService scriptAnalysisService;
-    
+
     @Autowired
     private VisualElementService visualElementService;
 
@@ -50,7 +50,7 @@ public class ScriptServiceImpl implements ScriptService {
         dto.setHistory(history);
         dto.setAnalysis(analysis);
         dto.setVisualElements(visualElements);
-        
+
         return dto;
     }
 
@@ -64,7 +64,9 @@ public class ScriptServiceImpl implements ScriptService {
         script.setLastUpdated(LocalDateTime.now());
         scriptMapper.insert(script);
         return script;
-    }    @Override
+    }
+
+    @Override
     public void updateScriptAsync(Integer scriptId, String title, String content, Integer stage) {
         scriptMapper.update(scriptId, title, content, stage, LocalDateTime.now());
     }
@@ -84,7 +86,7 @@ public class ScriptServiceImpl implements ScriptService {
         newScript.setLastUpdated(LocalDateTime.now());
         newScript.setStage(1);
 
-        System.out.println("222222222:"+newScript);
+        System.out.println("222222222:" + newScript);
         scriptMapper.insert(newScript);
 
         ScriptDetailDto dto = new ScriptDetailDto();
@@ -92,19 +94,20 @@ public class ScriptServiceImpl implements ScriptService {
         dto.setHistory(new ArrayList<>());
         dto.setAnalysis(null);
         dto.setVisualElements(new ArrayList<>());
-        
+
         return dto;
     }
 
     @Override
-    public ScriptFrameworkDto genFrame(ScriptReplyRequestEntity request, List<ScriptHistory> history, String scriptContent) {
+    public ScriptFrameworkDto genFrame(ScriptReplyRequestEntity request, List<ScriptHistory> history,
+            String scriptContent) {
         // 模拟AI生成框架的逻辑
         String mockResponse = "\"背景\": \"在太平洋航行的豪华游轮[爱神号]上，正举行珠宝大亨千金的婚礼。仪式开始前15分钟，新娘突然从化妆室消失，只留下地板上未干的血迹。游轮还有1小时即将起航，所有宾客都成为了嫌疑人......\"";
         String title = "消失的新娘";
-        
+
         // 更新剧本
         updateScriptAsync(request.getScriptId(), title, mockResponse, 2);
-        
+
         // 添加历史记录
         ScriptHistory userHistory = new ScriptHistory();
         userHistory.setScriptId(request.getScriptId());
@@ -112,21 +115,21 @@ public class ScriptServiceImpl implements ScriptService {
         userHistory.setResponse("");
         userHistory.setCreatedAt(LocalDateTime.now());
         scriptHistoryService.addHistory(userHistory);
-        
+
         ScriptHistory aiHistory = new ScriptHistory();
         aiHistory.setScriptId(request.getScriptId());
         aiHistory.setMessage("");
         aiHistory.setResponse(mockResponse);
         aiHistory.setCreatedAt(LocalDateTime.now());
         scriptHistoryService.addHistory(aiHistory);
-        
+
         // 重新获取更新后的剧本详情
         ScriptDetailDto updatedDto = getScriptByIdAsync(request.getScriptId());
-        
+
         ScriptFrameworkDto frameworkDto = new ScriptFrameworkDto();
         frameworkDto.setScript(updatedDto.getScript());
         frameworkDto.setDialogHistory(updatedDto.getHistory());
-        
+
         return frameworkDto;
     }
 
@@ -143,10 +146,12 @@ public class ScriptServiceImpl implements ScriptService {
         analysis.setScriptId(scriptId);
         analysis.setAnalysisResult("剧本分析结果：这是一个悬疑推理类剧本...");
         analysis.setAnalyzedAt(LocalDateTime.now());
-        
+
         scriptAnalysisService.saveAnalysis(analysis);
         return analysis;
-    }    @Override
+    }
+
+    @Override
     public ScriptDetailDto getCompSctiptAndDesc(Script script) {
         return getScriptByIdAsync(script.getId());
     }
