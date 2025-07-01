@@ -214,8 +214,31 @@ public class WebSocketMessage {
         private String notes;
 
         /** 关系 ID 列表 */
-        private List<String> relationships;
+        private List<Relationship> relationships;
     }
+    /**
+     * 人物设计师关系列表
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Relationship {
+        /** 目标节点 ID */
+        private String targetId;
+
+        /** 关系类型（如 friend, enemy） */
+        private String type;
+
+        /** 关系描述 */
+        private String description;
+
+        /** 关系强度（如 1-10 分） */
+        private int strength;
+
+        /** 当前状态（如 active、inactive） */
+        private String status;
+    }
+
 
     /**
      * 人物设计师边结构
