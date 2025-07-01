@@ -71,11 +71,12 @@ public class WebSocketMessageUtil {
                 Optional<Integer> userIdOpt = sessionRegistry.getUserId(client.getId());
                 if (userIdOpt.isPresent()) {
                     Optional<User> userOpt = userMapper.findById(userIdOpt.get());
+                    log.info("草拟吗={}", sessionRegistry.getAvatar(client.getId()));
                     if (userOpt.isPresent()) {
                         Map<String, Object> member = new HashMap<>();
                         member.put("id", userIdOpt.get());
                         member.put("username", userOpt.get().getUsername());
-                        member.put("avatar", ""); // 可以后续添加头像URL
+                        member.put("avatar", sessionRegistry.getAvatar(client.getId()).get()); // 可以后续添加头像URL
                         members.add(member);
                     }
                 }
