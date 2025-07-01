@@ -50,12 +50,6 @@ export const useCanvasStore = defineStore("story", () => {
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
   };
-  const handleCreateChaEdgeClick = () => {
-    console.log("点击创建边按钮");
-    isCreatingEdge.value = true;
-    selectedNodesForEdge.value = [];
-    showEdgeSelector.value = false;
-  };
   const handleCreateClueEdgeClick = () => {
     console.log("点击创建边按钮");
     isCreatingEdge.value = true;
@@ -349,15 +343,15 @@ export const useCanvasStore = defineStore("story", () => {
           edges.splice(i, 1);
         }
       }
+      broadcast();
     }
-    // console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
-    broadcast();
+    
   };
 
   // 处理结点的位置变化
   const handlePositionChange = (payload) => {
     const { id, position } = payload;
-    // console.log('[DEBUG] 结点位置变化：', id, position)
+    console.log('结点位置变化：', id, position);
     const nodeIndex = nodes.value.findIndex((n) => n.id === id);
     if (nodeIndex !== -1) {
       nodes.value[nodeIndex].position = position;
@@ -388,7 +382,6 @@ export const useCanvasStore = defineStore("story", () => {
     selectedNodesForEdge,
     showEdgeSelector,
     handleCreateEdgeClick,
-    handleCreateChaEdgeClick,
     handleCreateClueEdgeClick,
     handleEdgeSelect,
     handleEdgeConfirm,

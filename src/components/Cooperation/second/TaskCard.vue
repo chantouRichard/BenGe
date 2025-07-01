@@ -3,28 +3,31 @@
   <div
     class="task-card"
     :style="{
-              transform: isCardVisible
-                ? 'translateX(0)'
-                : 'translateX(-100%)',
-            }"
+      transform: isCardVisible ? 'translateX(0)' : 'translateX(-100%)',
+    }"
   >
     <div class="task-card-header">
+      <h1>你的角色：{{}}</h1>
       <h2>{{ title }}</h2>
     </div>
     <p class="task-text">{{ taskText }}</p>
-      <button @click="toggleCard" class="toggle-btn">{{ !isCardVisible ? ">" : "<" }}</button>
-
+    <button @click="toggleCard" class="toggle-btn">
+      {{ !isCardVisible ? ">" : "<" }}
+    </button>
   </div>
 
   <!-- 控制卡片显示的固定按钮 -->
-  
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 
 // 接收父组件传入的属性
 const props = defineProps({
+  role: {
+    type: String,
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -50,11 +53,11 @@ const toggleCard = () => {
 /* 任务卡片样式 */
 .task-card {
   position: fixed;
-  top: 150px;
+  top: 20px;
   left: 20px;
   transform: translateY(-50%);
-  width: 200px;
-  height: 200px;
+  width: 300px;
+  height: 300px;
   backdrop-filter: blur(10px); /* 毛玻璃效果 */
   border-radius: 10px;
   padding: 20px;
@@ -98,7 +101,7 @@ h2 {
   cursor: pointer;
 
   position: absolute;
-  left: 200px;
+  left: 300px;
   top: 50%;
   transform: translateY(-50%);
   width: 24px;

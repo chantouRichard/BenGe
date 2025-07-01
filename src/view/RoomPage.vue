@@ -2,7 +2,7 @@
   <div v-if="stage == 1">
     <FrameworkDesignStage :stage="stage" @updateStage="updateStage"/>
   </div>
-  <div v-else-if="stage == 2">
+  <div v-else-if="stage == 0">
     <CompleteScriptStage />
   </div>
   <div v-else>

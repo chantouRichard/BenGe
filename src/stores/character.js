@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
+import { socketState } from './socket';
 
 export const useCharacterStore = defineStore('characterStore', () => {
 
@@ -98,6 +99,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
           status: relationData.status
         });
       }
+      broadcast();
     }
 
     selectedNodesForEdge.value = [];
@@ -138,6 +140,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
       editingEdgeId.value = null;
       showEdgeSelector.value = false;
     }
+    broadcast();
   };
 
   // 用户在边选择器中，取消创建边
@@ -158,11 +161,14 @@ export const useCharacterStore = defineStore('characterStore', () => {
     // forceUpdateNode(payload.nodeId, payload.nodeData);
     editingEdgeId.value = null;
     showEdgeSelector.value = false;
+
+    broadcast();
   }
 
   // 连接结点
   const handleConnectNode = (newEdge) => {
     edges.push(newEdge)
+    broadcast();
   }
 
   // 点击结点，进入结点的信息编辑界面或者是在创建边
@@ -172,6 +178,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
     if (isCreatingEdge.value) {
       if (!selectedNodesForEdge.value.find(n => n.id === actualNode.id)) {
         selectedNodesForEdge.value.push(actualNode);
+        broadcast();
       }
 
       if (selectedNodesForEdge.value.length === 2) {
@@ -219,8 +226,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
     // 最后收起面板
     selectedNode.value = null;
   
-    console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2));
-    console.log("索引：", index);
+    broadcast();
     return index;
   };
   
@@ -250,7 +256,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
       }
     };
     nodes.value.push(newNode);
-
+    broadcast();
   }
 
   // 结点的删除
@@ -269,20 +275,31 @@ export const useCharacterStore = defineStore('characterStore', () => {
         }
       }
     }
-    // console.log('[DEBUG] 当前节点列表：', JSON.stringify(nodes.value, null, 2))
+    broadcast();
   }
 
   // 处理结点的位置变化
   const handlePositionChange = (payload) => {
     const { id, position } = payload
-    // console.log('[DEBUG] 结点位置变化：', id, position)
+    console.log('111结点位置变化：', id, position)
     const nodeIndex = nodes.value.findIndex(n => n.id === id)
     if (nodeIndex !== -1) {
       nodes.value[nodeIndex].position = position
       nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] } // ✅ 强制 Vue 感知变化
       // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
     }
-  }
+    broadcast();
+  };
+    // 广播节点和边的信息
+    const broadcast = () => {
+      socketState.socket.send(
+        JSON.stringify({ type: "character", characterNodes: nodes.value, characterEdges: edges })
+      );
+      console.log("广播的节点信息：", {
+        nodes: nodes.value,
+        edges: edges,
+      });
+    };
 
   return {
     nodes,

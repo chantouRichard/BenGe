@@ -6,17 +6,9 @@
       <transition name="fullscreen-slide">
         <div class="canvas fullscreen">
           <div style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;">第二阶段<br>你的角色是：{{ roles[userRole].name }}</div>
-          <div class="canvas">
+          <!-- <button style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;" @click="$emit('nextStage')">下一阶段</button> -->
+          <div class="canvas"> 
             <NarrativeWorkspace
-              v-if="userRole == 0"
-              @updateGraph="handleGraphUpdate"
-            />
-            <CharacterDesign
-              v-if="userRole == 1"
-              @updateGraph="handleGraphUpdate"
-            />
-            <ClueDesign
-            v-if="userRole == 2"
               @updateGraph="handleGraphUpdate"
             />
           </div>
