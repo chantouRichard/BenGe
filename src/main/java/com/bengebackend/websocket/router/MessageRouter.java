@@ -66,38 +66,63 @@ public class MessageRouter {
      */
     private WebSocketMessage parseMessage(JsonNode jsonNode) {
         WebSocketMessage message = new WebSocketMessage();
-        
+
         message.setType(getTextValue(jsonNode, "type"));
         message.setRoomId(getTextValue(jsonNode, "roomId"));
         message.setContent(getTextValue(jsonNode, "content"));
         message.setTime(getTextValue(jsonNode, "time"));
         message.setAvatar(getTextValue(jsonNode, "avatar"));
         message.setToken(getTextValue(jsonNode, "token"));
-        
-        // 处理userId（可能为数字）
+
+        // 处理 userId（可能为数字）
         JsonNode userIdNode = jsonNode.get("userId");
         if (userIdNode != null && !userIdNode.isNull()) {
             message.setUserId(userIdNode.asInt());
         }
-        
+
         message.setUsername(getTextValue(jsonNode, "username"));
 
-        if(jsonNode.has("roleName")){
+        if (jsonNode.has("roleName")) {
             message.setRoleName(getTextValue(jsonNode, "roleName"));
         }
 
-        // 新增对nodes和edges的处理
+        // 使用统一的 parseList 函数处理各种列表字段
         if (jsonNode.has("nodes")) {
-            message.setNodes(parseNodes(jsonNode.get("nodes")));
+            message.setNodes(parseList(jsonNode.get("nodes"), WebSocketMessage.NodeData.class));
         }
 
         if (jsonNode.has("edges")) {
-            message.setEdges(parseEdges(jsonNode.get("edges")));
+            message.setEdges(parseList(jsonNode.get("edges"), WebSocketMessage.EdgeData.class));
         }
-        
+
+        if (jsonNode.has("characterNodes")) {
+            message.setCharacterNodes(parseList(jsonNode.get("characterNodes"), WebSocketMessage.CharacterNode.class));
+        }
+
+        if (jsonNode.has("characterEdges")) {
+            message.setCharacterEdges(parseList(jsonNode.get("characterEdges"), WebSocketMessage.CharacterEdge.class));
+        }
+
+        if (jsonNode.has("clueNodes")) {
+            message.setClueNodes(parseList(jsonNode.get("clueNodes"), WebSocketMessage.ClueNode.class));
+        }
+
+        if (jsonNode.has("clueEdges")) {
+            message.setEdges(parseList(jsonNode.get("clueEdges"), WebSocketMessage.EdgeData.class));
+        }
+
+        if (jsonNode.has("inferenceNodes")) {
+            message.setInferenceNodes(parseList(jsonNode.get("inferenceNodes"), WebSocketMessage.InferenceNode.class));
+        }
+
+        if (jsonNode.has("personNodes")) {
+            message.setPersonNodes(parseList(jsonNode.get("personNodes"), WebSocketMessage.PersonNode.class));
+        }
+
         return message;
     }
-    
+
+
     /**
      * 安全获取文本值
      */
@@ -106,39 +131,18 @@ public class MessageRouter {
         return (fieldNode != null && !fieldNode.isNull()) ? fieldNode.asText() : null;
     }
 
-    /**
-     * 解析节点数据
-     */
-    private List<WebSocketMessage.NodeData> parseNodes(JsonNode nodesNode) {
+    private <T> List<T> parseList(JsonNode node, Class<T> clazz) {
         try {
             return objectMapper.readValue(
-                    nodesNode.toString(),
-                    objectMapper.getTypeFactory().constructCollectionType(
-                            List.class,
-                            WebSocketMessage.NodeData.class
-                    )
+                    node.toString(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, clazz)
             );
         } catch (Exception e) {
-            log.error("解析节点数据失败", e);
+            log.error("解析 {} 列表失败", clazz.getSimpleName(), e);
             return null;
         }
     }
 
-    /**
-     * 解析边数据
-     */
-    private List<WebSocketMessage.EdgeData> parseEdges(JsonNode edgesNode) {
-        try {
-            return objectMapper.readValue(
-                    edgesNode.toString(),
-                    objectMapper.getTypeFactory().constructCollectionType(
-                            List.class,
-                            WebSocketMessage.EdgeData.class
-                    )
-            );
-        } catch (Exception e) {
-            log.error("解析边数据失败", e);
-            return null;
-        }
-    }
 }
+
+
