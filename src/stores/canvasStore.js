@@ -50,6 +50,18 @@ export const useCanvasStore = defineStore("story", () => {
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
   };
+  const handleCreateChaEdgeClick = () => {
+    console.log("点击创建边按钮");
+    isCreatingEdge.value = true;
+    selectedNodesForEdge.value = [];
+    showEdgeSelector.value = false;
+  };
+  const handleCreateClueEdgeClick = () => {
+    console.log("点击创建边按钮");
+    isCreatingEdge.value = true;
+    selectedNodesForEdge.value = [];
+    showEdgeSelector.value = false;
+  };
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
@@ -237,6 +249,100 @@ export const useCanvasStore = defineStore("story", () => {
 
     broadcast();
   };
+  const handleAddChaNode = (event) => {
+    const rect = event?.target?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+    const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+
+    const newNode = {
+      id: generateNodeId(),
+      type: "character",
+      position: { x, y },
+      data: {
+        name: "新角色",
+        avatar: require("@/assets/avatar/1.jpg"),
+        age: null,
+        occupation: "",
+        personality: [],
+        background: "",
+        skills: [],
+        items: "",
+        notes: "",
+        relationships: [],
+      },
+    };
+    nodes.value.push(newNode);
+
+    broadcast();
+  };
+  const handleAddClueNode = (event) => {
+    const rect = event?.target?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+    const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+
+    const newNode = {
+      id: generateNodeId(),
+      type: "clue", // 关键点：类型改为 clue
+      position: { x, y },
+      data: {
+        title: "新线索",
+        relatedEvent: "", // 关联的事件
+        detail: "", // 线索内容
+        logic: "", // 推理逻辑
+        tags: "", // 标签（逗号分隔）
+        note: "", // 备注
+      },
+    };
+
+    nodes.value.push(newNode);
+
+    broadcast(); // 如果你在同步节点给协作成员，这一行保留
+  };
+  const handleAddInferenceNode = (event) => {
+    const rect = event?.target?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+    const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+
+    const newNode = {
+      id: generateNodeId(),
+      type: "inference",
+      position: { x, y },
+      data: {
+        title: '推导结论1',
+      summary: '总结',
+      evidence: '证据',
+      tags: '',
+      note: ''
+      },
+    };
+
+    nodes.value.push(newNode);
+
+    broadcast(); // 如果你在同步节点给协作成员，这一行保留
+  };
+  const handleAddPersonNode = (event) => {
+  const rect = event?.target?.getBoundingClientRect();
+  const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+  const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+
+  const newNode = {
+    id: generateNodeId(),
+    type: "person", // 使用你在 VueFlow 中注册的人物节点组件类型
+    position: { x, y },
+    data: {
+      name: '新人物',
+      bio: '人物背景简介',
+      clues: [],       // 与线索有关的ID或标题
+      tags: ['可疑'],   // 人物特点标签
+      note: ''         // 附加备注
+    },
+  };
+
+  nodes.value.push(newNode);
+
+  broadcast(); // 如果你在同步节点给其他协作者，这一行保留
+};
+
 
   // 结点的删除
   const handleDeleteNode = (nodeId) => {
@@ -287,6 +393,8 @@ export const useCanvasStore = defineStore("story", () => {
     selectedNodesForEdge,
     showEdgeSelector,
     handleCreateEdgeClick,
+    handleCreateChaEdgeClick,
+    handleCreateClueEdgeClick,
     handleEdgeSelect,
     handleEdgeConfirm,
     handleEdgeEditConfirm,
@@ -296,6 +404,10 @@ export const useCanvasStore = defineStore("story", () => {
     handleNodeClick,
     handleDetailSave,
     handleAddNode,
+    handleAddChaNode,
+    handleAddClueNode,
+    handleAddInferenceNode,
+    handleAddPersonNode,
     handleDeleteNode,
     handlePositionChange,
     broadcast,

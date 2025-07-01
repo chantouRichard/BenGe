@@ -2,8 +2,8 @@
   <div class="workspace-container">
     <!-- 角色设计师专用工具栏 -->
     <CharacterToolbar 
-      @add-character="characterStore.handleAddNode" 
-      @add-relationship="characterStore.handleCreateEdgeClick" 
+      @add-character="canvasStore.handleAddChaNode" 
+      @add-relationship="canvasStore.handleCreateChaEdgeClick" 
       @character-template="handleCharacterTemplate"
       @export-characters="handleExportCharacters"
     />
@@ -24,24 +24,24 @@
     <!-- 角色详情面板 -->
     <div style="height: 100%;width: 100%;">
       <CharacterDetailPanel 
-        :visible="characterStore.selectedNode" 
-        :nodeData="characterStore.selectedNode" 
+        :visible="canvasStore.selectedNode" 
+        :nodeData="canvasStore.selectedNode" 
         @save="handleDetailSave"
-        @close="characterStore.selectedNode = null" 
+        @close="canvasStore.selectedNode = null" 
       />
 
       <!-- 角色关系编辑器 -->
       <CharacterRelationEditor 
-        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId" 
-        :source="characterStore.selectedNodesForEdge[0]" 
-        :target="characterStore.selectedNodesForEdge[1]"
-        @confirm="characterStore.handleEdgeConfirm" 
-        @cancel="characterStore.handleEdgeCancel" 
+        v-if="canvasStore.showEdgeSelector && !canvasStore.editingEdgeId" 
+        :source="canvasStore.selectedNodesForEdge[0]" 
+        :target="canvasStore.selectedNodesForEdge[1]"
+        @confirm="canvasStore.handleEdgeConfirm" 
+        @cancel="canvasStore.handleEdgeCancel" 
       />
 
       <!-- 编辑现有关系 -->
       <CharacterRelationEditor 
-        v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId"
+        v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId"
         :source="getEdgeSourceNode()"
         :target="getEdgeTargetNode()"
         :initialType="getCurrentEdge()?.data?.type || ''"
@@ -49,9 +49,9 @@
         :initialStrength="getCurrentEdge()?.data?.strength || 5"
         :initialStatus="getCurrentEdge()?.data?.status || 'active'"
         :showDelete="true"
-        @confirm="characterStore.handleEdgeEditConfirm"
-        @cancel="characterStore.handleEdgeCancel" 
-        @delete-relation="characterStore.handleDeleteEdge" 
+        @confirm="canvasStore.handleEdgeEditConfirm"
+        @cancel="canvasStore.handleEdgeCancel" 
+        @delete-relation="canvasStore.handleDeleteEdge" 
       />
     </div>
   </div>
@@ -98,6 +98,7 @@ const getCurrentEdge = () => {
 const getEdgeSourceNode = () => {
   const edge = getCurrentEdge()
   return edge ? canvasStore.nodes.find(n => n.id === edge.source) : null
+  return edge ? canvasStore.nodes.find(n => n.id === edge.source) : null
 }
 
 // 获取边的目标节点 - 从canvasStore中查找
@@ -108,7 +109,7 @@ const getEdgeTargetNode = () => {
 
 // 角色详情保存
 const handleDetailSave = (updatedData) => {
-  const index = characterStore.handleDetailSave(updatedData);
+  const index = canvasStore.handleDetailSave(updatedData);
   console.log("接受到的索引",index);
   console.log("当前节点数据",nodes.value)
   canvasRef.value?.forceUpdateNode(updatedData.id, nodes.value[index].data);

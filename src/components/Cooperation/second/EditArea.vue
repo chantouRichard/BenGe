@@ -15,6 +15,10 @@
               v-if="userRole == 1"
               @updateGraph="handleGraphUpdate"
             />
+            <ClueDesign
+            v-if="userRole == 2"
+              @updateGraph="handleGraphUpdate"
+            />
             <AtmosphereDesign
               v-if="userRole == 3"
               @updateGraph="handleGraphUpdate"
@@ -29,6 +33,7 @@
 <script>
 import NarrativeWorkspace from "@/components/Cooperation/second/roles/NarrativeWorkspace.vue";
 import CharacterDesign from "./roles/CharacterDesign.vue";
+import ClueDesign from "./roles/ClueDesign.vue";
 import AtmosphereDesign from "./roles/AtmosphereDesign.vue";  
 
 export default {
@@ -36,6 +41,7 @@ export default {
   components: {
     NarrativeWorkspace,
     CharacterDesign,
+    ClueDesign,
     AtmosphereDesign,
   },
   props: {

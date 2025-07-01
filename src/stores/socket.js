@@ -87,7 +87,6 @@ function setupWebSocket() {
       console.error("WebSocket 错误:", msg.message);
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
-      // 这里更新角色选择的用户名
       handleRoleSelection(msg.roleName, msg.username);
     } else if(msg.type === "canvas"){
         handleCanvas(msg);
@@ -174,8 +173,10 @@ function handleRoleSelection(roleName, username) {
 // 同步画布
 function handleCanvas(msg){
 
-    canvasStore.nodes = msg.nodes;
-    canvasStore.edges = msg.edges;
+  console.log("接收到canvas：",msg);
+
+    canvasStore.nodes = msg.nodes || [];
+    canvasStore.edges = msg.edges || [];
 }
 
 // 更新成员的角色选择状态

@@ -1,7 +1,6 @@
 <template>
   <div class="chat-container">
-    <div
-      style="
+    <div style="
         width: 100px;
         margin-left: auto;
         margin-right: auto;
@@ -9,31 +8,22 @@
         border-color: black;
         border-width: 16px;
         border-radius: 5px;
-      "
-    >
+      ">
       现在开始聊天吧~
     </div>
     <!-- 聊天内容区域 -->
     <div class="chat-messages" ref="messagesContainer">
-      <div
-        v-for="(message, index) in socketState.messages"
-        :key="index"
-        :class="[
-          'message',
-          message.isSystem
-            ? 'message-system'
-            : message.isMe
+      <div v-for="(message, index) in socketState.messages" :key="index" :class="[
+        'message',
+        message.isSystem
+          ? 'message-system'
+          : message.isMe
             ? 'message-me'
             : 'message-other',
-        ]"
-      >
+      ]">
         <div v-if="!message.isSystem" class="message-avatar">
           <div class="avatar-circle">
-            <img
-              :src="message.avatar"
-              alt="avatar"
-              style="width: 40px; height: 40px; border-radius: 20px"
-            />
+            <img :src="message.avatar" alt="avatar" style="width: 40px; height: 40px; border-radius: 20px" />
           </div>
         </div>
         <div class="message-content">
@@ -48,18 +38,11 @@
 
     <!-- 输入区域 -->
     <div class="chat-input-area">
-      <input
-        type="text"
-        v-model="newMessage"
-        @keyup.enter="sendChatMessage"
-        placeholder="输入消息..."
-        class="message-input"
-      />
-      <img
-        src="../../assets/send.png"
-        @click="sendChatMessage"
-        class="send-button"
-      />
+      <input type="text" v-model="newMessage" @keyup.enter="sendChatMessage" placeholder="输入消息..."
+        class="message-input" />
+      <div class="send-button" @click="sendChatMessage">
+        <i class="fa-solid fa-paper-plane"></i>
+      </div>
     </div>
   </div>
 </template>
@@ -168,7 +151,8 @@ const messagesContainer = ref(null);
   height: 100%;
   /* max-height: 648px; */
   width: 100%;
-  background-color: white;
+  background-color: #ffffff2d;
+  backdrop-filter: blur(3px);
   border-radius: 16px;
   overflow: hidden;
   /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
@@ -179,7 +163,6 @@ const messagesContainer = ref(null);
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  background-color: whte;
   color: black;
   position: relative;
   z-index: 10;
@@ -207,7 +190,7 @@ const messagesContainer = ref(null);
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  background-color: white;
+  background-color: transparent;
 }
 
 .message {
@@ -229,7 +212,6 @@ const messagesContainer = ref(null);
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #ddd;
   background-size: cover;
   background-position: center;
 }
@@ -263,7 +245,7 @@ const messagesContainer = ref(null);
 
 .message-time {
   font-size: 11px;
-  color: #999;
+  color: hsl(0, 11%, 84%);
   margin-top: 4px;
 }
 
@@ -295,8 +277,7 @@ const messagesContainer = ref(null);
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  background-color: #f9f9f9;
-  border-top: 1px solid #eee;
+  border-top: 0.5px solid #eee;
 }
 
 .message-input {
@@ -308,12 +289,12 @@ const messagesContainer = ref(null);
   outline: none;
 }
 
+/* 外层按钮容器 - 圆形蓝底 */
 .send-button {
   width: 36px;
   height: 36px;
   margin-left: 10px;
   border-radius: 50%;
-  background-color: #3b82f6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -321,7 +302,16 @@ const messagesContainer = ref(null);
   transition: all 0.3s ease;
 }
 
+/* 图标本身 */
+.send-button i {
+  font-size: 16px;
+  color: white;
+  pointer-events: none; /* 避免事件冲突 */
+}
+
 .send-button:hover {
   background-color: #2563eb;
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
 }
 </style>
