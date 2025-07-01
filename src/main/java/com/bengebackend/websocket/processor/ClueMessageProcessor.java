@@ -12,43 +12,42 @@ import org.springframework.web.socket.WebSocketSession;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArraySet;
 
-/**
- * 人物设计师画布消息处理器 - 处理节点和边的更新
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CharacterMessageProcessor {
+public class ClueMessageProcessor {
 
     private final RoomManager roomManager;
     private final ObjectMapper objectMapper;
 
     /**
-     * 处理节点更新消息
+     * 处理画布全量更新(节点和边同时更新)
      */
     public void processFullCanvasUpdate(WebSocketSession session, String roomId, Integer userId,
-                                   User user, List<WebSocketMessage.CharacterNode> nodes,
-                                   List<WebSocketMessage.CharacterEdge> edges) {
-       try {
-           WebSocketMessage message = new WebSocketMessage();
-           message.setType("character");
-           message.setRoomId(roomId);
-           message.setUserId(userId);
-           message.setUsername(user.getUsername());
-           message.setTime(getCurrentFormattedTime());
-           message.setCharacterNodes(nodes);
-           message.setCharacterEdges(edges);
+                                        User user, List<WebSocketMessage.ClueNode> nodes, List<WebSocketMessage.InferenceNode> interNodes,
+                                        List<WebSocketMessage.PersonNode> perNodes, List<WebSocketMessage.EdgeData> edges) {
+        try {
+            WebSocketMessage message = new WebSocketMessage();
+            message.setType("clue");
+            message.setRoomId(roomId);
+            message.setUserId(userId);
+            message.setUsername(user.getUsername());
+            message.setTime(getCurrentFormattedTime());
+            message.setClueNodes(nodes);
+            message.setInferenceNodes(interNodes);
+            message.setPersonNodes(perNodes);
+            message.setEdges(edges);
 
-           String messageJson = objectMapper.writeValueAsString(message);
-           roomManager.broadcastToRoom(roomId, messageJson);
-           log.info("用户 {} 在房间 {} 更新了人物设计师画布数据", user.getUsername(), roomId);
-       } catch (Exception e) {
-           log.error("处理人物设计师画布更新失败: roomId={}, userId={}", roomId, userId, e);
-           broadcastCanvasErrorMessage(roomId, userId, user, "人物设计师画布更新失败");
-       }
-   }
+            String messageJson = objectMapper.writeValueAsString(message);
+            roomManager.broadcastToRoom(roomId, messageJson);
+
+            log.info("用户 {} 在房间 {} 更新了完整画布数据", user.getUsername(), roomId);
+        } catch (Exception e) {
+            log.error("处理画布全量更新失败: roomId={}, userId={}", roomId, userId, e);
+            broadcastCanvasErrorMessage(roomId, userId, user, "画布更新失败");
+        }
+    }
 
     /**
      * 广播画布错误消息
@@ -56,7 +55,7 @@ public class CharacterMessageProcessor {
     private void broadcastCanvasErrorMessage(String roomId, Integer userId, User user, String errorMsg) {
         try {
             WebSocketMessage message = new WebSocketMessage();
-            message.setType("character-error");
+            message.setType("clue-error");
             message.setRoomId(roomId);
             message.setUserId(userId);
             message.setUsername(user.getUsername());
