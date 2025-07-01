@@ -173,8 +173,10 @@ function handleRoleSelection(roleName, username) {
 // 同步画布
 function handleCanvas(msg){
 
-    canvasStore.nodes = msg.nodes;
-    canvasStore.edges = msg.edges;
+  console.log("接收到canvas：",msg);
+
+    canvasStore.nodes = msg.nodes || [];
+    canvasStore.edges = msg.edges || [];
 }
 
 // 更新成员的角色选择状态

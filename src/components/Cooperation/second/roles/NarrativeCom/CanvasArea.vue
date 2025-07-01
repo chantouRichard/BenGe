@@ -55,6 +55,42 @@
         />
       </template>
 
+      <!-- 线索节点 -->
+      <template #node-clue="{ id, type, data, position }">
+        <ClueNode
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
+      <!-- 结论节点 -->
+      <template #node-inference="{ id, type, data, position }">
+        <InferenceNode
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
+      <!-- 事件相关人物节点 -->
+      <template #node-person="{ id, type, data, position }">
+        <PersonNode
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
       <!-- 自定义边 -->
       <template #edge-custom="edgeProps">
         <CustomEdge v-bind="edgeProps"/>
@@ -63,6 +99,11 @@
       <!-- 角色关系边 -->
       <template #edge-relationship="edgeProps">
         <CharacterRelationEdge v-bind="edgeProps"/>
+      </template>
+
+      <!-- 线索、结论边 -->
+      <template #edge-clue="edgeProps">
+        <ClueEdges v-bind="edgeProps"/>
       </template>
     </VueFlow>
   </div>
@@ -75,6 +116,10 @@ import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
 import CharacterCard from '../CharacterCom/CharacterCard.vue'
 import CharacterRelationEdge from '../CharacterCom/CharacterRelationEdge.vue'
+import ClueNode from '../ClueCom/ClueNode.vue'
+import ClueEdges from '../ClueCom/ClueEdges.vue'
+import InferenceNode from '../ClueCom/InferenceNode.vue'
+import PersonNode from '../ClueCom/PersonNode.vue'
 
 const props = defineProps({
   nodes: {
