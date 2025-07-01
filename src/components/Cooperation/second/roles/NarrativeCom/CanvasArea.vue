@@ -55,6 +55,19 @@
         />
       </template>
 
+      <!-- 氛围节点 -->
+      <template #node-atmosphere="{ id, type, data, position, selected }">
+        <AtmosphereNode
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          :selected="selected"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
       <!-- 线索节点 -->
       <template #node-clue="{ id, type, data, position }">
         <ClueNode
@@ -120,6 +133,7 @@ import ClueNode from '../ClueCom/ClueNode.vue'
 import ClueEdges from '../ClueCom/ClueEdges.vue'
 import InferenceNode from '../ClueCom/InferenceNode.vue'
 import PersonNode from '../ClueCom/PersonNode.vue'
+import AtmosphereNode from '../AtmosphereCom/AtmosphereNode.vue'
 
 const props = defineProps({
   nodes: {
@@ -191,7 +205,8 @@ const handleNodeDragStop = (node) => {
 
 const nodeTypes = {
   custom: CustomNode,
-  character: CharacterCard
+  character: CharacterCard,
+  atmosphere: AtmosphereNode
 }
 
 const edgeTypes = {

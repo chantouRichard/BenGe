@@ -144,8 +144,19 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 点击结点，进入结点的信息编辑界面或者是在创建边
   const handleNodeClick = (node) => {
+    // 添加参数验证，防止 undefined 错误
+    if (!node) {
+      console.warn('handleNodeClick: node parameter is undefined');
+      return;
+    }
+
     const actualNode = node.node || node; // 处理两种可能的情况
-    console.log("点击节点信息：", JSON.stringify(actualNode));
+
+    // 验证 actualNode 是否有效
+    if (!actualNode || !actualNode.id) {
+      console.warn('handleNodeClick: invalid node data', actualNode);
+      return;
+    }
 
     if (isCreatingEdge.value) {
       console.log("当前选择结点", actualNode);
@@ -160,7 +171,7 @@ export const useCanvasStore = defineStore("story", () => {
       broadcast();
     } else {
       selectedNode.value = { ...actualNode };
-      console.log("else部分:", selectedNode.value);
+      console.log('设置选中节点:', selectedNode.value);
     }
   };
 
@@ -185,7 +196,6 @@ export const useCanvasStore = defineStore("story", () => {
           ...updatedData.data,
         };
 
-        // ✅ 强制触发响应式更新
         nodes.value[index] = { ...nodes.value[index] };
 
         console.log("更新后的节点数据：", nodes.value[index]);
@@ -363,14 +373,9 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 广播节点和边的信息
   const broadcast = () => {
-    socketState.socket.send(
-      JSON.stringify({ type: "canvas", nodes: nodes.value, edges: edges })
-    );
-    console.log("节点信息：", {
-      type: "canvas",
-      nodes: nodes.value,
-      edges: edges,
-    });
+    if (socketState?.socket?.send) {
+      socketState.socket.send({nodes:nodes.value,edges:edges});
+    }
   };
 
   return {
@@ -398,5 +403,6 @@ export const useCanvasStore = defineStore("story", () => {
     handleAddPersonNode,
     handleDeleteNode,
     handlePositionChange,
+    broadcast,
   };
 });

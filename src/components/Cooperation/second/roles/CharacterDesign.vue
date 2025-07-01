@@ -8,17 +8,17 @@
       @export-characters="handleExportCharacters"
     />
 
-    <!-- 主画布 -->
+    <!-- 主画布 - 使用canvasStore的数据以实现与NarrativeWorkspace同步 -->
     <CanvasArea
       ref="canvasRef"
       v-if="canvasStore.nodes.length > 0"
       :nodes="canvasStore.nodes"
       :edges="canvasStore.edges"
-      @delete-node="canvasStore.handleDeleteNode"
-      @node-select="canvasStore.handleNodeClick"
-      @edge-select="canvasStore.handleEdgeSelect"
-      @node-position-change="canvasStore.handlePositionChange"
-      @connect-node="canvasStore.handleConnectNode"
+      @delete-node="characterStore.handleDeleteNode"
+      @node-select="characterStore.handleNodeClick"
+      @edge-select="characterStore.handleEdgeSelect"
+      @node-position-change="characterStore.handlePositionChange"
+      @connect-node="characterStore.handleConnectNode"
     />
 
     <!-- 角色详情面板 -->
@@ -62,6 +62,7 @@ import CharacterToolbar from './CharacterCom/CharacterToolbar.vue'
 import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import CharacterDetailPanel from './CharacterCom/CharacterDetailPanel.vue'
 import CharacterRelationEditor from './CharacterCom/CharacterRelationEditor.vue'
+import { useCharacterStore } from '@/stores/character'
 import { useCanvasStore } from '@/stores/canvasStore'
 import { ref , computed, watch } from 'vue'
 
@@ -73,26 +74,34 @@ const props = defineProps({
   edges: Array,
 })
 
-// 先初始化store
+// 初始化store - 同时使用两个store
+const characterStore = useCharacterStore()
 const canvasStore = useCanvasStore()
 const canvasRef = ref(null)
 
 
-// 直接使用 store 中的数据驱动画布
+// 使用canvasStore的nodes作为画布数据源
+const effectiveNodes = computed(() => {
+  return props.nodes || canvasStore.nodes
+})
+const effectiveEdges = computed(() => props.edges || canvasStore.edges)
+
+// 直接使用 canvasStore 中的数据驱动画布（用于强制更新）
 const nodes = computed(() => canvasStore.nodes)
 
-// 获取当前编辑的边
+// 获取当前编辑的边 - 从canvasStore中查找
 const getCurrentEdge = () => {
-  return canvasStore.edges.find(e => e.id === canvasStore.editingEdgeId)
+  return canvasStore.edges.find(e => e.id === characterStore.editingEdgeId)
 }
 
-// 获取边的源节点
+// 获取边的源节点 - 从canvasStore中查找
 const getEdgeSourceNode = () => {
   const edge = getCurrentEdge()
   return edge ? canvasStore.nodes.find(n => n.id === edge.source) : null
+  return edge ? canvasStore.nodes.find(n => n.id === edge.source) : null
 }
 
-// 获取边的目标节点
+// 获取边的目标节点 - 从canvasStore中查找
 const getEdgeTargetNode = () => {
   const edge = getCurrentEdge()
   return edge ? canvasStore.nodes.find(n => n.id === edge.target) : null

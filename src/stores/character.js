@@ -4,30 +4,25 @@ import { socketState } from './socket';
 
 export const useCharacterStore = defineStore('characterStore', () => {
 
+  // 引入画布store以共享数据
+  const canvasStore = useCanvasStore()
+
   // 生成结点的ID
   const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
-  // 所有角色节点数据
-  const nodes = ref([{
-    id: generateNodeId(),
-    type: 'character',
-    position: { x: 100, y: 100 },
-    data: {
-      name: '张三',
-      avatar: require('@/assets/avatar/1.jpg'),
-      age: 28,
-      occupation: '律师',
-      personality: ['冷静', '理性', '正义感强'],
-      background: '毕业于知名法学院，专攻刑事辩护，有着强烈的正义感和敏锐的洞察力。',
-      skills: ['法律知识', '逻辑推理', '谈判技巧'],
-      items: '一支父亲留下的钢笔，法学院毕业证书',
-      notes: '主要推理角色，善于发现细节线索',
-      relationships: []
-    }
-  }])
+  // 使用computed属性从canvasStore获取角色节点
+  const nodes = computed(() => {
+    return canvasStore.nodes.filter(node => node.type === 'character')
+  })
 
-  // 所有连线
-  const edges = reactive([])
+  // 使用computed属性从canvasStore获取角色关系边
+  const edges = computed(() => {
+    return canvasStore.edges.filter(edge => edge.type === 'relationship')
+  })
+
+  // 获取所有节点（包括非角色节点，用于关系连接）
+  const allNodes = computed(() => canvasStore.nodes)
+  const allEdges = computed(() => canvasStore.edges)
 
   // 当前选择结点
   const selectedNode = ref(null)
@@ -43,6 +38,31 @@ export const useCharacterStore = defineStore('characterStore', () => {
 
   // 是否展示边选择器
   const showEdgeSelector = ref(false)
+
+  // 初始化默认角色节点（如果画布中还没有角色节点）
+  const initializeDefaultCharacter = () => {
+    const hasCharacterNodes = canvasStore.nodes.some(node => node.type === 'character')
+    if (!hasCharacterNodes) {
+      const defaultCharacter = {
+        id: generateNodeId(),
+        type: 'character',
+        position: { x: 100, y: 100 },
+        data: {
+          name: '张三',
+          avatar: require('@/assets/avatar/1.jpg'),
+          age: 28,
+          occupation: '律师',
+          personality: ['冷静', '理性', '正义感强'],
+          background: '毕业于知名法学院，专攻刑事辩护，有着强烈的正义感和敏锐的洞察力。',
+          skills: ['法律知识', '逻辑推理', '谈判技巧'],
+          items: '一支父亲留下的钢笔，法学院毕业证书',
+          notes: '主要推理角色，善于发现细节线索',
+          relationships: []
+        }
+      }
+      canvasStore.nodes.push(defaultCharacter)
+    }
+  }
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
@@ -81,17 +101,18 @@ export const useCharacterStore = defineStore('characterStore', () => {
         })
       });
 
-      edges.push(newEdge);
+      // 添加到canvasStore中
+      canvasStore.edges.push(newEdge);
 
       // 同时在角色节点中记录关系
-      const sourceNodeIndex = nodes.value.findIndex(n => n.id === sourceNode.id);
-      const targetNodeIndex = nodes.value.findIndex(n => n.id === targetNode.id);
+      const sourceNodeIndex = canvasStore.nodes.findIndex(n => n.id === sourceNode.id);
+      const targetNodeIndex = canvasStore.nodes.findIndex(n => n.id === targetNode.id);
       
       if (sourceNodeIndex !== -1) {
-        if (!nodes.value[sourceNodeIndex].data.relationships) {
-          nodes.value[sourceNodeIndex].data.relationships = [];
+        if (!canvasStore.nodes[sourceNodeIndex].data.relationships) {
+          canvasStore.nodes[sourceNodeIndex].data.relationships = [];
         }
-        nodes.value[sourceNodeIndex].data.relationships.push({
+        canvasStore.nodes[sourceNodeIndex].data.relationships.push({
           targetId: targetNode.id,
           type: relationData.type,
           description: relationData.description,
@@ -111,7 +132,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
   const handleEdgeEditConfirm = (relationData) => {
     if (!editingEdgeId.value) return;
 
-    const edge = edges.find(e => e.id === editingEdgeId.value);
+    const edge = canvasStore.edges.find(e => e.id === editingEdgeId.value);
     if (edge) {
       // 更新关系边数据
       edge.data.type = relationData.type;
@@ -121,13 +142,13 @@ export const useCharacterStore = defineStore('characterStore', () => {
       edge.data.label = relationData.type || '关系';
 
       // 同时更新角色节点中的关系记录
-      const sourceNodeIndex = nodes.value.findIndex(n => n.id === edge.source);
-      if (sourceNodeIndex !== -1 && nodes.value[sourceNodeIndex].data.relationships) {
-        const relationIndex = nodes.value[sourceNodeIndex].data.relationships.findIndex(
+      const sourceNodeIndex = canvasStore.nodes.findIndex(n => n.id === edge.source);
+      if (sourceNodeIndex !== -1 && canvasStore.nodes[sourceNodeIndex].data.relationships) {
+        const relationIndex = canvasStore.nodes[sourceNodeIndex].data.relationships.findIndex(
           r => r.targetId === edge.target
         );
         if (relationIndex !== -1) {
-          nodes.value[sourceNodeIndex].data.relationships[relationIndex] = {
+          canvasStore.nodes[sourceNodeIndex].data.relationships[relationIndex] = {
             targetId: edge.target,
             type: relationData.type,
             description: relationData.description,
@@ -139,6 +160,9 @@ export const useCharacterStore = defineStore('characterStore', () => {
 
       editingEdgeId.value = null;
       showEdgeSelector.value = false;
+
+      // 广播更新
+      canvasStore.broadcast && canvasStore.broadcast()
     }
     broadcast();
   };
@@ -153,12 +177,11 @@ export const useCharacterStore = defineStore('characterStore', () => {
 
   // 在边选择器中，删除边
   const handleDeleteEdge = () => {
-    const index = edges.findIndex(e => e.id === editingEdgeId.value);
+    const index = canvasStore.edges.findIndex(e => e.id === editingEdgeId.value);
     if (index !== -1) {
-      edges.splice(index, 1);
+      canvasStore.edges.splice(index, 1);
     }
 
-    // forceUpdateNode(payload.nodeId, payload.nodeData);
     editingEdgeId.value = null;
     showEdgeSelector.value = false;
 
@@ -173,7 +196,19 @@ export const useCharacterStore = defineStore('characterStore', () => {
 
   // 点击结点，进入结点的信息编辑界面或者是在创建边
   const handleNodeClick = (node) => {
+    // 添加参数验证，防止 undefined 错误
+    if (!node) {
+      console.warn('handleNodeClick: node parameter is undefined');
+      return;
+    }
+
     const actualNode = node.node || node; // 处理两种可能的情况
+
+    // 验证 actualNode 是否有效
+    if (!actualNode || !actualNode.id) {
+      console.warn('handleNodeClick: invalid node data', actualNode);
+      return;
+    }
 
     if (isCreatingEdge.value) {
       if (!selectedNodesForEdge.value.find(n => n.id === actualNode.id)) {
@@ -202,18 +237,18 @@ export const useCharacterStore = defineStore('characterStore', () => {
   
     // 如果当前有选中节点，才尝试查找并更新
     if (selectedNode.value) {
-      index = nodes.value.findIndex(n => n.id === updatedData.id);
+      index = canvasStore.nodes.findIndex(n => n.id === updatedData.id);
   
       if (index !== -1) {
-        nodes.value[index].data = {
-          ...nodes.value[index].data,
+        canvasStore.nodes[index].data = {
+          ...canvasStore.nodes[index].data,
           ...updatedData.data,
         };
   
         // ✅ 强制触发响应式更新
-        nodes.value[index] = { ...nodes.value[index] };
+        canvasStore.nodes[index] = { ...canvasStore.nodes[index] };
   
-        console.log('更新后的节点数据：', nodes.value[index]);
+        console.log('更新后的节点数据：', canvasStore.nodes[index]);
       } else {
         console.warn('未找到对应的节点 ID:', updatedData.id);
         return -1;
@@ -230,8 +265,6 @@ export const useCharacterStore = defineStore('characterStore', () => {
     return index;
   };
   
-  
-
   // 工具栏中添加角色
   const handleAddNode = (event) => {
     const rect = event?.target?.getBoundingClientRect();
@@ -261,19 +294,23 @@ export const useCharacterStore = defineStore('characterStore', () => {
 
   // 结点的删除
   const handleDeleteNode = (nodeId) => {
-    const index = nodes.value.findIndex(n => n.id === nodeId);
+    const index = canvasStore.nodes.findIndex(n => n.id === nodeId);
     if (index !== -1) {
-      nodes.value.splice(index, 1)
+      canvasStore.nodes.splice(index, 1);
 
       if (selectedNode.value?.id === nodeId) {
         selectedNode.value = null;
       }
 
-      for (let i = edges.length - 1; i >= 0; i--) {
-        if (edges[i].source === nodeId || edges[i].target === nodeId) {
-          edges.splice(i, 1)
+      // 删除相关的边
+      for (let i = canvasStore.edges.length - 1; i >= 0; i--) {
+        if (canvasStore.edges[i].source === nodeId || canvasStore.edges[i].target === nodeId) {
+          canvasStore.edges.splice(i, 1);
         }
       }
+
+      // 广播更新
+      canvasStore.broadcast && canvasStore.broadcast()
     }
     broadcast();
   }
@@ -301,14 +338,22 @@ export const useCharacterStore = defineStore('characterStore', () => {
       });
     };
 
+  // 初始化默认角色（在store创建时调用）
+  initializeDefaultCharacter()
+
   return {
+    // 数据
     nodes,
     edges,
+    allNodes,
+    allEdges,
     selectedNode,
     editingEdgeId,
     isCreatingEdge,
     selectedNodesForEdge,
     showEdgeSelector,
+    
+    // 方法
     handleCreateEdgeClick,
     handleEdgeSelect,
     handleEdgeConfirm,
@@ -320,6 +365,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
     handleDetailSave,
     handleAddNode,
     handleDeleteNode,
-    handlePositionChange
+    handlePositionChange,
+    initializeDefaultCharacter
   }
 })
