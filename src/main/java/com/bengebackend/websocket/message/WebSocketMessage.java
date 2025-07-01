@@ -53,6 +53,17 @@ public class WebSocketMessage {
     /** 人物设计师边数据列表 */
     private List<CharacterEdge> characterEdges;
 
+    /** 线索设计师节点数据列表 */
+    private List<ClueNode> clueNodes;
+
+    /** 推断结点数据列表 */
+    private List<InferenceNode> inferenceNodes;
+
+    /**
+     * 线索设计师 - 人物结点列表
+     */
+    private List<PersonNode> personNodes;
+
     /**
      * 剧情设计师节点结构
      */
@@ -290,5 +301,87 @@ public class WebSocketMessage {
 
         /** 显示用标签 */
         private String label;
+    }
+
+    /**
+     * 线索设计师结点结构
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ClueNode {
+        private String id;
+        private String type;
+        private Position position;
+        private ClueNodeContent data;
+    }
+
+    /**
+     * 线索设计师结点内容
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ClueNodeContent {
+        private String title;
+        private String relatedEvent;
+        private String detail;
+        private String logic;
+        private String tags;
+        private String note;
+    }
+
+    /**
+     * 线索设计师 - 推理结点
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class InferenceNode {
+        private String id;
+        private String type;
+        private Position position;
+        private InferenceContent data;
+    }
+
+    /**
+     * 线索设计师 - 推理内容结构
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class InferenceContent {
+        private String title;
+        private String summary;
+        private String evidence;
+        private String tags;
+        private String note;
+    }
+
+    /**
+     * 线索设计师 - 人物结点
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PersonNode {
+        private String id;
+        private String type;
+        private Position position;
+        private PersonContent data;
+    }
+
+    /**
+     * 人物节点内容结构
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PersonContent {
+        private String name;
+        private String bio;
+        private List<String> clues;
+        private List<String> tags;
+        private String note;
     }
 }

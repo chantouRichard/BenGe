@@ -1,10 +1,13 @@
 package com.bengebackend.service;
 
 import com.bengebackend.entity.AIMsgDevide;
+import com.bengebackend.entity.Slogan;
+import com.bengebackend.entity.SloganRequestEntity;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
  * AI 服务接口
@@ -36,4 +39,13 @@ public interface AIService {
      */
     CompletableFuture<String> GenImage(String Description, String NegPrompt);
 
+    /**
+     * 生成Slogan流式输出
+     */
+    CompletableFuture<Void> GenerateSloganStreamAsync(SloganRequestEntity request, Consumer<Slogan> callback);
+
+    /**
+     * AI助手流式聊天
+     */
+    CompletableFuture<Void> ChatStreamAsync(List<Map<String, String>> messages, Consumer<String> callback);
 }
