@@ -15,6 +15,10 @@
               v-if="userRole == 1"
               @updateGraph="handleGraphUpdate"
             />
+            <AtmosphereDesign
+              v-if="userRole == 3"
+              @updateGraph="handleGraphUpdate"
+            />
           </div>
         </div>
       </transition>
@@ -25,12 +29,14 @@
 <script>
 import NarrativeWorkspace from "@/components/Cooperation/second/roles/NarrativeWorkspace.vue";
 import CharacterDesign from "./roles/CharacterDesign.vue";
+import AtmosphereDesign from "./roles/AtmosphereDesign.vue";  
 
 export default {
   name: "EditArea",
   components: {
     NarrativeWorkspace,
-    CharacterDesign
+    CharacterDesign,
+    AtmosphereDesign,
   },
   props: {
     roles: {

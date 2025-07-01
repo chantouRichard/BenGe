@@ -55,6 +55,19 @@
         />
       </template>
 
+      <!-- 氛围节点 -->
+      <template #node-atmosphere="{ id, type, data, position, selected }">
+        <AtmosphereNode
+          :key="id"
+          :id="id"
+          :type="type"
+          :data="data"
+          :position="position"
+          :selected="selected"
+          @delete="handleDeleteNode"
+        />
+      </template>
+
       <!-- 自定义边 -->
       <template #edge-custom="edgeProps">
         <CustomEdge v-bind="edgeProps"/>
@@ -75,6 +88,7 @@ import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
 import CharacterCard from '../CharacterCom/CharacterCard.vue'
 import CharacterRelationEdge from '../CharacterCom/CharacterRelationEdge.vue'
+import AtmosphereNode from '../AtmosphereCom/AtmosphereNode.vue'
 
 const props = defineProps({
   nodes: {
@@ -146,7 +160,8 @@ const handleNodeDragStop = (node) => {
 
 const nodeTypes = {
   custom: CustomNode,
-  character: CharacterCard
+  character: CharacterCard,
+  atmosphere: AtmosphereNode
 }
 
 const edgeTypes = {
