@@ -54,7 +54,7 @@ public class AIServicelmpl implements AIService {
 
     @Override
     public CompletableFuture<AIMsgDevide> GenFramework(List<Map<String, String>> msgs) {
-        msgs.add(new HashMap<String, String>() {
+        msgs.add(0, new HashMap<String, String>() {
             {
                 put("role", "system");
                 put("content", System_MSG);
@@ -191,11 +191,17 @@ public class AIServicelmpl implements AIService {
                 .thenApply(v -> allFutures.stream()
                         .map(CompletableFuture::join)
                         .collect(Collectors.toList()));
+        // 返回结果示例：
+        // [[[a,b,c(角色名)], [aa,bb,cc]], [[d, e, f(场景名)], [dd,ee,ff]], [[g,h,i(道具名)],
+        // [gg,hh,ii]]]
     }
 
     @Override
     public CompletableFuture<String> GenImage(String Description, String NegPrompt) {
         try {
+            if (NegPrompt == null) {
+                NegPrompt = "";
+            }
             // 异步创建任务
             CompletableFuture<String> taskFuture = CreateGenImageTaskAsync(Description, NegPrompt);
 
