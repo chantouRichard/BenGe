@@ -2,6 +2,7 @@ package com.bengebackend.service.serviceImpl;
 
 import com.bengebackend.dto.ScriptDetailDto;
 import com.bengebackend.dto.ScriptFrameworkDto;
+import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.entity.ScriptReplyRequestEntity;
 import com.bengebackend.mapper.ScriptMapper;
 import com.bengebackend.model.Script;
@@ -9,12 +10,17 @@ import com.bengebackend.model.ScriptAnalysis;
 import com.bengebackend.model.ScriptHistory;
 import com.bengebackend.model.VisualElement;
 import com.bengebackend.service.*;
+
+import dev.langchain4j.model.output.structured.Description;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 剧本服务实现类
@@ -33,6 +39,9 @@ public class ScriptServiceImpl implements ScriptService {
 
     @Autowired
     private VisualElementService visualElementService;
+
+    @Autowired
+    private AIService aiService;
 
     @Override
     public ScriptDetailDto getScriptByIdAsync(Integer id) {
@@ -101,7 +110,30 @@ public class ScriptServiceImpl implements ScriptService {
     @Override
     public ScriptFrameworkDto genFrame(ScriptReplyRequestEntity request, List<ScriptHistory> history,
             String scriptContent) {
+        // 处理发给AI的消息
+        List<Map<String, String>> messages = new ArrayList<>();
+        for (ScriptHistory h : history) {
+            Map<String, String> msg = new HashMap<>();
+            if (h.getResponse() == "" && h.getMessage() != "") {
+                msg.put("role", "user");
+                msg.put("content", h.getMessage());
+            } else {
+                msg.put("role", "assistant");
+                msg.put("content", h.getResponse());
+            }
+            messages.add(msg);
+        }
+        messages.add(new HashMap<String, String>() {
+            {
+                put("role", "user");
+                put("content", request.getMessage());
+            }
+        });
+
         // 模拟AI生成框架的逻辑
+        // AIMsgDevide aiMsgTemp = aiService.GenFramework(messages).join();
+        // String mockResponse = aiMsgTemp.getStrScript();
+        // String title = aiMsgTemp.getTitle();(AI生成调用)
         String mockResponse = "\"背景\": \"在太平洋航行的豪华游轮[爱神号]上，正举行珠宝大亨千金的婚礼。仪式开始前15分钟，新娘突然从化妆室消失，只留下地板上未干的血迹。游轮还有1小时即将起航，所有宾客都成为了嫌疑人......\"";
         String title = "消失的新娘";
 
@@ -147,17 +179,54 @@ public class ScriptServiceImpl implements ScriptService {
         analysis.setAnalysisResult("剧本分析结果：这是一个悬疑推理类剧本...");
         analysis.setAnalyzedAt(LocalDateTime.now());
 
+        // String analysisResult = aiService.AnalyzeScriptContent(scriptContent).join();
+        // ScriptAnalysis analysis = new ScriptAnalysis();
+        // analysis.setScriptId(scriptId);
+        // analysis.setAnalysisResult(analysisResult);
+        // analysis.setAnalyzedAt(LocalDateTime.now());
+
         scriptAnalysisService.saveAnalysis(analysis);
         return analysis;
     }
 
     @Override
     public ScriptDetailDto getCompSctiptAndDesc(Script script) {
+        // // 调用AI服务获取剧本内容和元素描述
+        // String fullContent = aiService.GenDetail(script.getContent(),
+        // script.getTitle()).join();
+        // List<List<List<String>>> Descriptions =
+        // aiService.GetThreeTypesOfDesc(fullContent).join();
+        // List<VisualElement> newElements = new ArrayList<>();
+        // for (int n1 = 0; n1 < 3; n1 += 1) {
+        // for (int n3 = 0; n3 < Descriptions.get(n1).size(); n3 += 1) {
+        // VisualElement element = new VisualElement();
+        // element.setScriptId(script.getId());
+        // if(n1==0)element.setType("Character");
+        // if(n1==1)element.setType("Scene");
+        // if(n1==2)element.setType("Prop");
+        // element.setId(n3);
+        // element.setName(Descriptions.get(n1).get(0).get(n3));
+        // element.setDescription(Descriptions.get(n1).get(1).get(n3));
+        // newElements.add(element);
+        // }
+        // }
+
+        // // 更新剧本
+        // updateScriptAsync(script.getId(), script.getTitle(), fullContent, 3);
+
+        // // 更新视觉元素描述
+        // visualElementService.updateVisualElements(script.getId(), newElements);
+
         return getScriptByIdAsync(script.getId());
     }
 
     @Override
     public String visualizeScriptAsync(Integer scriptId, Integer elementId) {
+        // List<VisualElement> ves = getScriptByIdAsync(scriptId).getVisualElements();
+        // String Image_base64 = aiService.GenImage(ves.get(elementId).getName() + "：" +
+        // ves.get(elementId).getDescription(), null).join();
+        // visualElementService.updateElementUrl(elementId, Image_base64);
+        // return Image_base64;
         // 模拟生成图像URL
         return "https://example.com/generated-image-" + elementId + ".jpg";
     }
