@@ -2,9 +2,13 @@
 import { reactive } from "vue";
 import { useCanvasStore } from "./canvasStore";
 import { useCharacterStore } from "./character";
+import { useClueStore } from "./clue";
+import { useAtmosphereStore } from "./atmosphere";
 
 const canvasStore = useCanvasStore();
 const characterStore = useCharacterStore();
+const clueStore = useClueStore();
+const atmosphereStore = useAtmosphereStore();
 
 const socketState = reactive({
   socket: null,
@@ -22,6 +26,39 @@ const socketState = reactive({
   //   节点和边的信息
   nodes: {},
   edges: {},
+
+  userRole:-1,
+  roles: [
+  {
+    name: "剧情设计师",
+    description:
+      "擅长构建故事主线与反转，通过精妙布局勾勒出跌宕起伏的剧情，掌控节奏与情感张力，引导玩家沉浸在虚构与现实交织的世界中。",
+    task:
+      "在画布上设计剧情主线与关键节点，包括起承转合、高潮反转、结局逻辑等，确保故事线完整且引人入胜。",
+  },
+  {
+    name: "角色设计师",
+    description:
+      "负责塑造人物性格与关系网络，为每一个角色赋予鲜明动机与成长轨迹，让玩家在扮演中感受真实的情感与冲突。",
+    task:
+      "在画布中添加并完善角色节点，设定角色背景、动机、技能、物品与相互关系，构建角色成长路径与互动关系网。",
+  },
+  {
+    name: "线索设计师",
+    description:
+      "精于埋设线索与误导，通过巧妙布局隐藏真相，引导推理节奏，确保玩家在抽丝剥茧中感受层层惊喜与挑战。",
+    task:
+      "在画布中添加线索节点及其关联关系，设计误导型线索、核心线索和关键证据链，明确每条线索的获取方式与逻辑归属。",
+  },
+  {
+    name: "氛围设计师",
+    description:
+      "以视觉、音效与文本语言营造沉浸式体验，塑造紧张或诡秘的氛围，让每一处场景都充满戏剧张力，增强整体代入感。",
+    task:
+      "在画布中标注关键场景与氛围要素（如灯光、音效、环境设定），为每段剧情或线索交付设计匹配的情绪基调与视觉风格。",
+  },
+]
+
 });
 
 function setupWebSocket() {
@@ -45,8 +82,8 @@ function setupWebSocket() {
       JSON.stringify({
         type: "auth",
         token,
-        roomId:socketState.roomId,
-        avatar:socketState.avatar,
+        roomId: socketState.roomId,
+        avatar: socketState.avatar,
       })
     );
     socketState.isConnected = true;
@@ -90,8 +127,8 @@ function setupWebSocket() {
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
       handleRoleSelection(msg.roleName, msg.username);
-    } else if(msg.type === "canvas" || msg.type === "character"){
-        handleCanvas(msg);
+    } else if (msg.type === "canvas" || msg.type === "character" || msg.type === "clue" || msg.type === "atmosphere") {
+      handleCanvas(msg);
     }
   };
 
@@ -153,38 +190,50 @@ function closeWebSocket() {
 function handleRoleSelection(roleName, username) {
   // 遍历所有角色，查找是否有该用户已选择了其他角色
   for (let existingRole in socketState.roleSelections) {
-    console.log("打印：",existingRole);
+    console.log("打印：", existingRole);
     // 如果当前角色是其他角色且该角色已经被用户名选择
-    if (socketState.roleSelections[existingRole] === username && existingRole !== roleName) {
+    if (
+      socketState.roleSelections[existingRole] === username &&
+      existingRole !== roleName
+    ) {
       // 清空原来选择的角色
       console.log(`${username} 已选择了 ${existingRole}，正在清空该角色的选择`);
-      socketState.roleSelections[existingRole] = ''; // 清空原选择
+      socketState.roleSelections[existingRole] = ""; // 清空原选择
     }
   }
 
   // 更新当前角色的选择
   socketState.roleSelections[roleName] = username;
-  console.log("更新后的 socketState.roleSelections:", socketState.roleSelections);
+  console.log(
+    "更新后的 socketState.roleSelections:",
+    socketState.roleSelections
+  );
 
   // 更新成员列表
   updateMembers(roleName, username);
   console.log("更新后的成员信息:", socketState.members);
 }
 
-
 // 同步画布
-function handleCanvas(msg){
+function handleCanvas(msg) {
+  console.log("接收到canvas：", msg);
 
-  console.log("接收到canvas：",msg);
-
-  if(msg.type == "canvas"){
+  if (msg.type == "canvas") {
     canvasStore.nodes = msg.nodes || [];
     canvasStore.edges = msg.edges || [];
-  }
-  else if(msg.type == "character")
-  {
-    characterStore.nodes= msg.characterNodes || [];
+  } else if (msg.type == "character") {
+    characterStore.nodes = msg.characterNodes || [];
     characterStore.edges = msg.characterEdges || [];
+  } else if(msg.type == "clue") {
+    clueStore.nodes = [
+    ...(msg.clueNodes || []),
+    ...(msg.inferenceNodes || []),
+    ...(msg.personNodes || []),
+  ];
+    clueStore.edges = msg.clueEdges || [];
+  } else{
+    atmosphereStore.nodes = msg.atmosphereNodes || [];
+    atmosphereStore.edges = msg.atmosphereEdges || [];
   }
 }
 

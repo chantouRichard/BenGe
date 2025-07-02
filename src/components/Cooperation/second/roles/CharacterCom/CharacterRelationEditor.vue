@@ -1,4 +1,5 @@
 <template>
+  <teleport to="body">
   <transition name="fade">
     <div 
       v-if="showSelector"
@@ -109,6 +110,7 @@
       </div>
     </div>
   </transition>
+  </teleport>
 </template>
 
 <script setup>

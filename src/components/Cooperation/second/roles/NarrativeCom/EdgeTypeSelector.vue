@@ -1,4 +1,5 @@
 <template>
+  <teleport to="body">
   <div class="overlay">
     <div class="selector-dialog">
       <button class="close-btn" @click="$emit('cancel')" aria-label="关闭弹窗">×</button>
@@ -35,6 +36,7 @@
       </div>
     </div>
   </div>
+  </teleport>
 </template>
 
 <script setup>
@@ -192,8 +194,9 @@ const handleDelete = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 9999; /* ✨ 确保比其他 teleport 出来的组件高 */
 }
+
 
 .selector-dialog {
   background: #FFFFFF;

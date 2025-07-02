@@ -1,80 +1,147 @@
 <template>
-  <div class="scrolling-tips">
-    <transition name="slide-fade">
-      <p :key="currentTip">{{ currentTip }}</p>
+  <div
+    class="scrolling-tips"
+    :style="{ width: containerWidth }"
+  >
+  <img style="object-fit: cover;width: 30px;height: 30px;" src="../../../assets/second/tips.png"/>
+    <transition
+      name="slide-fade"
+      mode="out-in"
+      @before-leave="onBeforeLeave"
+    >
+      <p ref="tipEl" style="margin-left: 10px;" :key="currentTip">{{ currentTip }}</p>
     </transition>
+
+    <!-- 隐藏的预测文本，用于提前测量下一条宽度 -->
+    <p ref="nextTipEl" class="hidden-tip">{{ currentTip }}</p>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 
-// 定义滚动提示文本
 const tips = [
-  '这是第一条提示信息。',
-  '第二条提示来啦！',
-  '这里是第三条提示！',
-  '不要忘了第四条提示。',
-  '最后一条提示信息！'
+  '设计你的剧本主线，确保起承转合清晰。',
+  '尝试为角色赋予独特的动机和冲突，增强故事的张力。',
+  '在设计线索时，考虑不同人物之间的信息差。',
+  '构建剧情反转时，确保伏笔的合理性，避免突兀。',
+  '思考每个场景的情感变化和高潮时刻。',
+  '记得在适当的时刻加入悬念，让观众保持兴趣。',
+  '角色之间的互动要有深度，避免单一对话。',
+  '设计结局时，考虑是否能给观众留下深刻印象。',
+  '为每个角色设计一个独特的背景故事，使其更加丰满。',
+  '思考每个节点的作用，确保每一环节都能推动故事发展。',
+  '根据人物设定，设计他们的语言风格和行为模式。',
+  '构思场景时，考虑不同的环境和氛围对剧情的影响。',
+  '在设计复杂剧情时，确保人物的动机一致且合理。',
+  '设计节奏时，适当分配高潮与平缓的部分。',
+  '不忘设计出彩的细节，这些细节会增加剧本的层次感。',
+  '思考剧情中的冲突与解决方案，给角色安排挑战。'
 ];
 
-// 当前显示的提示信息
+
+const currentIndex = ref(0);
 const currentTip = ref(tips[0]);
+const nextTip = ref(tips[1]);
 
-// 当前提示信息的索引
-let currentIndex = 0;
+const tipEl = ref(null);
+const nextTipEl = ref(null);
+const containerWidth = ref('auto');
 
-// 每3秒切换一条提示
-const changeTip = () => {
-  currentIndex = (currentIndex + 1) % tips.length;  // 循环切换
-  currentTip.value = tips[currentIndex];
-};
+// 提前计算下一个提示的宽度
+function updateNextWidth() {
+  if (nextTipEl.value) {
+    const width = nextTipEl.value.scrollWidth + 60;
+    containerWidth.value = `${width}px`;
+  }
+}
+
+function changeTip() {
+  currentIndex.value = (currentIndex.value + 1) % tips.length;
+  currentTip.value = tips[currentIndex.value];
+  nextTip.value = tips[(currentIndex.value + 1) % tips.length];
+  nextTick(() => updateNextWidth());
+}
+
+// 触发切换时提前更新宽度
+function onBeforeLeave() {
+  updateNextWidth();
+}
 
 onMounted(() => {
-  // 设置定时器，每3秒切换一次提示
-  setInterval(changeTip, 3000);
+  updateNextWidth();
+  setInterval(changeTip, 8000);
 });
 </script>
 
 <style scoped>
 .scrolling-tips {
   position: fixed;
-  bottom: 20px; /* 固定在屏幕左下角 */
+  bottom: 20px;
   left: 20px;
-  font-size: 24px; /* 字体大小 24px */
-  color: black; /* 文字颜色黑色 */
-  background-color: rgba(255, 255, 255, 0.7); /* 背景透明度适中 */
-  padding: 10px 20px;
-  border-radius: 8px;
-  z-index: 9999;
+  font-size: 24px;
+  color: black;
+  background-color: #F5F8FD;
+  padding: 8px 8px;
+  border-radius: 20px;
+  z-index: 9000;
   overflow: hidden;
-  height: 50px; /* 给定固定高度，防止文本的动态改变高度影响布局 */
+  height: 50px;
+  display: inline-block;
+  /* line-height: 50px; */
+  align-items: center;
+  transition: width 0.5s ease;
+  white-space: nowrap;
 }
 
-/* 滑动动画 */
+.scrolling-tips p {
+  margin: 0;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* 隐藏预测文本 */
+.hidden-tip {
+  visibility: hidden;
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  white-space: nowrap;
+}
+
+/* 动画 */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: transform 0.5s ease, opacity 0.5s ease;
 }
 
-.slide-fade-enter, 
-.slide-fade-leave-to {
-  transform: translateY(100%); /* 初始位置在屏幕下方 */
+.slide-fade-enter-from {
+  transform: translateY(100%);
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 .slide-fade-enter-to {
-  transform: translateY(0); /* 进入时从下方滑入 */
+  transform: translateY(0);
   opacity: 1;
+  will-change: transform, opacity;
 }
 
 .slide-fade-leave-from {
-  transform: translateY(0); /* 离开时从当前位置滑出 */
+  transform: translateY(0);
   opacity: 1;
+  will-change: transform, opacity;
 }
 
 .slide-fade-leave-to {
-  transform: translateY(-100%); /* 离开时向上滑动 */
+  transform: translateY(-100%);
   opacity: 0;
+  will-change: transform, opacity;
 }
+
+/* 避免影响布局，使用绝对定位 */
+.scrolling-tips p {
+  position: absolute; 
+}
+
 </style>

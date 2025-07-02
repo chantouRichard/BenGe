@@ -17,7 +17,7 @@ import CompleteScriptStage from "@/components/Cooperation/CompleteScriptStage.vu
 import DirectionSelectionStage from "@/components/Cooperation/DirectionSelectionStage.vue";
 import { setupWebSocket } from "@/stores/socket";
 
-const stage = ref(0);
+const stage = ref(1);
 setupWebSocket();
 
 const updateStage = (newStage) => {
