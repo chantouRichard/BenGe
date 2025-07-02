@@ -320,6 +320,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
     handleDetailSave,
     handleAddNode,
     handleDeleteNode,
-    handlePositionChange
+    handlePositionChange,
+    broadcast
   }
 })

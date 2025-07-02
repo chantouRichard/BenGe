@@ -27,11 +27,11 @@
     />
     <AtmosphereToolbar
       v-if="socketState.userRole == 3"
-      @add-node="(e) => { console.log('add-node事件:', e); canvasStore.handleAddNode(e); }"
-      @atmo-palette="(e) => { console.log('atmo-palette事件:', e); handleExport(e); }"
-      @link-scene="(e) => { console.log('link-scene事件:', e); handleExport(e); }"
-      @export-atmo="(e) => { console.log('export-atmo事件:', e); handleExport(e); }"
-      @ai-generate="(e) => { console.log('ai-generate事件被接收:', e); handleAtmosphereAiGenerate(e); }"
+      @add-node="atmosphereStore.handleAddNode"
+      @atmo-palette="handleAtmospherePalette"
+      @link-scene="handleLinkScene"
+      @export-atmo="handleExport"
+      @ai-generate="handleAtmosphereAiGenerate"
     />
 
     <!-- 主画布 -->
@@ -88,6 +88,14 @@
         @close="characterStore.selectedNode = null"
       />
 
+      <!-- 氛围设计师 -->
+      <AtmosphereDetailPanel
+        :visible="atmosphereStore.selectedNode"
+        :nodeData="atmosphereStore.selectedNode"
+        @save="handleDetailSave"
+        @close="atmosphereStore.selectedNode = null"
+      />
+
       <!-- 角色关系编辑器 -->
       <CharacterRelationEditor
         v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId"
@@ -137,9 +145,11 @@ import CharacterDetailPanel from './CharacterCom/CharacterDetailPanel.vue'
 import CharacterRelationEditor from './CharacterCom/CharacterRelationEditor.vue'
 import ClueToolbar from './ClueCom/ClueToolbar.vue'
 import AtmosphereToolbar from './AtmosphereCom/AtmosphereToolbar.vue'
+import AtmosphereDetailPanel from './AtmosphereCom/AtmosphereDetailPanel.vue'
 import AIGenerateDialog from './AIGenerateDialog.vue'
 import { useCharacterStore } from '@/stores/character'
 import { useCanvasStore } from '@/stores/canvasStore'
+import { useAtmosphereStore } from '@/stores/atmosphere'
 import { ref , computed } from 'vue'
 
 // 传入参数
@@ -153,6 +163,7 @@ import  request  from '@/api/request';
 
 const canvasStore = useCanvasStore();
 const characterStore = useCharacterStore();
+const atmosphereStore = useAtmosphereStore();
 const canvasRef = ref(null)
 
 // AI对话框相关状态
@@ -223,11 +234,10 @@ const handleNodeClick = (data) => {
   }
 };
 const handleEdgeSelect = (edge) => {
-  if (data.node.type === "custom") {
-    canvasStore.handleEdgeSelect(edge);
-  } else if (data.node.type === "character") {
-    characterStore.handleEdgeSelect(edge);
-  }
+  // 边选择不需要根据节点类型判断，直接使用对应的store处理
+  // 这里需要根据边的类型或者其他逻辑来判断使用哪个store
+  // 暂时使用canvasStore处理所有边选择
+  canvasStore.handleEdgeSelect(edge);
 };
 const handleNodePositionChange = (payload) => {
     const { id, position } = payload;
@@ -301,6 +311,12 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
     if (result.success && result.nodes) {
       // 根据设计师类型添加节点到相应的store
       result.nodes.forEach((nodeData, index) => {
+        // 对角色节点数据进行格式转换
+        let processedData = nodeData
+        if (currentDesignerType.value === 'character') {
+          processedData = processCharacterNodeData(nodeData)
+        }
+
         const newNode = {
           id: `ai-${currentDesignerType.value}-${Date.now()}-${index}`,
           type: getNodeTypeByDesigner(currentDesignerType.value),
@@ -308,7 +324,7 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
             x: 400 + index * 250,
             y: 300 + index * 120
           },
-          data: nodeData
+          data: processedData
         }
 
         if (currentDesignerType.value === 'character') {
@@ -375,11 +391,57 @@ const handleClueAiGenerate = async () => {
   showAIDialog.value = true
 }
 
+// 处理角色节点数据格式转换
+const processCharacterNodeData = (nodeData) => {
+  const processed = { ...nodeData }
+
+  // 处理personality字段：如果是字符串，转换为数组
+  if (processed.personality && typeof processed.personality === 'string') {
+    // 按照常见分隔符分割字符串
+    processed.personality = processed.personality
+      .split(/[,，、；;]/)
+      .map(item => item.trim())
+      .filter(item => item.length > 0)
+  }
+
+  // 处理skills字段：如果是字符串，转换为数组
+  if (processed.skills && typeof processed.skills === 'string') {
+    processed.skills = processed.skills
+      .split(/[,，、；;]/)
+      .map(item => item.trim())
+      .filter(item => item.length > 0)
+  }
+
+  // 确保必要字段存在
+  if (!processed.personality) processed.personality = []
+  if (!processed.skills) processed.skills = []
+  if (!processed.relationships) processed.relationships = []
+  if (!processed.avatar) processed.avatar = require('@/assets/avatar/1.jpg')
+
+  return processed
+}
+
 // 处理氛围设计师AI生成
 const handleAtmosphereAiGenerate = async () => {
-  console.log('handleAtmosphereAiGenerate 函数被调用了！');
   currentDesignerType.value = 'atmosphere'
   showAIDialog.value = true
+}
+
+// 处理氛围调色板
+const handleAtmospherePalette = () => {
+  handleExport()
+}
+
+// 处理关联场景
+const handleLinkScene = () => {
+  if (atmosphereStore.isLinkingMode) {
+    atmosphereStore.exitLinkingMode()
+    console.log('退出氛围与场景关联模式')
+  } else {
+    atmosphereStore.handleLinkSceneClick()
+    console.log('进入氛围与场景关联模式')
+    console.log('请先点击氛围节点，再点击场景节点建立关联')
+  }
 }
 
 </script>

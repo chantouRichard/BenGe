@@ -11,10 +11,6 @@
             <NarrativeWorkspace
               @updateGraph="handleGraphUpdate"
             />
-            <AtmosphereDesign
-              v-if="userRole == 3"
-              @updateGraph="handleGraphUpdate"
-            />
           </div>
         </div>
       </transition>
