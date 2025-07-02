@@ -74,6 +74,13 @@ const buttons = ref([
     color: "rgba(100, 220, 180, 0.7)",
     hover: false,
   },
+  {
+    icon: require("@/assets/icons/magic-wand.svg"),
+    action: "ai-generate",
+    tooltip: "AI生成角色",
+    color: "rgba(255, 215, 0, 0.7)",
+    hover: false,
+  },
 ]);
 
 // 交互状态
@@ -128,9 +135,10 @@ const startDrag = (e) => {
 // 发出事件
 defineEmits([
   'add-character',
-  'add-relationship', 
+  'add-relationship',
   'character-template',
-  'export-characters'
+  'export-characters',
+  'ai-generate'
 ]);
 </script>
 

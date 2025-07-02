@@ -75,6 +75,13 @@ const buttons = ref([
     color: "rgba(144, 238, 144, 0.7)",
     hover: false,
   },
+  {
+    icon: require("@/assets/icons/magic-wand.svg"),
+    action: "ai-generate",
+    tooltip: "AI生成氛围",
+    color: "rgba(255, 215, 0, 0.7)",
+    hover: false,
+  },
 ]);
 
 // 交互状态
@@ -97,6 +104,15 @@ const handleButtonHover = (btn, isHover) => {
     console.log('悬停在工具:', btn.tooltip);
   }
 };
+
+// 发出事件
+defineEmits([
+  'add-node',
+  'atmo-palette',
+  'link-scene',
+  'export-atmo',
+  'ai-generate'
+]);
 
 // 拖拽逻辑
 const startDrag = (e) => {
@@ -134,13 +150,7 @@ const startDrag = (e) => {
   window.addEventListener("touchend", endHandler);
 };
 
-// 发出事件
-defineEmits([
-  'add-node',
-  'atmo-palette',
-  'link-scene',
-  'export-atmo'
-]);
+
 </script>
 
 <style scoped>
