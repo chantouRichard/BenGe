@@ -85,8 +85,15 @@ const buttons = ref([
   {
     icon: require("@/assets/icons/file-text.svg"),
     action: "export-clues",
-    tooltip: "导出角色表",
+    tooltip: "导出线索表",
     color: "rgba(100, 220, 180, 0.7)",
+    hover: false,
+  },
+  {
+    icon: require("@/assets/icons/magic-wand.svg"),
+    action: "ai-generate",
+    tooltip: "AI生成线索",
+    color: "rgba(255, 215, 0, 0.7)",
     hover: false,
   },
 ]);
@@ -146,7 +153,8 @@ defineEmits([
   'add-relationship',
   'add-person',
   'clue-template',
-  'export-clues'
+  'export-clues',
+  'ai-generate'
 ]);
 </script>
 

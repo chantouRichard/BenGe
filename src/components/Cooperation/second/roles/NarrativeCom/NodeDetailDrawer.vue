@@ -144,7 +144,8 @@ const formData = ref({
 
 // 初始化表单数据
 const initFormData = () => {
-  const data = props.nodeData?.node?.data || {}; // 取出 node.data
+  // 修复数据路径：直接从nodeData.data获取，因为AI生成的节点数据直接存储在data字段中
+  const data = props.nodeData?.data || {};
   formData.value = {
     title: data.title || '',
     timeLabel: data.timeLabel || '',
@@ -154,7 +155,8 @@ const initFormData = () => {
     nodeConnections: data.nodeConnections || '',
     notes: data.notes || ''
   };
-  console.log("formData数据:", formData.value);
+  console.log("AI生成节点formData数据:", formData.value);
+  console.log("原始nodeData:", props.nodeData);
 };
 
 

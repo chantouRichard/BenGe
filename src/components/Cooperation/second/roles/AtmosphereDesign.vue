@@ -6,6 +6,7 @@
       @atmo-palette="handleAtmospherePalette"
       @link-scene="handleLinkScene"
       @export-atmo="handleExport"
+      @ai-generate="handleAiGenerate"
     />
 
     <!-- 主画布 - 使用canvasStore的数据以实现与NarrativeWorkspace同步 -->
@@ -56,6 +57,8 @@ import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import { useAtmosphereStore } from '@/stores/atmosphere'
 import { useCanvasStore } from '@/stores/canvasStore'
 import { ref , computed } from 'vue'
+import { socketState } from '@/stores/socket'
+import request from '@/api/request'
 
 // 传入参数
 import { defineProps } from 'vue'
@@ -127,6 +130,58 @@ const handleLinkScene = () => {
   }
 }
 
+// 处理AI生成氛围
+const handleAiGenerate = async () => {
+  console.log('AtmosphereDesign: handleAiGenerate 函数被调用了！');
+  const userInput = prompt('请描述您要生成的氛围需求：', '生成与场景匹配的氛围节点，包括灯光、音乐、天气等')
+  if (!userInput) return
+
+  try {
+    const contextData = {
+      chat: socketState.messages.map(msg => ({
+        user: msg.username || msg.sender,
+        text: msg.content,
+        time: msg.time
+      })),
+      canvasNodes: canvasStore.nodes.map(node => ({
+        type: node.type,
+        title: node.data?.title || '未命名',
+        data: JSON.stringify(node.data).substring(0, 200)
+      })),
+      characterNodes: [] // 氛围设计师可能没有角色数据
+    }
+
+    const result = await request.post('/ai/generate-nodes', {
+      userInput: userInput,
+      designerType: 'atmosphere',
+      contextData: JSON.stringify(contextData)
+    })
+
+    if (result.success && result.nodes) {
+      result.nodes.forEach((nodeData, index) => {
+        const newNode = {
+          id: 'ai-atmosphere-' + Date.now() + '-' + index,
+          type: 'atmosphere',
+          position: {
+            x: 400 + index * 250,
+            y: 300 + index * 120
+          },
+          data: nodeData
+        }
+        canvasStore.nodes.push(newNode)
+      })
+
+      canvasStore.broadcast && canvasStore.broadcast()
+      alert(`成功生成${result.nodes.length}个氛围节点！`)
+    } else {
+      alert('生成失败：' + (result.message || '未知错误'))
+    }
+  } catch (error) {
+    console.error('AI生成失败:', error)
+    alert('生成失败，请检查网络连接')
+  }
+}
+
 // 导出氛围表功能
 const handleExport = () => {
   console.log('导出氛围表')
@@ -139,7 +194,7 @@ const handleExport = () => {
            `- **天气环境**: ${d.weather || ''}\n` +
            `- **备注**: ${d.notes || ''}\n`
   }).join('\n')
-  
+
   const blob = new Blob([lines], {type:'text/markdown'})
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
