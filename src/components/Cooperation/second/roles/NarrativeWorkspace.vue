@@ -118,8 +118,11 @@
       :visible="showAIDialog"
       :designer-type="currentDesignerType"
       :context-data="aiContextData"
+      :generate-result="aiGenerateResult"
+      :generate-error="aiGenerateError"
       @cancel="handleAIDialogCancel"
       @generate="handleAIDialogGenerate"
+      @close="handleAIDialogClose"
     />
   </div>
 </template>
@@ -155,6 +158,8 @@ const canvasRef = ref(null)
 // AI对话框相关状态
 const showAIDialog = ref(false)
 const currentDesignerType = ref('narrative')
+const aiGenerateResult = ref(null)
+const aiGenerateError = ref(null)
 const aiContextData = computed(() => {
   return {
     chatCount: socketState.messages?.length || 0,
@@ -253,10 +258,20 @@ const handleAiGenerate = async () => {
 // AI对话框处理方法
 const handleAIDialogCancel = () => {
   showAIDialog.value = false
+  aiGenerateResult.value = null
+  aiGenerateError.value = null
+}
+
+const handleAIDialogClose = () => {
+  showAIDialog.value = false
+  aiGenerateResult.value = null
+  aiGenerateError.value = null
 }
 
 const handleAIDialogGenerate = async ({ userInput, template }) => {
-  showAIDialog.value = false
+  // 清除之前的结果
+  aiGenerateResult.value = null
+  aiGenerateError.value = null
 
   try {
     // 收集当前上下文
@@ -305,13 +320,20 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
         }
       })
 
-      alert(`成功生成${result.nodes.length}个${getDesignerName(currentDesignerType.value)}节点！`)
+      // 设置成功结果，让对话框显示
+      aiGenerateResult.value = {
+        success: true,
+        message: `成功生成${result.nodes.length}个${getDesignerName(currentDesignerType.value)}节点！`,
+        nodeCount: result.nodes.length
+      }
     } else {
-      alert('生成失败：' + (result.message || '未知错误'))
+      // 设置失败结果
+      aiGenerateError.value = '生成失败：' + (result.message || '未知错误')
     }
   } catch (error) {
     console.error('AI生成失败:', error)
-    alert('生成失败，请检查网络连接')
+    // 设置错误结果
+    aiGenerateError.value = '生成失败，请检查网络连接'
   }
 }
 

@@ -117,25 +117,52 @@
         </div>
       </div>
 
+      <!-- 结果显示区域 -->
+      <div v-if="showResult" class="result-section">
+        <div class="result-content">
+          <div v-if="generateResult" class="result-success">
+            <i class="fas fa-check-circle"></i>
+            <span>{{ generateResult.message || '生成成功！' }}</span>
+          </div>
+          <div v-if="generateError" class="result-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ generateError }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 对话框底部 -->
       <div class="dialog-footer">
-        <div class="footer-info">
+        <div class="footer-info" v-if="!showResult">
           <i class="fas fa-info-circle"></i>
           <span>AI将基于当前上下文和您的描述生成相关节点</span>
         </div>
+        <div class="footer-info" v-else>
+          <i class="fas fa-clock"></i>
+          <span>{{ autoCloseCountdown > 0 ? `${autoCloseCountdown}秒后自动关闭` : '正在关闭...' }}</span>
+        </div>
         <div class="footer-actions">
-          <button class="btn-cancel" @click="handleCancel">
+          <button class="btn-cancel" @click="handleCancel" :disabled="isGenerating">
             <i class="fas fa-times"></i>
             取消
           </button>
-          <button 
-            class="btn-generate" 
+          <button
+            class="btn-generate"
             @click="handleGenerate"
             :disabled="!userInput.trim() || isGenerating"
+            v-if="!showResult"
           >
             <i v-if="isGenerating" class="fas fa-spinner fa-spin"></i>
             <i v-else class="fas fa-magic"></i>
             {{ isGenerating ? '生成中...' : '开始生成' }}
+          </button>
+          <button
+            class="btn-close"
+            @click="handleClose"
+            v-if="showResult"
+          >
+            <i class="fas fa-check"></i>
+            确定
           </button>
         </div>
       </div>
@@ -160,17 +187,28 @@ const props = defineProps({
   contextData: {
     type: Object,
     default: () => ({})
+  },
+  generateResult: {
+    type: Object,
+    default: null
+  },
+  generateError: {
+    type: String,
+    default: null
   }
 })
 
 // Emits
-const emit = defineEmits(['cancel', 'generate'])
+const emit = defineEmits(['cancel', 'generate', 'close'])
 
 // 响应式数据
 const userInput = ref('')
 const selectedTemplate = ref(null)
 const isGenerating = ref(false)
 const textareaRef = ref(null)
+const showResult = ref(false)
+const autoCloseCountdown = ref(0)
+let autoCloseTimer = null
 
 // 设计师配置
 const designerConfig = {
@@ -237,23 +275,48 @@ const adjustTextareaHeight = () => {
 }
 
 const handleCancel = () => {
-  userInput.value = ''
-  selectedTemplate.value = null
+  if (isGenerating.value) return // 生成中不允许取消
+  resetDialog()
   emit('cancel')
 }
 
 const handleGenerate = () => {
   if (!userInput.value.trim()) return
-  
+
   isGenerating.value = true
+  showResult.value = false
   emit('generate', {
     userInput: userInput.value,
     template: selectedTemplate.value
   })
-  
-  // 重置生成状态（实际应该在父组件处理完成后重置）
-  setTimeout(() => {
-    isGenerating.value = false
+}
+
+const handleClose = () => {
+  resetDialog()
+  emit('close')
+}
+
+const resetDialog = () => {
+  userInput.value = ''
+  selectedTemplate.value = null
+  isGenerating.value = false
+  showResult.value = false
+  autoCloseCountdown.value = 0
+  if (autoCloseTimer) {
+    clearInterval(autoCloseTimer)
+    autoCloseTimer = null
+  }
+}
+
+const startAutoClose = () => {
+  autoCloseCountdown.value = 3
+  autoCloseTimer = setInterval(() => {
+    autoCloseCountdown.value--
+    if (autoCloseCountdown.value <= 0) {
+      clearInterval(autoCloseTimer)
+      autoCloseTimer = null
+      handleClose()
+    }
   }, 1000)
 }
 
@@ -313,9 +376,25 @@ watch(() => props.visible, (newVal) => {
       adjustTextareaHeight()
     })
   } else {
-    userInput.value = ''
-    selectedTemplate.value = null
+    resetDialog()
+  }
+})
+
+// 监听生成结果
+watch(() => props.generateResult, (newResult) => {
+  if (newResult) {
     isGenerating.value = false
+    showResult.value = true
+    startAutoClose()
+  }
+})
+
+// 监听生成错误
+watch(() => props.generateError, (newError) => {
+  if (newError) {
+    isGenerating.value = false
+    showResult.value = true
+    startAutoClose()
   }
 })
 </script>
@@ -628,6 +707,54 @@ watch(() => props.visible, (newVal) => {
   white-space: nowrap;
 }
 
+.result-section {
+  padding: 20px 32px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.result-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.result-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #22c55e;
+  background: #f0fdf4;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+}
+
+.result-success i {
+  font-size: 16px;
+}
+
+.result-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ef4444;
+  background: #fef2f2;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.result-error i {
+  font-size: 16px;
+}
+
 .dialog-footer {
   display: flex;
   justify-content: space-between;
@@ -655,7 +782,8 @@ watch(() => props.visible, (newVal) => {
 }
 
 .btn-cancel,
-.btn-generate {
+.btn-generate,
+.btn-close {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -690,6 +818,16 @@ watch(() => props.visible, (newVal) => {
 .btn-generate:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-close {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+
+.btn-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
 }
 
 /* 响应式设计 */
