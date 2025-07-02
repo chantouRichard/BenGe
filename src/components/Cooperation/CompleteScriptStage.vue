@@ -552,6 +552,7 @@ function updateMembers(membersList) {
   font-weight: 800;
   font-family: Arial, Helvetica, sans-serif;
   letter-spacing: 2px;
+  font-size: 18px;
 }
 
 .right-menu {
@@ -595,7 +596,7 @@ function updateMembers(membersList) {
   border-top-right-radius: 20px;
   border-top-left-radius: 4px;
   background-color: transparent;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(5px);
   align-items: center;
   z-index: 2;
   padding-left: 20px;
