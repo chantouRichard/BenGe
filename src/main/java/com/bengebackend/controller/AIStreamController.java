@@ -194,12 +194,11 @@ public class AIStreamController {
                 case "character":
                     prompt.append("  \"name\": \"角色姓名\",\n");
                     prompt.append("  \"occupation\": \"职业\",\n");
-                    prompt.append("  \"age\": \"年龄\",\n");
+                    prompt.append("  \"age\": 年龄数字,\n");
                     prompt.append("  \"background\": \"背景故事\",\n");
-                    prompt.append("  \"personality\": \"性格特点\",\n");
-                    prompt.append("  \"motivation\": \"动机\",\n");
-                    prompt.append("  \"secrets\": \"秘密\",\n");
-                    prompt.append("  \"relationships\": \"人际关系\",\n");
+                    prompt.append("  \"personality\": [\"性格特点1\", \"性格特点2\", \"性格特点3\"],\n");
+                    prompt.append("  \"skills\": [\"技能1\", \"技能2\", \"技能3\"],\n");
+                    prompt.append("  \"items\": \"携带物品\",\n");
                     prompt.append("  \"notes\": \"备注\"\n");
                     break;
                 case "clue":
