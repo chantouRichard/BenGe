@@ -20,14 +20,14 @@
       <EditArea
         :roles="roles"
         :userRole="userRole"
-        @nextStage="changeStage(1)"
+        @nextStage="changeStage(2)"
       />
 
       <teleport to="body">
         <MemberList />
       </teleport>
       <teleport to="body">
-        <TaskCard :title="'任务卡片'" :taskText="'你没有任务'" />
+        <TaskCard :role="userRole" :title="'任务卡片'" :taskText="'你没有任务'" />
       </teleport>
       <teleport to="body">
         <ScollingTips/>

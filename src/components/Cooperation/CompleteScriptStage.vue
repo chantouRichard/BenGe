@@ -88,25 +88,25 @@
       <!-- 成员区 -->
       <div class="member-area" :class="{ collapsed: !isMemberOpen }">
         <div class="member-header">
-          <span class="member-titlr">在线成员 ({{ members.length }})</span>
           <button class="toggle-btn" @click="toggleMemberArea">
-            {{ isMemberOpen ? "▲" : "▼" }}
+            <img v-if="isMemberOpen" style="object-fit: cover;width: 24px;height: 24px;" src="../../assets/third/close.png"/>
+            <img v-if="!isMemberOpen" style="object-fit: cover;width: 24px;height: 24px;" src="../../assets/third/open.png"/>
           </button>
+          <span v-show="isMemberOpen" class="member-titlr">在线成员 ({{ socketState.members.length }})</span>
+          
         </div>
-        <transition name="fade">
-          <div v-show="isMemberOpen" class="member-list">
-            <div class="member-item" v-for="member in members" :key="member.id">
+          <div class="member-list">
+            <div class="member-item" v-for="member in socketState.members" :key="member.id">
               <div class="member-avatar-container">
                 <img :src="member.avatar" alt="avatar" class="member-avatar" />
                 <div class="online-indicator"></div>
               </div>
-              <span class="member-name">{{ member.name }}</span>
+              <span v-show="isMemberOpen" class="member-name">{{ member.username }}</span>
             </div>
-            <div v-if="members.length === 0" class="no-members">
+            <div v-if="socketState.members.length === 0" class="no-members">
               暂无其他成员在线
             </div>
           </div>
-        </transition>
       </div>
     </div>
     <FloatingChatWrapper :room-id="roomId" :user-id="currentUser.id" :user-name="currentUser.name"
@@ -130,6 +130,7 @@ import TurndownService from "turndown";
 import axios from "axios";
 import FloatingChatWrapper from "./third/FloatingChatWrapper.vue";
 import loginImage from "../../assets/login.png";
+import { socketState } from "@/stores/socket";
 
 const route = useRoute();
 const isMemberOpen = ref(true);
@@ -440,14 +441,15 @@ function updateMembers(membersList) {
 }
 
 .member-list {
+  position: absolute;
   display: grid;
   grid-template-columns: repeat(auto-fit,
       minmax(120px, 1fr));
   /* 自动换行、每列最小120px */
-  margin-top: 10px;
+  margin-top: 40px;
   justify-content: center;
   /* 整体居中 */
-  width: 90%;
+  width: 100%;
   max-width: 100%;
 }
 
@@ -455,7 +457,7 @@ function updateMembers(membersList) {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
-  padding: 8px;
+  padding: 2px;
   border-radius: 8px;
   transition: background-color 0.2s;
 }
@@ -808,21 +810,7 @@ function updateMembers(membersList) {
   flex: 1;
 }
 
-/* 过渡动画 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease, max-height 0.3s ease;
-}
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
 
-.fade-enter-to,
-.fade-leave-from {
-  opacity: 1;
-  max-height: 200px;
-}
+
 </style>

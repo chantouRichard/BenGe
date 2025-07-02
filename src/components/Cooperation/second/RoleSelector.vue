@@ -54,6 +54,7 @@ function getRoleImage(index) {
 // 选择角色
 function selectRole(index) {
   const roleName = props.roles[index].name;
+  socketState.userRole = index;
 
   // 如果该角色已被其他成员选择，则弹出提示
   if (socketState.roleSelections[roleName]) {

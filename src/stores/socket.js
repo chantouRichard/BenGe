@@ -1,8 +1,10 @@
 // socket.js
 import { reactive } from "vue";
 import { useCanvasStore } from "./canvasStore";
+import { useCharacterStore } from "./character";
 
 const canvasStore = useCanvasStore();
+const characterStore = useCharacterStore();
 
 const socketState = reactive({
   socket: null,
@@ -88,7 +90,7 @@ function setupWebSocket() {
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
       handleRoleSelection(msg.roleName, msg.username);
-    } else if(msg.type === "canvas"){
+    } else if(msg.type === "canvas" || msg.type === "character"){
         handleCanvas(msg);
     }
   };
@@ -175,8 +177,15 @@ function handleCanvas(msg){
 
   console.log("接收到canvas：",msg);
 
+  if(msg.type == "canvas"){
     canvasStore.nodes = msg.nodes || [];
     canvasStore.edges = msg.edges || [];
+  }
+  else if(msg.type == "character")
+  {
+    characterStore.nodes= msg.characterNodes || [];
+    characterStore.edges = msg.characterEdges || [];
+  }
 }
 
 // 更新成员的角色选择状态

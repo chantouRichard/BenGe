@@ -50,8 +50,96 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import loginImage from "@/assets/login.png";
-import { socketState } from "@/stores/socket.js";
+import { socketState } from '@/stores/socket';
+import { useCanvasStore } from '@/stores/canvasStore';
+import { useCharacterStore } from '@/stores/character';
+import { nextTick } from 'vue';
 
+const canvasStore = useCanvasStore();
+const characterStore = useCharacterStore();
+
+const collectContextData = () => {
+  return {
+    chat: socketState.messages
+      .map(msg => ({
+        user: msg.username || msg.sender,
+        text: msg.content,
+        time: msg.time
+      })),
+    
+    // 画布节点数据（场景、氛围、线索等）
+    canvasNodes: canvasStore.nodes.map(node => ({
+      id: node.id,
+      type: node.type,
+      title: node.data?.title || '未命名',
+      // 根据节点类型提取关键信息
+      summary: getNodeSummary(node)
+    })),
+    
+    // 画布连接关系
+    canvasEdges: canvasStore.edges.map(edge => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      type: edge.type,
+      relationship: edge.data?.relationship || edge.data?.label || '连接',
+      description: edge.data?.description || ''
+    })),
+    
+    // 角色节点数据
+    characterNodes: characterStore.nodes.map(node => ({
+      id: node.id,
+      type: node.type,
+      name: node.data?.name || '未命名角色',
+      occupation: node.data?.occupation || '',
+      background: node.data?.background?.substring(0, 100) || '',
+      personality: Array.isArray(node.data?.personality) ? 
+        node.data.personality.join(', ') : ''
+    })),
+    
+    // 角色关系
+    characterEdges: characterStore.edges.map(edge => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      relationship: edge.data?.relationship || '关系',
+      description: edge.data?.description || '',
+      strength: edge.data?.strength || ''
+    })),
+    
+    // 房间信息
+    room: {
+      id: socketState.roomId,
+      members: socketState.members.length,
+      stage: '第二阶段协作设计'
+    }
+  };
+};
+
+const getNodeSummary = (node) => {
+  switch(node.type) {
+    case 'custom': // 场景节点
+      return `场景: ${node.data?.sceneDescription || ''}, 时间: ${node.data?.timeLabel || ''}, 涉及角色: ${node.data?.characters || ''}`;
+      
+    case 'character': // 角色节点
+      return `角色: ${node.data?.name || ''}, 职业: ${node.data?.occupation || ''}, 性格: ${Array.isArray(node.data?.personality) ? node.data.personality.join(', ') : ''}`;
+      
+    case 'atmosphere': // 氛围节点
+      return `氛围: ${node.data?.mood || ''}, 灯光: ${node.data?.lighting || ''}, 音乐: ${node.data?.music || ''}`;
+      
+    case 'clue': // 线索节点
+      return `线索: ${node.data?.detail || ''}, 相关事件: ${node.data?.relatedEvent || ''}`;
+      
+    case 'inference': // 推理节点
+      return `推理: ${node.data?.summary || ''}, 证据: ${node.data?.evidence || ''}`;
+      
+    case 'person': // 人物节点
+      return `人物: ${node.data?.name || ''}, 简介: ${node.data?.bio || ''}`;
+      
+    default:
+      return JSON.stringify(node.data).substring(0, 100);
+  }
+};
 // 接收 props
 const props = defineProps({
   roomId: {
@@ -105,11 +193,17 @@ const getCurrentTime = () => {
 // 发送消息
 const sendChatMessage = () => {
   if (newMessage.value.trim() === "") return;
-  socketState.newMessage = newMessage.value;
+
+  let messageContent=newMessage.value;
+
+  if(newMessage.value.startsWith('@ai')){
+    const ContextData=collectContextData();
+    messageContent=`${newMessage.value}\n\n[CONTEXT_DATA]${JSON.stringify(ContextData)}[/CONTEXT_DATA]`;
+  }
 
   const messageData = {
     type: "chat",
-    content: newMessage.value,
+    content: messageContent,
     time: getCurrentTime(),
     avatar: props.avatar,
   };
