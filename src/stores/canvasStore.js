@@ -361,12 +361,10 @@ export const useCanvasStore = defineStore("story", () => {
   // 处理结点的位置变化
   const handlePositionChange = (payload) => {
     const { id, position } = payload;
-    console.log('结点位置变化：', id, position);
     const nodeIndex = nodes.value.findIndex((n) => n.id === id);
     if (nodeIndex !== -1) {
       nodes.value[nodeIndex].position = position;
       nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] }; // ✅ 强制 Vue 感知变化
-      // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
     }
     broadcast();
   };

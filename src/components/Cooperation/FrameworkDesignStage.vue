@@ -16,59 +16,19 @@
       />
     </div>
 
-    <div v-else-if="stage == 1" class="main-area">
+    <div v-else-if="stage == 1">
       <EditArea
         :roles="roles"
         :userRole="userRole"
         @nextStage="changeStage(2)"
       />
 
-      <teleport to="body">
+        <SearchPanel />
         <MemberList />
-      </teleport>
-      <teleport to="body">
-        <TaskCard :role="userRole" :title="'任务卡片'" :taskText="'你没有任务'" />
-      </teleport>
-      <teleport to="body">
+        <TaskCard :role="userRole" :content="socketState.roles[socketState.userRole].task" />
         <ScollingTips/>
-      </teleport>
-      <teleport to="body">
         <ChatPanel/>
-      </teleport>
-      <teleport to="body">
-        <transition name="slide-panel">
-          <div
-            class="side-panel-container"
-            :style="{
-              transform: isPanelCollapsed
-                ? 'translateX(0)'
-                : 'translateX(100%)',
-            }"
-          >
-            <!-- SidePanel 内容 -->
-            <div class="side-panel-content">
-              <SidePanel
-                :members="members"
-                :user-id="userId"
-                :avatar="userAvatar"
-                :is-member-open="true"
-                @membersUpdated="updateMembers"
-                @clickMember="handleMemberClick"
-                background-color="white"
-                fontColor="black"
-              />
-            </div>
-
-            <!-- 垂直居中的按钮 -->
-            <button
-              class="side-panel-toggle"
-              @click="isPanelCollapsed = !isPanelCollapsed"
-            >
-              {{ isPanelCollapsed ? ">" : "<" }}
-            </button>
-          </div>
-        </transition>
-      </teleport>
+      
     </div>
   </div>
 </template>
@@ -77,11 +37,13 @@
 import { onMounted, onBeforeUnmount } from "vue";
 import { ref } from "vue";
 import MemberList from "./second/MemberList.vue";
+import SearchPanel from "./second/SearchPanel.vue";
 import TaskCard from "./second/TaskCard.vue";
 import ScollingTips from "./second/ScollingTips.vue";
 import ChatPanel from "./second/ChatPanel.vue";
 
 import { defineEmits } from "vue";
+import { socketState } from "@/stores/socket";
 
 // 角色选择区
 import RoleSelector from "./second/RoleSelector.vue";

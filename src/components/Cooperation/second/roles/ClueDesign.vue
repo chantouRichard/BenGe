@@ -17,10 +17,10 @@
       <PersonDetailPanel :visible="canvasStore.selectedNode?.type == 'person' || false" :nodeData="canvasStore.selectedNode" @save="handleDetailSave"
         @close="canvasStore.selectedNode = null" />
 
-      <EdgeTypeSelector v-if="canvasStore.showEdgeSelector" :source="canvasStore.selectedNodesForEdge[0]" :target="canvasStore.selectedNodesForEdge[1]"
+      <ClueEdgeSelector v-if="canvasStore.showEdgeSelector" :source="canvasStore.selectedNodesForEdge[0]" :target="canvasStore.selectedNodesForEdge[1]"
         @confirm="canvasStore.handleEdgeConfirm" @cancel="canvasStore.handleEdgeCancel" />
 
-      <EdgeTypeSelector v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId"
+      <ClueEdgeSelector v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId"
         :initialType="canvasStore.edges.find(e => e.id === canvasStore.editingEdgeId)?.data?.type || null"
         :initialLabel="canvasStore.edges.find(e => e.id === canvasStore.editingEdgeId)?.data?.label || ''"
         :showDelete="true"
@@ -36,7 +36,7 @@ import CanvasArea from './NarrativeCom/CanvasArea.vue'
 import ClueDetailPanel from './ClueCom/ClueDetailPanel.vue'
 import InferenceDetailPanel from './ClueCom/InferenceDetailPanel.vue'
 import PersonDetailPanel from './ClueCom/PersonDetailPanel.vue'
-import EdgeTypeSelector from './ClueCom/EdgeTypeSelector.vue'
+import ClueEdgeSelector from './ClueCom/ClueEdgeSelector.vue'
 import { useCanvasStore } from '@/stores/canvasStore'
 import { ref , computed } from 'vue'
 

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 import { socketState } from './socket';
 
-export const useCharacterStore = defineStore('characterStore', () => {
+export const useClueStore = defineStore('clueStore', () => {
 
   // 生成结点的ID
   const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
@@ -10,19 +10,15 @@ export const useCharacterStore = defineStore('characterStore', () => {
   // 所有角色节点数据
   const nodes = ref([{
     id: generateNodeId(),
-    type: 'character',
+    type: 'clue',
     position: { x: 100, y: 100 },
     data: {
-      name: '张三',
-      avatar: require('@/assets/avatar/1.jpg'),
-      age: 28,
-      occupation: '律师',
-      personality: ['冷静', '理性', '正义感强'],
-      background: '毕业于知名法学院，专攻刑事辩护，有着强烈的正义感和敏锐的洞察力。',
-      skills: ['法律知识', '逻辑推理', '谈判技巧'],
-      items: '一支父亲留下的钢笔，法学院毕业证书',
-      notes: '主要推理角色，善于发现细节线索',
-      relationships: []
+        title: "新线索",
+        relatedEvent: "", // 关联的事件
+        detail: "", // 线索内容
+        logic: "", // 推理逻辑
+        tags: "", // 标签（逗号分隔）
+        note: "", // 备注
     }
   }])
 
@@ -232,32 +228,73 @@ export const useCharacterStore = defineStore('characterStore', () => {
   
   
 
-  // 工具栏中添加角色
-  const handleAddNode = (event) => {
+  const handleAddClueNode = (event) => {
     const rect = event?.target?.getBoundingClientRect();
     const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
     const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
 
     const newNode = {
       id: generateNodeId(),
-      type: 'character',
+      type: "clue", // 关键点：类型改为 clue
       position: { x, y },
       data: {
-        name: '新角色',
-        avatar: require('@/assets/avatar/1.jpg'),
-        age: null,
-        occupation: '',
-        personality: [],
-        background: '',
-        skills: [],
-        items: '',
-        notes: '',
-        relationships: []
-      }
+        title: "新线索",
+        relatedEvent: "", // 关联的事件
+        detail: "", // 线索内容
+        logic: "", // 推理逻辑
+        tags: "", // 标签（逗号分隔）
+        note: "", // 备注
+      },
     };
+
     nodes.value.push(newNode);
+
     broadcast();
-  }
+  };
+  const handleAddInferenceNode = (event) => {
+    const rect = event?.target?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+    const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+
+    const newNode = {
+      id: generateNodeId(),
+      type: "inference",
+      position: { x, y },
+      data: {
+        title: '推导结论1',
+      summary: '总结',
+      evidence: '证据',
+      tags: '',
+      note: ''
+      },
+    };
+
+    nodes.value.push(newNode);
+
+    broadcast();
+  };
+  const handleAddPersonNode = (event) => {
+  const rect = event?.target?.getBoundingClientRect();
+  const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+  const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+
+  const newNode = {
+    id: generateNodeId(),
+    type: "person", // 使用你在 VueFlow 中注册的人物节点组件类型
+    position: { x, y },
+    data: {
+      name: '新人物',
+      bio: '人物背景简介',
+      clues: [],       // 与线索有关的ID或标题
+      tags: ['可疑'],   // 人物特点标签
+      note: ''         // 附加备注
+    },
+  };
+
+  nodes.value.push(newNode);
+
+  broadcast(); // 如果你在同步节点给其他协作者，这一行保留
+};
 
   // 结点的删除
   const handleDeleteNode = (nodeId) => {
@@ -285,19 +322,35 @@ export const useCharacterStore = defineStore('characterStore', () => {
     if (nodeIndex !== -1) {
       nodes.value[nodeIndex].position = position
       nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] } // ✅ 强制 Vue 感知变化
+      // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
     }
     broadcast();
   };
     // 广播节点和边的信息
     const broadcast = () => {
-      socketState.socket.send(
-        JSON.stringify({ type: "character", characterNodes: nodes.value, characterEdges: edges })
-      );
-      console.log("广播的节点信息：", {
-        nodes: nodes.value,
-        edges: edges,
-      });
-    };
+  // 分类节点
+  const clueNodes = nodes.value.filter(n => n.type === 'clue');
+  const inferenceNodes = nodes.value.filter(n => n.type === 'inference');
+  const personNodes = nodes.value.filter(n => n.type === 'person');
+
+  console.log("clue:",clueNodes);
+  console.log("inference:",inferenceNodes);
+  console.log("personNodes:",personNodes);
+  // 构造消息体
+  const message = {
+    type: "clue", // 或者你可以改成 "clueSync"、"canvasUpdate"，看你的协议设计
+    clueNodes,
+    inferenceNodes,
+    personNodes,
+    clueEdges: edges,
+  };
+
+  // 发送广播消息
+  socketState.socket.send(JSON.stringify(message));
+
+  console.log("广播的节点信息：", message);
+};
+
 
   return {
     nodes,
@@ -316,7 +369,9 @@ export const useCharacterStore = defineStore('characterStore', () => {
     handleConnectNode,
     handleNodeClick,
     handleDetailSave,
-    handleAddNode,
+    handleAddClueNode,
+    handleAddInferenceNode,
+    handleAddPersonNode,
     handleDeleteNode,
     handlePositionChange
   }

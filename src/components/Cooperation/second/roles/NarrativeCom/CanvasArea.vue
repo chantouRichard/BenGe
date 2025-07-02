@@ -1,6 +1,6 @@
 <template>
   <div class="canvas-container">
-    <VueFlow
+    <VueFlow ref="vueFlowRef"
       class="vue-flow"
       :style="{
     backgroundPosition: `${backgroundX}px ${backgroundY}px`
@@ -135,6 +135,33 @@ import InferenceNode from '../ClueCom/InferenceNode.vue'
 import PersonNode from '../ClueCom/PersonNode.vue'
 import AtmosphereNode from '../AtmosphereCom/AtmosphereNode.vue'
 
+import html2canvas from 'html2canvas';
+const vueFlowRef = ref(null);
+function exportCanvas() {
+  const el = document.querySelector('.vue-flow'); // 这个比 viewport 更安全
+  if (!el) {
+    console.warn('画布容器未找到');
+    return;
+  }
+
+  html2canvas(el, {
+    useCORS: true,
+    scale: 2,
+    backgroundColor: null, // 可透明背景
+    logging: true,
+  }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = imgData;
+    link.download = 'canvas.png';
+    link.click();
+  }).catch(err => {
+    console.error('截图失败：', err);
+  });
+}
+
+
+
 const props = defineProps({
   nodes: {
     type: Array,
@@ -243,7 +270,8 @@ const forceUpdateEdge = (id, newData) => {
 
 defineExpose({
   forceUpdateNode,
-  forceUpdateEdge
+  forceUpdateEdge,
+  exportCanvas
 })
 
 // 边连接完成事件（拖动新边）
@@ -307,10 +335,11 @@ const handleEdgeUpdate = ({ edge, connection }) => {
 }
 
 .vue-flow {
+  background-color: #C3DCFB;
   /* background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px); */
   /* background: transparent; */
   /* background-color: #F0F1F5; */
-  background-image: url('../../../../../assets/second/canvasback.png');
+  /* background-image: url('../../../../../assets/second/background.png');*/
 }
 
 /* 覆盖VueFlow默认节点样式 */

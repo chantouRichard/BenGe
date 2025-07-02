@@ -2,7 +2,7 @@
   <div v-if="stage == 1">
     <FrameworkDesignStage :stage="stage" @updateStage="updateStage"/>
   </div>
-  <div v-else-if="stage == 0">
+  <div v-else-if="stage == 2">
     <CompleteScriptStage />
   </div>
   <div v-else>
@@ -17,7 +17,7 @@ import CompleteScriptStage from "@/components/Cooperation/CompleteScriptStage.vu
 import DirectionSelectionStage from "@/components/Cooperation/DirectionSelectionStage.vue";
 import { setupWebSocket } from "@/stores/socket";
 
-const stage = ref(0);
+const stage = ref(1);
 setupWebSocket();
 
 const updateStage = (newStage) => {
