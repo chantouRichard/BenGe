@@ -467,9 +467,7 @@ const getDesignerName = (designerType) => {
 }
 
 // 处理导出功能
-const handleExport = () => {
-  console.log('导出功能')
-}
+
 
 // 处理人物设计师AI生成
 const handleCharacterAiGenerate = async () => {
