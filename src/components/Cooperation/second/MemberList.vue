@@ -68,7 +68,7 @@ const toggleMemberListVisibility = () => {
   position: fixed;
   top: 10px;
   right: 20px;
-  z-index: 9000;
+  z-index: 1000;
   background:transparent;
   /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
   border-radius: 8px;

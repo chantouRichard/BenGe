@@ -91,7 +91,9 @@ const toggleDrawer = () => {
   height: 94%;
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* 微微的下方阴影 */
-  background-color: white; /* 可选：加上背景以便阴影可见 */
+  /* background-color: white; */
+  background-image: url('../../../assets/second/cardback.png');
+  background-size: cover;
 
   display: flex;
   flex-direction: column;
@@ -113,8 +115,10 @@ const toggleDrawer = () => {
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 更轻微的阴影 */
   background-color: white;
+  background-image: url('../../../assets/second/cardback.png');
 
-  transition: transform 0.3s ease;
+
+  transition: transform 0.5s ease;
 }
 .slide-in .task-card-bottom {
   top: 4%;

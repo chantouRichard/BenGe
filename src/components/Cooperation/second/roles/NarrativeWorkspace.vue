@@ -495,11 +495,11 @@ const handleAtmosphereAiGenerate = async () => {
   position: relative;
   width: 100%;
   height: 100%;
-  max-height: 900px;
+  max-height: 960px;
   overflow: hidden;
 
   padding: 40px;
-  border-radius: 24px;
+  border-radius: 50px;
 }
 
 /* 简单的关联状态指示 */

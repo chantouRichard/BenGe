@@ -108,7 +108,9 @@ export default {
   width: 100%;
   height: 100%;
 
-  background:transparent;
+  /* background:transparent; */
+  background-image: url('../../../assets/chat-main-bg.png');
+
 
   background-size: cover;
   background-position: center;

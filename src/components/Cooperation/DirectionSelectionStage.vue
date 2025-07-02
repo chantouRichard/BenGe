@@ -11,6 +11,7 @@
         <div class="back-image"></div>
         <div class="menu-front">
           <i class="fa-solid fa-scroll logo"></i>
+          <ElButton @click="$emit('updateStage',1)">下一阶段</ElButton>
           <div class="menu-group">
             <div class="menu-item">BenGe.Vision</div>
             <i class="fa-solid fa-circle-info menu-icon"></i>
@@ -67,6 +68,7 @@ import Chat from './Chat.vue';
 import loginImage from '../../assets/login.png';
 import { socketState } from '@/stores/socket';
 import MemberList from "@/components/Cooperation/first/MemberList.vue";
+import { ElButton } from 'element-plus';
 
 const route = useRoute();
 const isMemberOpen = ref(true);

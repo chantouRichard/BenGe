@@ -42,8 +42,8 @@ const currentIcon = computed(() =>
 <style scoped>
 .floating-wrapper {
   position: fixed;
-  bottom: 40px;
-  right: 40px;
+  bottom: 80px;
+  right: 80px;
   z-index: 9000;
   pointer-events: none; /* 保证只有子元素响应点击 */
 }
@@ -74,8 +74,8 @@ const currentIcon = computed(() =>
 /* 按钮基础样式 */
 .toggle-btn {
   position: absolute;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   top: 20px;
   left: 20px;
   z-index: 9000;
