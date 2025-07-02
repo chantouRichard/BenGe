@@ -17,6 +17,9 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -788,6 +791,90 @@ public class AIServicelmpl implements AIService {
         }
 
         return content.length() > 50 ? content.substring(0, 50) + "..." : content;
+    }
+
+    @Override
+    public CompletableFuture<AIMsgDevide> GenFrameworkStream(List<Map<String, String>> msgs,
+            Consumer<String> callback) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                msgs.add(0, new HashMap<String, String>() {
+                    {
+                        put("role", "system");
+                        put("content", System_MSG);
+                    }
+                });
+                // 构建消息数组
+                JSONArray messages = new JSONArray();
+                for (Map<String, String> msg : msgs) {
+                    messages.put(new JSONObject()
+                            .put("role", msg.get("role"))
+                            .put("content", msg.get("content")));
+                }
+
+                // 创建请求连接
+                URL url = new URL("https://spark-api-open.xf-yun.com/v2/chat/completions");// X1URL
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer ZxztQfIySwHMqrLvRLGa:gZdZClyqiPxeoHVTZQbO");// X1APIPassword
+                conn.setDoOutput(true);
+
+                // 发送请求体
+                try (OutputStream os = conn.getOutputStream()) {
+                    JSONObject body = new JSONObject()
+                            .put("user", "user_id")
+                            .put("model", "x1")
+                            .put("stream", true)
+                            .put("max_tokens", 32768)
+                            .put("messages", messages);
+                    os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                }
+
+                String StrScript = processStreamResponse(conn, callback);
+                AIMsgDevide devidedMsg = new AIMsgDevide();
+                DevideScriptContent(devidedMsg, StrScript, true);
+                return devidedMsg;
+            } catch (Exception e) {
+                throw new RuntimeException("API请求失败", e);
+            }
+        });
+    }
+
+    private String processStreamResponse(HttpURLConnection conn, Consumer<String> callback) throws Exception {
+        int responseCode = conn.getResponseCode();
+        if (responseCode != HttpURLConnection.HTTP_OK) {
+            throw new RuntimeException("API响应错误: " + responseCode);
+        }
+
+        StringBuilder fullContent = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("[DONE]"))
+                    break;
+                if (line.isBlank() || line.isEmpty())
+                    continue;
+                callback.accept(line);
+                String block = line;
+                try {
+                    JSONObject json = new JSONObject(block.substring(5));
+                    json = json.getJSONArray("choices").getJSONObject(0).getJSONObject("delta");
+                    if (!json.has("content")) {
+                        continue;
+                    } else {
+                        block = json.getString("content");
+                        fullContent.append(block);
+                    }
+                } catch (Exception e) {
+                    System.err.print(".");
+                }
+            }
+        }
+        return fullContent.toString();
     }
 
     private static final String[] GenDetailSysPrompt = {

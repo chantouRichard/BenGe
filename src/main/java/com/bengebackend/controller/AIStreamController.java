@@ -1,7 +1,13 @@
 package com.bengebackend.controller;
 
 import com.bengebackend.entity.SloganRequestEntity;
+import com.bengebackend.entity.AIMsgDevide;
+import com.bengebackend.model.ScriptHistory;
 import com.bengebackend.service.AIService;
+import com.bengebackend.service.ScriptService;
+import com.bengebackend.dto.ScriptDetailDto;
+import com.bengebackend.entity.ScriptReplyRequestEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,6 +30,9 @@ public class AIStreamController {
 
     @Autowired
     private AIService aiService;
+
+    @Autowired
+    private ScriptService scriptService;
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -87,6 +99,75 @@ public class AIStreamController {
                 System.err.println("AI助手流式聊天失败: " + e.getMessage());
                 emitter.completeWithError(e);
             }
+        });
+
+        return emitter;
+    }
+
+    /**
+     * GenFramework流式输出接口
+     */
+    @PostMapping(value = "/genframework/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter generateFrameworkStream(@RequestBody ScriptReplyRequestEntity request) {
+        SseEmitter emitter = new SseEmitter(0L);
+        // 准备消息
+        ScriptDetailDto sdd = scriptService.getScriptByIdAsync(request.getScriptId());
+        List<ScriptHistory> history = sdd.getHistory();
+        List<Map<String, String>> messages = new ArrayList<>();
+        for (ScriptHistory h : history) {
+            Map<String, String> msg = new HashMap<>();
+            if (h.getResponse() == "" && h.getMessage() != "") {
+                msg.put("role", "user");
+                msg.put("content", h.getMessage());
+            } else {
+                msg.put("role", "assistant");
+                msg.put("content", h.getResponse());
+            }
+            messages.add(msg);
+        }
+        messages.add(new HashMap<String, String>() {
+            {
+                put("role", "user");
+                put("content", request.getMessage());
+            }
+        });
+
+        // 启动异步流式处理
+        CompletableFuture<AIMsgDevide> future = aiService.GenFrameworkStream(messages, chunk -> {
+
+            try {
+                // 发送数据块到客户端
+                emitter.send(SseEmitter.event()
+                        .name("message") // 事件名称
+                        .data(chunk) // 实际内容
+                        .reconnectTime(3000));// 重连时间
+            } catch (IOException e) {
+                // 发送失败时取消任务
+                throw new RuntimeException("SSE发送失败", e);
+            }
+        });
+
+        // 处理完成/异常情况
+        future.whenComplete((result, ex) -> {
+            if (ex != null) {
+                // 异常处理
+                emitter.completeWithError(ex);
+            } else {
+                // 正常完成
+                emitter.complete();
+                scriptService.updateScriptAsync(request.getScriptId(), result.getTitle(), result.getStrScript(), 2);
+            }
+        });
+
+        // 处理连接关闭
+        emitter.onCompletion(() -> {
+            if (!future.isDone()) {
+                future.cancel(true); // 取消仍在进行的任务
+            }
+        });
+
+        emitter.onTimeout(() -> {
+            future.cancel(true); // 超时取消任务
         });
 
         return emitter;

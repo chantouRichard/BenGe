@@ -25,44 +25,43 @@ public class ScriptController {
     @Autowired
     private ScriptService scriptService;
 
-
     /**
      * 生成剧本方向标语
      */
 
-//    @Autowired
-//    private QwenChatModel qwenChatModel;
+    // @Autowired
+    // private QwenChatModel qwenChatModel;
 
     @PostMapping("/directions")
     public ResponseEntity<Object> generateSlogan(@RequestBody SloganRequestEntity request) {
 
-//        String response = qwenChatModel.chat("""
-//                请根据以下关键词生成完整的剧本杀广告,
-//                严格按照以下格式生成内容：
-//                剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
-//                每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
-//                关键词包括以下几点：
-//                """ + request.getPrompt());
-//        if (response == null || response.isEmpty()) {
-//            return ResponseEntity.badRequest().body("生成剧本方向标语失败");
-//        }
-//        // 解析生成的内容
-//        String[] parts = response.split("\\n");
-//        if (parts.length < 3) {
-//            return ResponseEntity.badRequest().body("生成的内容格式不正确");
-//        }
-//        String background = parts[0].replace("剧本背景: ", "").trim();
-//        String playerGoal = parts[1].replace("玩家目标: ", "").trim();
-//        String coreIdea = parts[2].replace("核心创意: ", "").trim();
-//        // 创建返回对象
-//        SloganResponseDto sloganResponse = new SloganResponseDto();
-//        sloganResponse.setSlogans(List.of(
-//                new Slogan("剧本背景", background),
-//                new Slogan("玩家目标", playerGoal),
-//                new Slogan("核心创意", coreIdea)
-//        ));
-//        return ResponseEntity.ok(sloganResponse);
-        return  ResponseEntity.ok("");
+        // String response = qwenChatModel.chat("""
+        // 请根据以下关键词生成完整的剧本杀广告,
+        // 严格按照以下格式生成内容：
+        // 剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
+        // 每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
+        // 关键词包括以下几点：
+        // """ + request.getPrompt());
+        // if (response == null || response.isEmpty()) {
+        // return ResponseEntity.badRequest().body("生成剧本方向标语失败");
+        // }
+        // // 解析生成的内容
+        // String[] parts = response.split("\\n");
+        // if (parts.length < 3) {
+        // return ResponseEntity.badRequest().body("生成的内容格式不正确");
+        // }
+        // String background = parts[0].replace("剧本背景: ", "").trim();
+        // String playerGoal = parts[1].replace("玩家目标: ", "").trim();
+        // String coreIdea = parts[2].replace("核心创意: ", "").trim();
+        // // 创建返回对象
+        // SloganResponseDto sloganResponse = new SloganResponseDto();
+        // sloganResponse.setSlogans(List.of(
+        // new Slogan("剧本背景", background),
+        // new Slogan("玩家目标", playerGoal),
+        // new Slogan("核心创意", coreIdea)
+        // ));
+        // return ResponseEntity.ok(sloganResponse);
+        return ResponseEntity.ok("");
     }
 
     /**
@@ -91,7 +90,6 @@ public class ScriptController {
 
         return ResponseEntity.ok("AI服务暂未实现");
     }
-
 
     /**
      * 根据剧本ID获取剧本详情
@@ -149,7 +147,8 @@ public class ScriptController {
             return ResponseEntity.badRequest().build();
         }
 
-        ScriptFrameworkDto frameworkDto = scriptService.genFrame(request, scriptDetail.getHistory(), scriptDetail.getScript().getContent());
+        ScriptFrameworkDto frameworkDto = scriptService.genFrame(request, scriptDetail.getHistory(),
+                scriptDetail.getScript().getContent());
         if (frameworkDto == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -167,7 +166,7 @@ public class ScriptController {
         }
 
         try {
-            String result = scriptService.genFrameStreamAsync(request);
+            String result = "当前服务已在controller-aistream中实现，请访问对应的流式接口";
             return ResponseEntity.ok(result);
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body("生成失败：" + ex.getMessage());
@@ -214,8 +213,8 @@ public class ScriptController {
      */
     @PutMapping("/update")
     public ResponseEntity<ScriptDetailDto> updateScript(@RequestBody ScriptUpdateRequestEntity request) {
-        if (request.getContent() == null || request.getContent().trim().isEmpty() || 
-            request.getScriptId() <= 0 || request.getStage() <= 0) {
+        if (request.getContent() == null || request.getContent().trim().isEmpty() ||
+                request.getScriptId() <= 0 || request.getStage() <= 0) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -244,19 +243,18 @@ public class ScriptController {
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-
         if (authentication != null && authentication.isAuthenticated()) {
             try {
                 // 获取存储在 authentication 中的 userId（保存在 details 字段）
-                Integer userId = (Integer) authentication.getDetails();  // 强制转换为 Integer 类型
-                return userId;  // 返回 userId
+                Integer userId = (Integer) authentication.getDetails(); // 强制转换为 Integer 类型
+                return userId; // 返回 userId
             } catch (Exception e) {
                 System.out.println("Error retrieving userId: " + e.getMessage());
-                return 1;  // 如果出错，返回默认的 1
+                return 1; // 如果出错，返回默认的 1
             }
         }
 
-        return 1;  // 如果未认证，返回默认的 1
+        return 1; // 如果未认证，返回默认的 1
     }
 
 }
