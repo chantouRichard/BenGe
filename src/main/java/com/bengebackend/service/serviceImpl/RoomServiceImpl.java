@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomServiceImpl implements RoomService {
@@ -26,7 +27,7 @@ public class RoomServiceImpl implements RoomService {
         // 计算分页偏移量
         int offset = (getAllRoomsEntity.getPage() - 1) * getAllRoomsEntity.getLimit();
         // 查询房间列表
-        List<RoomDto> roomDtos = roomMapper.getAllRooms(offset, getAllRoomsEntity.getLimit());
+        List<RoomDto> roomDtos = roomMapper.getAllRooms(offset, getAllRoomsEntity.getLimit()).stream().filter(room->room.getCurrentMembers()<4).collect(Collectors.toList());
 
         return roomDtos;
     }
