@@ -1,529 +1,343 @@
 <template>
-  <div class="room-container">
-    <!-- 主内容区 -->
-    <div class="main-content">
-      <!-- 左侧工作区 -->
-      <div class="left-panel">
-        <div style="display: flex">
-          <h2 class="stage-title">
-            {{
-              currentStage === "direction"
-                ? "第一阶段：方向确定"
-                : "第二阶段：投票确认"
-            }}
-          </h2>
-          <!-- 按钮：只有在 direction 阶段并且 currentUser.role 为 true 时显示 -->
-          <el-button
-            v-if="currentStage != 'direction'"
-            :disabled="!currentUser.role"
-            @click="$emit('updateStage',1)"
-            type="primary"
-            style="margin-left: 20px;"
-          >
-            阶段按钮
-          </el-button>
+  <div class="direction-selection-stage">
+    <div class="header">
+      <div class="left-menu">
+        <div class="stage-title">
+          <i class="fa-solid fa-bars-staggered title-icon"></i>
+          <span class="title">方向选择</span>
         </div>
-
-        <!-- 工作区 -->
-        <div
-          class="section"
-          style="flex: 1; display: flex; flex-direction: column; min-height: 0"
-        >
-          <h3 class="section-title">
-            {{ currentStage === "direction" ? "个人工作区" : "投票区" }}
-          </h3>
-
-          <div
-            class="direction-stage-container"
-            style="flex: 1; min-height: 0; overflow: hidden"
-          >
-            <!--方向选择-->
-            <DirectionSelect
-              v-if="currentStage === 'direction'"
-              :userInfo="currentUser"
-              @submission="handleConfirmSubmit"
-              @confirm-submit="handleConfirmSubmit"
-              @next-stage="handleConfirmSubmit"
-            />
-
-            <VoteStage
-              v-else-if="currentStage === 'vote'"
-              :aiSuggestion="aiSuggestion"
-              :isGenerating="isGenerating"
-              @regenerate="handleRegenerate"
-              @accept="handleAcceptSuggestion"
-            />
+      </div>
+      <div class="right-menu">
+        <div class="back-image"></div>
+        <div class="menu-front">
+          <i class="fa-solid fa-scroll logo"></i>
+          <div class="menu-group">
+            <div class="menu-item">BenGe.Vision</div>
+            <i class="fa-solid fa-circle-info menu-icon"></i>
+            <img src="../../assets/login.png" alt="avatar" class="avatar" />
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 右侧进度区 -->
+    <div class="main-content">
+      <!-- 左侧区域 -->
+      <div class="left-panel">
+        <DirectionSelect
+            v-if="!showVoteStage"
+            @confirm="handleDirectionConfirm"
+            class="direction-select-component"
+        />
+        <VoteStage
+            v-else
+            :room-id="roomId"
+            :members="members"
+            :all-directions="allDirections"
+            @submitVote="handleVoteSubmit"
+            @regenerateSuggestion="handleRegenerateRequest"
+            class="vote-stage-component"
+        />
+      </div>
+
+      <!-- 右侧区域 -->
       <div class="right-panel">
         <!-- 成员区 -->
-        <div class="member-area" :class="{ collapsed: !isMemberOpen }">
-          <div class="member-header">
-            <h2 style="min-width: 72px">在线成员 ({{ members.length }})</h2>
-            <button class="toggle-btn" @click="toggleMemberArea">
-              {{ isMemberOpen ? "▲" : "▼" }}
-            </button>
-          </div>
-          <transition name="fade">
-            <div v-show="isMemberOpen" class="member-list">
-              <div
-                class="member-item"
-                v-for="member in socketState.members"
-                :key="member.id"
-              >
-                <div class="member-avatar-container">
-                  <img
-                    :src="member.avatar"
-                    alt="avatar"
-                    class="member-avatar"
-                  />
-                  <div class="online-indicator"></div>
-                </div>
-                <div class="member-info">
-                  <span class="member-name">{{ member.name }}</span>
-                  <div
-                    v-if="member.selections && member.selections.length > 0"
-                    class="member-directions"
-                  >
-                    <div
-                      class="direction-tag"
-                      v-for="(direction, idx) in member.selections"
-                      :key="idx"
-                    >
-                      <!-- {{ direction.content }} -->
-                    </div>
-                  </div>
-                  <div v-else class="no-directions">尚未选择方向</div>
-                </div>
-              </div>
-              <div v-if="members.length === 0" class="no-members">
-                暂无其他成员在线
-              </div>
-            </div>
-          </transition>
-        </div>
+        <MemberList members="members" />
 
-        <!-- 聊天区域 -->
-        <div
-          class="chat-area"
-          :style="{ height: isMemberOpen ? '80%' : '95%' }"
-        >
-          <div>
-            <h2>聊天区</h2>
-          </div>
-          <div
-            style="
-              width: 100%;
-              height: 100%;
-              margin-left: auto;
-              margin-right: auto;
-              position: relative;
-              overflow: hidden;
-            "
-          >
-            <Chat
-              :userId="currentUser.id"
-              @membersUpdated="updateMembers"
-              :avatar="currentUser.avatar"
-            />
-          </div>
-        </div>
+        <!-- 聊天区 -->
+        <Chat
+            :room-id="String(roomId)"
+            :user-id="currentUser.id"
+            :user-name="currentUser.name"
+            :avatar="currentUser.avatar"
+            @membersUpdated="updateMembers"
+            class="chat-component"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import Chat from "./Chat.vue";
-import DirectionSelect from "@/components/Cooperation/first/DirectionSelect.vue";
+import { ref, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import DirectionSelect from '@/components/Cooperation/first/DirectionSelect.vue';
 import VoteStage from "@/components/Cooperation/first/VoteStage.vue";
-import { isOwner, getCurrentRoom } from "@/api/room.js";
-import { ElButton } from "element-plus";
-import { socketState } from "@/stores/socket";
+import Chat from './Chat.vue';
+import loginImage from '../../assets/login.png';
+import { socketState } from '@/stores/socket';
+import MemberList from "@/components/Cooperation/first/MemberList.vue";
 
-// 当前阶段状态
-const currentStage = ref("direction");
+const route = useRoute();
+const isMemberOpen = ref(true);
+const showVoteStage = ref(false);
+const allDirections = ref([]); // 存储所有成员选择的方向
 
-// 当前用户信息
-const currentUser = ref({
-  id: "user_" + Math.floor(Math.random() * 1000),
-  name:
-    localStorage.getItem("username") ||
-    "用户" + Math.floor(Math.random() * 1000),
-  avatar: socketState.avatar,
-  role: false,
+// 获取房间ID
+const roomId = computed(() => {
+  return parseInt(route.params.roomId) || 1;
 });
 
-// AI生成的建议
-const aiSuggestion = ref("");
-const isGenerating = ref(false);
+// 从localStorage获取用户信息
+const currentUser = computed(() => {
+  const username = localStorage.getItem('username') || '匿名用户';
+  return {
+    id: socketState.userId || `user_${username}_${Date.now()}`,
+    name: username,
+    avatar: loginImage,
+  };
+});
 
-// 成员区状态
-const isMemberOpen = ref(true);
-const members = ref([]);
-
-// 存储各成员的选择
-const memberSelections = ref({});
-
-// 最终选择的方向
-const selectedDirections = ref([]);
-
-// 处理方向提交
-/* eslint-disable no-unused-vars */
-
-const handleDirectionSubmission = (info) => {
-  memberSelections.value[currentUser.value.id] = info.directions;
-  updateMemberList();
-};
-
-// 处理确认提交，切换到投票阶段
-const handleConfirmSubmit = async (data) => {
-  selectedDirections.value = data.directions;
-
-  // 模拟生成AI建议
-  isGenerating.value = true;
-  aiSuggestion.value = "";
-
-  // 这里应该是调用API生成建议
-  setTimeout(() => {
-//     aiSuggestion.value = `基于您选择的方向，建议创作一个关于：
-// ${data.directions.map((d) => `- ${d.content}`).join("\n")}
-
-// 故事梗概：
-// 主角在${data.directions[0].content}背景下，面临${
-//       data.directions[1].content
-//     }的挑战，最终通过${data.directions[2].content}解决问题。`;
-//     isGenerating.value = false;
-  }, 1500);
-
-  currentStage.value = "vote";
-  // WebSocket
-  // socket.emit('start-vote-stage', {
-  //   directions: data.directions,
-  //   userId: currentUser.value.id
-  // });
-};
-
-// 处理重新生成建议
-const handleRegenerate = (feedback) => {
-  isGenerating.value = true;
-  aiSuggestion.value = "";
-
-  // 模拟根据反馈重新生成
-  setTimeout(() => {
-//     aiSuggestion.value = `根据您的反馈"${feedback}"，重新生成的建议：
-// ${selectedDirections.value.map((d) => `- ${d.content}`).join("\n")}
-
-// 调整后的故事：
-// 加入了${feedback || "更多细节"}，使情节更加丰富。`;
-//     isGenerating.value = false;
-  }, 1500);
-};
-
-// 处理接受建议
-const handleAcceptSuggestion = () => {
-  console.log("接受建议:", aiSuggestion.value);
-  // 这里可以进入下一阶段或保存结果
-  // emit('next-stage', { suggestion: aiSuggestion.value });
-};
-
-// 更新成员列表
-const updateMemberList = () => {
-  const currentMemberIndex = members.value.findIndex(
-    (m) => m.id === currentUser.value.id
-  );
-  if (currentMemberIndex !== -1) {
-    members.value[currentMemberIndex].selections =
-      memberSelections.value[currentUser.value.id] || [];
-  } else {
-    members.value.push({
-      id: currentUser.value.id,
-      name: currentUser.value.name,
-      avatar: currentUser.value.avatar,
-      selections: memberSelections.value[currentUser.value.id] || [],
-    });
-  }
-};
-
-// 更新成员列表(聊天组件)
-function updateMembers(membersList) {
-  // 合并新成员列表与现有选择信息
-  members.value = membersList.map((member) => {
-    // 确保 member.id 是字符串，避免调用 slice 报错
-    const memberId = String(member.id); // 强制转换为字符串
-
-    // 保留原有的选择信息
-    const existingSelections = memberSelections.value[memberId] || [];
-
-    return {
-      id: memberId,
-      name: member.name || `用户${memberId.slice(5)}`, // 这里使用转换后的 memberId
-      avatar: member.avatar || currentUser.value.avatar,
-      selections: existingSelections,
-    };
-  });
-
-  // 确保当前用户在成员列表中
-  if (!members.value.some((m) => m.id === currentUser.value.id)) {
-    members.value.push({
-      id: currentUser.value.id,
-      name: currentUser.value.name,
-      avatar: currentUser.value.avatar,
-      selections: memberSelections.value[currentUser.value.id] || [],
-    });
-  }
-
-  console.log("成员信息已更新", members.value);
-}
-
-// 切换成员区显示
 const toggleMemberArea = () => {
   isMemberOpen.value = !isMemberOpen.value;
 };
 
-// 初始化
-onMounted(() => {
-  // 初始化当前用户
-  members.value.push({
-    id: currentUser.value.id,
-    name: currentUser.value.name,
-    avatar: currentUser.value.avatar,
-    selections: [],
-  });
+const updateMembers = (membersList) => {
+  if (!Array.isArray(membersList)) return;
 
-  currentUser.value.role = isHost();
-});
+  const currentUserId = String(currentUser.value.id);
 
-// 判断是否房主
-async function isHost() {
-  try {
-    const currentRoom = await getCurrentRoom();
-    console.log("currentRoom:", currentRoom);
-    if (currentRoom.id) {
-      try {
-        const response = await isOwner(currentRoom.id);
+  // 更新socketState中的成员数据
+  socketState.members = membersList
+      .filter(member =>
+          member &&
+          member.id != null &&
+          String(member.id) !== currentUserId &&
+          member.roomId === roomId.value
+      )
+      .map(m => ({
+        id: m.id,
+        username: m.name || m.username || '匿名用户',
+        avatar: m.avatar || loginImage,
+        selectedDirections: m.selectedDirections || []
+      }));
+};
 
-        console.log("用户是不是房主：", response);
-        return response.data;
-      } catch (error) {
-        console.error("Error checking if user is host:", error);
-        return false;
-      }
-    }
-  } catch (err) {
-    console.log("错误：", err);
-  }
-  return false;
+const handleDirectionConfirm = (selectedDirections) => {
+  // json格式发送到后端并收集所有成员的选择
+  socketState.socket.send(JSON.stringify({
+    type: 'submit_directions',
+    roomId: roomId.value,
+    directions: selectedDirections
+  }))
+  allDirections.value.push(selectedDirections);
+
+  showVoteStage.value = true;
+};
+
+// 投票
+const handleVoteSubmit = (voteData) => {
+  socketState.socket.send(JSON.stringify({
+    type: 'submit_vote',
+    roomId: roomId.value,
+    directions: voteData.directions
+  }))
 }
+
+const handleRegenerateRequest = (requestData) => {
+  socketState.socket.send(JSON.stringify({
+    type: 'regenerate_suggestion',
+    roomId: roomId.value,
+    modification: requestData.modification
+  }))
+}
+
+// 监听所有方向数据
+watch(() => socketState.directionDate, (newData) => {
+  if (newData && newData.roomId === roomId.value) {
+    allDirections.value = newData.allDirections;
+    showVoteStage.value = true;
+  }
+}, { deep: true });
+
+defineExpose({
+  roomId,
+  currentUser,
+  isMemberOpen,
+  toggleMemberArea,
+  updateMembers,
+  handleDirectionConfirm,
+  showVoteStage,
+  allDirections,
+});
 </script>
 
 <style scoped>
-/* 页面容器 */
-.room-container {
+.direction-selection-stage {
+  width: 98%;
+  height: 95vh;
+  margin: 10px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-image: url("../../assets/loginback.jpg");
+  background: linear-gradient(90deg, #EDEEF2 0%, #ECEDEF 38%, #ECEDF1 70%, #EDEEF3 100%);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  height: 65px;
+  padding: 0 0;
+  background-color: transparent;
+  border-color: transparent;
+  border-radius: 20px;
+}
+
+.left-menu {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom-color: transparent;
+}
+
+.stage-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.title-icon {
+  font-size: large;
+}
+
+.title {
+  font-weight: 800;
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 2px;
+}
+
+.right-menu {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 30px;
+  position: relative;
+  height: 100%;
+  border-bottom-left-radius: 30px;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 4px;
+}
+
+.back-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 113%;
+  background-image: url('../../assets/header-back.png');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  z-index: 1;
+  border-bottom-left-radius: 30px;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 4px;
+}
+
+.menu-front {
+  width: 100%;
+  height: 113%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom-left-radius: 30px;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 4px;
+  background-color: transparent;
+  backdrop-filter: blur(10px);
+  align-items: center;
+  z-index: 2;
+  padding-left: 20px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+}
+
+.menu-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 20px;
+  margin-right: 10px;
+}
+
+.menu-item {
+  font-size: 16px;
+  font-weight: bold;
   color: #333;
-  overflow: hidden;
+}
+
+.menu-icon {
+  cursor: pointer;
+  font-size: 30px;
+  background-image: linear-gradient(45deg, #E6E6ED 0%, #C6C3DF 30%, #B5C4E1 70%, #B5BDDF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.avatar {
+  padding: 2px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background-color: #FCFEFE;
+  z-index: 2;
 }
 
 .main-content {
   display: flex;
-  height: calc(100vh - 70px);
+  flex: 1;
   padding: 20px;
   gap: 20px;
-  overflow: hidden;
-  box-sizing: border-box;
-  flex: 1;
+  height: calc(100% - 85px);
 }
 
 .left-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-  box-sizing: border-box;
-  flex: 3;
-  padding: 15px;
-}
-
-.right-panel {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-  gap: 20px;
-}
-
-.direction-stage-container {
   flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.chat-area {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 15px;
   padding: 20px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
-  box-sizing: border-box;
-  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
-.stage-title {
-  color: #000000;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
+.left-panel .stage-title {
+  font-size: 18px;
+  font-weight: bold;
   margin-bottom: 20px;
-}
-
-.section {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.section-title {
-  color: #050000;
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 16px;
-}
-
-/* 成员区样式 */
-.member-area {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
-  box-sizing: border-box;
-}
-
-.member-header {
-  display: flex;
-  height: 40px;
-  align-items: center;
-}
-
-.toggle-btn {
-  height: 30px;
-  width: 30px;
-  border: none;
-  background-color: white;
-  cursor: pointer;
-}
-
-.member-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.member-item {
-  display: flex;
-  align-items: flex-start;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background-color 0.2s;
-}
-
-.member-item:hover {
-  background-color: #f5f5f5;
-}
-
-.member-avatar-container {
-  position: relative;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
-
-.member-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.online-indicator {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 10px;
-  height: 10px;
-  background-color: #4caf50;
-  border: 2px solid #fff;
-  border-radius: 50%;
-}
-
-.member-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.member-name {
-  font-size: 14px;
-  font-weight: 500;
   color: #333;
 }
 
-.member-directions {
+.direction-select-component {
+  flex: 1;
+  height: 0; /* 让DirectionSelect组件填充剩余空间 */
+}
+
+.right-panel {
+  width: 300px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 5px;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.direction-tag {
-  background-color: #e1f5fe;
-  color: #0288d1;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.no-directions {
-  font-size: 12px;
-  color: #999;
-  font-style: italic;
-}
-
-.no-members {
-  text-align: center;
-  color: #999;
-  font-size: 12px;
-  padding: 20px;
+.chat-component {
+  flex: 1;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 /* 过渡动画 */
@@ -541,25 +355,6 @@ async function isHost() {
 .fade-enter-to,
 .fade-leave-from {
   opacity: 1;
-  max-height: 300px;
-}
-
-/* 滚动条样式 */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  max-height: 200px;
 }
 </style>

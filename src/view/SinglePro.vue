@@ -88,6 +88,7 @@
 import { ref , onMounted , onUnmounted } from 'vue'
 import { useRouter } from 'vue-router';
 import { userLoadingStore } from '@/stores/userLoadingStore';
+import { usescriptStore } from '@/stores/scriptStore';
 import ScriptsList from '@/components/Single/ScriptsList.vue';
 import ScriptWorkspace from '@/components/Single/ScriptWorkspace.vue';
 
@@ -100,6 +101,7 @@ const showScriptList = ref(false);  // 脚本列表是否显示
 
 // 渲染数据的获取
 const loadingStore = userLoadingStore();
+const scriptStore = usescriptStore();
 const username = ref('');
 
 
@@ -153,6 +155,8 @@ onMounted(() => {
       loadingStore.hide();
     }, 1000)
   }
+
+  scriptStore.loadScripts();
 
   // 控制AI助手的显示
   loadingStore.showAiAssistantLoading();

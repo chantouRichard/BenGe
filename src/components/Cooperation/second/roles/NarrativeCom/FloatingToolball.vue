@@ -76,6 +76,13 @@ const buttons = ref([
     color: "rgba(100, 220, 180, 0.7)",
     hover: false,
   },
+  {
+  icon: require("@/assets/icons/magic-wand.svg"),
+  action: "ai-generate",
+  tooltip: "AI生成场景",
+  color: "rgba(255, 215, 0, 0.7)",
+  hover: false,
+}
 ]);
 
 const isExpanded = ref(false);
@@ -136,7 +143,15 @@ const startDrag = (e) => {
   window.addEventListener("mouseup", endHandler);
   window.addEventListener("touchend", endHandler);
 };
+defineEmits([
+  'add-node',
+  'add-edge',
+  'export-md',
+  'export-pdf',
+  'ai-generate'
+])
 </script>
+
 
 <style scoped>
 .toolball {

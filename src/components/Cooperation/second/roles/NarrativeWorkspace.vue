@@ -6,12 +6,14 @@
       @add-node="canvasStore.handleAddNode"
       @add-edge="canvasStore.handleCreateEdgeClick"
       @export="handleExport"
+      @ai-generate="handleAiGenerate"
     />
     <CharacterToolbar
       v-if="socketState.userRole == 1"
       @add-character="characterStore.handleAddNode"
       @add-relationship="characterStore.handleCreateEdgeClick"
       @export-characters="handleExport"
+      @ai-generate="handleCharacterAiGenerate"
     />
     <ClueToolbar
       v-if="socketState.userRole == 2"
@@ -20,12 +22,15 @@
       @add-person="clueStore.handleAddPersonNode"
       @add-relationship="clueStore.handleCreateEdgeClick"
       @export-clues="handleExport"
+      @ai-generate="handleClueAiGenerate"
     />
     <AtmosphereToolbar
       v-if="socketState.userRole == 3"
-      @add-node="atmosphereStore.handleAddNode"
-      @add-edge="atmosphereStore.handleCreateEdgeClick"
-      @export-atmo="handleExport"
+      @add-node="(e) => { console.log('add-node事件:', e); canvasStore.handleAddNode(e); }"
+      @atmo-palette="(e) => { console.log('atmo-palette事件:', e); handleExport(e); }"
+      @link-scene="(e) => { console.log('link-scene事件:', e); handleExport(e); }"
+      @export-atmo="(e) => { console.log('export-atmo事件:', e); handleExport(e); }"
+      @ai-generate="(e) => { console.log('ai-generate事件被接收:', e); handleAtmosphereAiGenerate(e); }"
     />
 
     <!-- 主画布 -->
@@ -172,6 +177,18 @@
         <span v-else>🎯 点击场景节点建立关联</span>
       </div>
     </div>
+
+    <!-- AI生成对话框 -->
+    <AIGenerateDialog
+      :visible="showAIDialog"
+      :designer-type="currentDesignerType"
+      :context-data="aiContextData"
+      :generate-result="aiGenerateResult"
+      :generate-error="aiGenerateError"
+      @cancel="handleAIDialogCancel"
+      @generate="handleAIDialogGenerate"
+      @close="handleAIDialogClose"
+    />
   </div>
 </template>
 
@@ -192,6 +209,7 @@ import PersonDetailPanel from "./ClueCom/PersonDetailPanel.vue";
 import AtmosphereToolbar from "./AtmosphereCom/AtmosphereToolbar.vue";
 import AtmosphereDetailPanel from "./AtmosphereCom/AtmosphereDetailPanel.vue";
 import AtmospherePalette from "./AtmosphereCom/AtmospherePalette.vue";
+import AIGenerateDialog from './AIGenerateDialog.vue'
 
 import ClueEdgeSelector from "./ClueCom/ClueEdgeSelector.vue";
 import { useCharacterStore } from "@/stores/character";
@@ -201,14 +219,33 @@ import { useAtmosphereStore } from "@/stores/atmosphere";
 import { ref, computed } from "vue";
 
 // 传入参数
-import { defineProps } from "vue";
-import { socketState } from "@/stores/socket";
+import { defineProps } from 'vue'
+import { socketState } from '@/stores/socket'
+import  request  from '@/api/request';
+
+// const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
+// const effectiveEdges = computed(() => props.edges || canvasStore.edges)
+
 
 const canvasStore = useCanvasStore();
 const characterStore = useCharacterStore();
 const clueStore = useClueStore();
 const atmosphereStore = useAtmosphereStore();
 const canvasRef = ref(null);
+
+// AI对话框相关状态
+const showAIDialog = ref(false)
+const currentDesignerType = ref('narrative')
+const aiGenerateResult = ref(null)
+const aiGenerateError = ref(null)
+const aiContextData = computed(() => {
+  return {
+    chatCount: socketState.messages?.length || 0,
+    nodeCount: nodes.value?.length || 0,
+    characterCount: characterStore.nodes?.length || 0,
+    recentNodes: nodes.value?.slice(-5) || []
+  }
+})
 
 // 导出图片
 const handleExport = () => {
@@ -319,6 +356,140 @@ const handleConnectNode = (connection) => {
   // 统一交给 canvasStore 处理边
   canvasStore.handleConnectNode(connection);
 };
+
+// 处理AI生成场景
+const handleAiGenerate = async () => {
+  currentDesignerType.value = 'narrative'
+  showAIDialog.value = true
+}
+
+// AI对话框处理方法
+const handleAIDialogCancel = () => {
+  showAIDialog.value = false
+  aiGenerateResult.value = null
+  aiGenerateError.value = null
+}
+
+const handleAIDialogClose = () => {
+  showAIDialog.value = false
+  aiGenerateResult.value = null
+  aiGenerateError.value = null
+}
+
+const handleAIDialogGenerate = async ({ userInput, template }) => {
+  // 清除之前的结果
+  aiGenerateResult.value = null
+  aiGenerateError.value = null
+
+  try {
+    // 收集当前上下文
+    const contextData = {
+      chat: socketState.messages.map(msg => ({
+        user: msg.username || msg.sender,
+        text: msg.content,
+        time: msg.time
+      })),
+      canvasNodes: canvasStore.nodes.map(node => ({
+        type: node.type,
+        title: node.data?.title || '未命名',
+        data: JSON.stringify(node.data).substring(0, 200)
+      })),
+      characterNodes: characterStore.nodes.map(node => ({
+        name: node.data?.name || '未命名角色',
+        occupation: node.data?.occupation || ''
+      }))
+    }
+
+    const result = await request.post('/ai/generate-nodes', {
+      userInput: userInput,
+      designerType: currentDesignerType.value,
+      contextData: JSON.stringify(contextData)
+    })
+
+    if (result.success && result.nodes) {
+      // 根据设计师类型添加节点到相应的store
+      result.nodes.forEach((nodeData, index) => {
+        const newNode = {
+          id: `ai-${currentDesignerType.value}-${Date.now()}-${index}`,
+          type: getNodeTypeByDesigner(currentDesignerType.value),
+          position: {
+            x: 400 + index * 250,
+            y: 300 + index * 120
+          },
+          data: nodeData
+        }
+
+        if (currentDesignerType.value === 'character') {
+          characterStore.nodes.push(newNode)
+          characterStore.broadcast && characterStore.broadcast()
+        } else {
+          canvasStore.nodes.push(newNode)
+          canvasStore.broadcast && canvasStore.broadcast()
+        }
+      })
+
+      // 设置成功结果，让对话框显示
+      aiGenerateResult.value = {
+        success: true,
+        message: `成功生成${result.nodes.length}个${getDesignerName(currentDesignerType.value)}节点！`,
+        nodeCount: result.nodes.length
+      }
+    } else {
+      // 设置失败结果
+      aiGenerateError.value = '生成失败：' + (result.message || '未知错误')
+    }
+  } catch (error) {
+    console.error('AI生成失败:', error)
+    // 设置错误结果
+    aiGenerateError.value = '生成失败，请检查网络连接'
+  }
+}
+
+// 辅助方法
+const getNodeTypeByDesigner = (designerType) => {
+  const typeMap = {
+    narrative: 'custom',
+    character: 'character',
+    clue: 'clue',
+    atmosphere: 'atmosphere'
+  }
+  return typeMap[designerType] || 'custom'
+}
+
+const getDesignerName = (designerType) => {
+  const nameMap = {
+    narrative: '场景',
+    character: '角色',
+    clue: '线索',
+    atmosphere: '氛围'
+  }
+  return nameMap[designerType] || '节点'
+}
+
+// 处理导出功能
+const handleExport = () => {
+  console.log('导出功能')
+}
+
+// 处理人物设计师AI生成
+const handleCharacterAiGenerate = async () => {
+  currentDesignerType.value = 'character'
+  showAIDialog.value = true
+}
+
+// 处理线索设计师AI生成
+const handleClueAiGenerate = async () => {
+  currentDesignerType.value = 'clue'
+  showAIDialog.value = true
+}
+
+// 处理氛围设计师AI生成
+const handleAtmosphereAiGenerate = async () => {
+  console.log('handleAtmosphereAiGenerate 函数被调用了！');
+  currentDesignerType.value = 'atmosphere'
+  showAIDialog.value = true
+}
+
 </script>
 
 <style scoped>
