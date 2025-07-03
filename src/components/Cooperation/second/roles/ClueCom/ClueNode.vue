@@ -13,8 +13,8 @@
         <button class="delete-button" @click.stop="handleDelete">×</button>
       </div>
       <p class="clue-detail">{{ clueData.detail || '暂无线索描述' }}</p>
-      <div class="clue-tags" v-if="clueData.tags && clueData.tags.length">
-        <span v-for="tag in clueData.tags.slice(0, 3)" :key="tag" class="clue-tag">{{ tag }}</span>
+      <div class="clue-tags" v-if="clueData.tags && clueData.tags.trim()">
+        <span v-for="tag in getTagsArray(clueData.tags).slice(0, 3)" :key="tag" class="clue-tag">{{ tag }}</span>
       </div>
     </div>
   </div>
@@ -38,6 +38,13 @@ const stylePosition = computed(() => ({
   left: `${props.position?.x ?? 0}px`,
   top: `${props.position?.y ?? 0}px`
 }))
+
+// 将字符串标签转换为数组
+const getTagsArray = (tags) => {
+  if (!tags) return []
+  if (Array.isArray(tags)) return tags
+  return tags.split(',').map(tag => tag.trim()).filter(Boolean)
+}
 
 const handleDelete = (e) => {
   e.stopPropagation()

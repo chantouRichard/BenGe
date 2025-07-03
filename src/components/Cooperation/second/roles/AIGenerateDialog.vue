@@ -98,6 +98,37 @@
                 <span class="context-value">{{ contextData.characterCount || 0 }} 个角色</span>
               </div>
             </div>
+
+            <!-- 详细节点类型统计 -->
+            <div v-if="contextData.nodesByType" class="context-details-section">
+              <h5>节点详情</h5>
+              <div class="node-type-stats">
+                <div v-if="contextData.nodesByType.scene" class="stat-item">
+                  <i class="fas fa-theater-masks"></i>
+                  <span>场景: {{ contextData.nodesByType.scene }}</span>
+                </div>
+                <div v-if="contextData.nodesByType.character" class="stat-item">
+                  <i class="fas fa-user"></i>
+                  <span>角色: {{ contextData.nodesByType.character }}</span>
+                </div>
+                <div v-if="contextData.nodesByType.clue" class="stat-item">
+                  <i class="fas fa-search"></i>
+                  <span>线索: {{ contextData.nodesByType.clue }}</span>
+                </div>
+                <div v-if="contextData.nodesByType.atmosphere" class="stat-item">
+                  <i class="fas fa-cloud-sun"></i>
+                  <span>氛围: {{ contextData.nodesByType.atmosphere }}</span>
+                </div>
+                <div v-if="contextData.nodesByType.inference" class="stat-item">
+                  <i class="fas fa-brain"></i>
+                  <span>推理: {{ contextData.nodesByType.inference }}</span>
+                </div>
+                <div v-if="contextData.nodesByType.person" class="stat-item">
+                  <i class="fas fa-user-circle"></i>
+                  <span>人物: {{ contextData.nodesByType.person }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -697,6 +728,40 @@ watch(() => props.generateError, (newError) => {
   color: #2d3748;
   font-weight: 600;
   margin-top: 2px;
+}
+
+.context-details-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.context-details-section h5 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.node-type-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.stat-item i {
+  color: #667eea;
+  font-size: 12px;
+  width: 16px;
+  text-align: center;
 }
 
 

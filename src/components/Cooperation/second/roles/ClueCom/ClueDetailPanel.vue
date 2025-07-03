@@ -107,13 +107,13 @@ const formData = ref({
 });
 
 const initFormData = () => {
-  const data = props.clueData?.node?.data || {};
+  const data = props.clueData?.data || {};
   formData.value = {
     title: data.title || '',
     relatedEvent: data.relatedEvent || '',
     detail: data.detail || '',
     logic: data.logic || '',
-    tags: (data.tags || []).join(', '),
+    tags: data.tags || '', // 直接使用字符串，与store定义一致
     note: data.note || ''
   };
 };
@@ -125,7 +125,7 @@ const handleSave = () => {
     id: props.clueData?.id,
     data: {
       ...formData.value,
-      tags: formData.value.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      tags: formData.value.tags // 保持字符串格式，与store定义一致
     }
   });
   handleClose();

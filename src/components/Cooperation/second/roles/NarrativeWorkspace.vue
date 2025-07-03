@@ -257,6 +257,7 @@ import { ref, computed } from "vue";
 import { defineProps } from 'vue'
 import { socketState } from '@/stores/socket'
 import  request  from '@/api/request';
+import { collectContextData } from '@/utils/contextCollector';
 
 // const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
 // const effectiveEdges = computed(() => props.edges || canvasStore.edges)
@@ -274,11 +275,13 @@ const currentDesignerType = ref('narrative')
 const aiGenerateResult = ref(null)
 const aiGenerateError = ref(null)
 const aiContextData = computed(() => {
+  const contextData = collectContextData()
   return {
-    chatCount: socketState.messages?.length || 0,
-    nodeCount: nodes.value?.length || 0,
-    characterCount: characterStore.nodes?.length || 0,
-    recentNodes: nodes.value?.slice(-5) || []
+    chatCount: contextData.chatCount || 0,
+    nodeCount: contextData.nodeCount || 0,
+    characterCount: contextData.characterCount || 0,
+    // 为了兼容现有UI，保留这些统计字段
+    ...contextData.context?.statistics
   }
 })
 
@@ -331,7 +334,10 @@ const handleDetailSave = (updatedData) => {
   }
 
   console.log("接受到的索引", newIndex);
-  canvasRef.value?.forceUpdateNode(updatedData.id, nodes.value[index].data);
+  // 直接使用更新后的数据进行强制更新
+  if (newIndex !== -1) {
+    canvasRef.value?.forceUpdateNode(updatedData.id, updatedData.data);
+  }
 };
 
 const handleDeleteNode = (id) => {
@@ -484,23 +490,8 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
   aiGenerateError.value = null
 
   try {
-    // 收集当前上下文
-    const contextData = {
-      chat: socketState.messages.map(msg => ({
-        user: msg.username || msg.sender,
-        text: msg.content,
-        time: msg.time
-      })),
-      canvasNodes: canvasStore.nodes.map(node => ({
-        type: node.type,
-        title: node.data?.title || '未命名',
-        data: JSON.stringify(node.data).substring(0, 200)
-      })),
-      characterNodes: characterStore.nodes.map(node => ({
-        name: node.data?.name || '未命名角色',
-        occupation: node.data?.occupation || ''
-      }))
-    }
+    // 使用统一的上下文收集工具，收集完整的上下文数据
+    const contextData = collectContextData()
 
     const result = await request.post('/ai/generate-nodes', {
       userInput: userInput,
@@ -511,10 +502,14 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
     if (result.success && result.nodes) {
       // 根据设计师类型添加节点到相应的store
       result.nodes.forEach((nodeData, index) => {
-        // 对角色节点数据进行格式转换
+        // 对不同类型节点数据进行格式转换
         let processedData = nodeData
         if (currentDesignerType.value === 'character') {
           processedData = processCharacterNodeData(nodeData)
+        } else if (currentDesignerType.value === 'clue') {
+          processedData = processClueNodeData(nodeData)
+        } else if (currentDesignerType.value === 'atmosphere') {
+          processedData = processAtmosphereNodeData(nodeData)
         }
 
         const newNode = {
@@ -530,12 +525,18 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
         if (currentDesignerType.value === 'character') {
           characterStore.nodes.push(newNode)
           characterStore.broadcast && characterStore.broadcast()
-        } else {
+        } else if(currentDesignerType.value == 'clue'){
+          clueStore.nodes.push(newNode)
+          clueStore.broadcast && clueStore.broadcast()
+        }else if(currentDesignerType.value == 'atmosphere'){
+          canvasStore.nodes.push(newNode)
+          canvasStore.broadcast && canvasStore.broadcast()
+        }else {
           canvasStore.nodes.push(newNode)
           canvasStore.broadcast && canvasStore.broadcast()
         }
-      })
-
+      }
+    )
       // 设置成功结果，让对话框显示
       aiGenerateResult.value = {
         success: true,
@@ -617,6 +618,47 @@ const processCharacterNodeData = (nodeData) => {
   if (!processed.avatar) processed.avatar = require('@/assets/avatar/1.jpg')
 
   return processed
+}
+
+// 处理线索节点数据格式转换
+const processClueNodeData = (nodeData) => {
+  const processed = { ...nodeData }
+
+  // 安全处理relatedCharacters字段
+  let relatedEvent = ''
+  if (processed.relatedCharacters) {
+    if (Array.isArray(processed.relatedCharacters)) {
+      relatedEvent = processed.relatedCharacters.join(', ')
+    } else {
+      relatedEvent = String(processed.relatedCharacters)
+    }
+  }
+
+  // 将AI返回的字段映射到前端期望的字段
+  return {
+    title: processed.title || '新线索',
+    relatedEvent: relatedEvent,
+    detail: processed.description || '',
+    logic: processed.hiddenInfo || '',
+    tags: processed.type || '',
+    note: processed.notes || ''
+  }
+}
+
+// 处理氛围节点数据格式转换
+const processAtmosphereNodeData = (nodeData) => {
+  const processed = { ...nodeData }
+
+  // 将AI返回的字段映射到前端期望的字段
+  return {
+    title: processed.title || '氛围节点',
+    timeLabel: processed.timeLabel || '',
+    mood: processed.mood || processed.type || '平静',
+    lighting: processed.lighting || processed.description || '',
+    music: processed.music || '',
+    weather: processed.weather || '',
+    note: processed.notes || ''
+  }
 }
 
 // 处理氛围设计师AI生成
