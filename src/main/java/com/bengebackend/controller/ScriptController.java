@@ -27,7 +27,6 @@ public class ScriptController {
     @Autowired
     private ScriptService scriptService;
 
-
     /**
      * 生成剧本方向标语
      */
@@ -61,8 +60,7 @@ public class ScriptController {
         sloganResponse.setSlogans(List.of(
                 new Slogan("剧本背景", background),
                 new Slogan("玩家目标", playerGoal),
-                new Slogan("核心创意", coreIdea)
-        ));
+                new Slogan("核心创意", coreIdea)));
         return ResponseEntity.ok(sloganResponse);
     }
 
@@ -92,7 +90,6 @@ public class ScriptController {
 
         return ResponseEntity.ok("AI服务暂未实现");
     }
-
 
     /**
      * 根据剧本ID获取剧本详情
@@ -150,7 +147,8 @@ public class ScriptController {
             return ResponseEntity.badRequest().build();
         }
 
-        ScriptFrameworkDto frameworkDto = scriptService.genFrame(request, scriptDetail.getHistory(), scriptDetail.getScript().getContent());
+        ScriptFrameworkDto frameworkDto = scriptService.genFrame(request, scriptDetail.getHistory(),
+                scriptDetail.getScript().getContent());
         if (frameworkDto == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -168,7 +166,7 @@ public class ScriptController {
         }
 
         try {
-            String result = scriptService.genFrameStreamAsync(request);
+            String result = "当前服务已在controller-aistream中实现，请访问对应的流式接口";
             return ResponseEntity.ok(result);
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body("生成失败：" + ex.getMessage());
@@ -215,8 +213,8 @@ public class ScriptController {
      */
     @PutMapping("/update")
     public ResponseEntity<ScriptDetailDto> updateScript(@RequestBody ScriptUpdateRequestEntity request) {
-        if (request.getContent() == null || request.getContent().trim().isEmpty() || 
-            request.getScriptId() <= 0 || request.getStage() <= 0) {
+        if (request.getContent() == null || request.getContent().trim().isEmpty() ||
+                request.getScriptId() <= 0 || request.getStage() <= 0) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -245,19 +243,18 @@ public class ScriptController {
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-
         if (authentication != null && authentication.isAuthenticated()) {
             try {
                 // 获取存储在 authentication 中的 userId（保存在 details 字段）
-                Integer userId = (Integer) authentication.getDetails();  // 强制转换为 Integer 类型
-                return userId;  // 返回 userId
+                Integer userId = (Integer) authentication.getDetails(); // 强制转换为 Integer 类型
+                return userId; // 返回 userId
             } catch (Exception e) {
                 System.out.println("Error retrieving userId: " + e.getMessage());
-                return 1;  // 如果出错，返回默认的 1
+                return 1; // 如果出错，返回默认的 1
             }
         }
 
-        return 1;  // 如果未认证，返回默认的 1
+        return 1; // 如果未认证，返回默认的 1
     }
 
 }

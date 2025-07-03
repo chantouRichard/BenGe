@@ -1,10 +1,16 @@
 package com.bengebackend.controller;
 
 import com.bengebackend.entity.SloganRequestEntity;
+import com.bengebackend.entity.AIMsgDevide;
+import com.bengebackend.model.ScriptHistory;
 import com.bengebackend.service.AIService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
 import lombok.extern.slf4j.Slf4j;
+import com.bengebackend.service.ScriptService;
+import com.bengebackend.dto.ScriptDetailDto;
+import com.bengebackend.entity.ScriptReplyRequestEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,12 +20,13 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-
 
 @RestController
 @RequestMapping("/api/ai")
@@ -35,6 +42,9 @@ public class AIStreamController {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ScriptService scriptService;
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -107,6 +117,75 @@ public class AIStreamController {
     }
 
     /**
+     * GenFramework流式输出接口
+     */
+    @PostMapping(value = "/genframework/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter generateFrameworkStream(@RequestBody ScriptReplyRequestEntity request) {
+        SseEmitter emitter = new SseEmitter(0L);
+        // 准备消息
+        ScriptDetailDto sdd = scriptService.getScriptByIdAsync(request.getScriptId());
+        List<ScriptHistory> history = sdd.getHistory();
+        List<Map<String, String>> messages = new ArrayList<>();
+        for (ScriptHistory h : history) {
+            Map<String, String> msg = new HashMap<>();
+            if (h.getResponse() == "" && h.getMessage() != "") {
+                msg.put("role", "user");
+                msg.put("content", h.getMessage());
+            } else {
+                msg.put("role", "assistant");
+                msg.put("content", h.getResponse());
+            }
+            messages.add(msg);
+        }
+        messages.add(new HashMap<String, String>() {
+            {
+                put("role", "user");
+                put("content", request.getMessage());
+            }
+        });
+
+        // 启动异步流式处理
+        CompletableFuture<AIMsgDevide> future = aiService.GenFrameworkStream(messages, chunk -> {
+
+            try {
+                // 发送数据块到客户端
+                emitter.send(SseEmitter.event()
+                        .name("message") // 事件名称
+                        .data(chunk) // 实际内容
+                        .reconnectTime(3000));// 重连时间
+            } catch (IOException e) {
+                // 发送失败时取消任务
+                throw new RuntimeException("SSE发送失败", e);
+            }
+        });
+
+        // 处理完成/异常情况
+        future.whenComplete((result, ex) -> {
+            if (ex != null) {
+                // 异常处理
+                emitter.completeWithError(ex);
+            } else {
+                // 正常完成
+                emitter.complete();
+                scriptService.updateScriptAsync(request.getScriptId(), result.getTitle(), result.getStrScript(), 2);
+            }
+        });
+
+        // 处理连接关闭
+        emitter.onCompletion(() -> {
+            if (!future.isDone()) {
+                future.cancel(true); // 取消仍在进行的任务
+            }
+        });
+
+        emitter.onTimeout(() -> {
+            future.cancel(true); // 超时取消任务
+        });
+
+        return emitter;
+    }
+
+    /**
      * 测试接口
      */
     @GetMapping("/test")
@@ -114,73 +193,114 @@ public class AIStreamController {
         return ResponseEntity.ok("AI流式服务运行正常");
     }
 
-
     @PostMapping("/generate-nodes")
     public ResponseEntity<Map<String, Object>> generateNodes(@RequestBody Map<String, Object> request) {
-            try {
-                String userInput = (String) request.get("userInput");
-                String designerType = (String) request.get("designerType");
-                String contextData = (String) request.get("contextData");
+        try {
+            String userInput = (String) request.get("userInput");
+            String designerType = (String) request.get("designerType");
+            String contextData = (String) request.get("contextData");
 
-                log.info("AI生成请求: 类型={}, 输入={}, 上下文={}", designerType, userInput, contextData);
+            log.info("AI生成请求: 类型={}, 输入={}, 上下文={}", designerType, userInput, contextData);
 
-                // 构建AI提示词
-                String prompt = buildPrompt(userInput, designerType, null, contextData);
+            // 构建AI提示词
+            String prompt = buildPrompt(userInput, designerType, null, contextData);
 
-                // 调用AI
-                String aiResponse = qwenChatModel.chat(prompt);
-                log.info("AI原始回复: {}", aiResponse);
+            // 调用AI
+            String aiResponse = qwenChatModel.chat(prompt);
+            log.info("AI原始回复: {}", aiResponse);
 
-                // 解析AI回复
-                List<Map<String, Object>> nodes = parseAiResponse(aiResponse);
+            // 解析AI回复
+            List<Map<String, Object>> nodes = parseAiResponse(aiResponse);
 
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("nodes", nodes);
-                response.put("message", "成功生成" + nodes.size() + "个节点");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("nodes", nodes);
+            response.put("message", "成功生成" + nodes.size() + "个节点");
 
-                return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
 
-            } catch (Exception e) {
-                log.error("AI生成失败", e);
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("success", false);
-                errorResponse.put("message", "生成失败: " + e.getMessage());
-                return ResponseEntity.ok(errorResponse);
-            }
+        } catch (Exception e) {
+            log.error("AI生成失败", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "生成失败: " + e.getMessage());
+            return ResponseEntity.ok(errorResponse);
+        }
+    }
+
+    private String buildPrompt(String userInput, String designerType, Integer count, String contextData) {
+        StringBuilder prompt = new StringBuilder();
+
+        // 根据设计师类型构建不同的提示词
+        switch (designerType) {
+            case "narrative":
+                prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的场景节点。\n\n");
+                break;
+            case "character":
+                prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的角色节点。\n\n");
+                break;
+            case "clue":
+                prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的线索节点。\n\n");
+                break;
+            case "atmosphere":
+                prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的氛围节点。\n\n");
+                break;
+            default:
+                prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的节点。\n\n");
         }
 
-        private String buildPrompt(String userInput, String designerType, Integer count, String contextData) {
-            StringBuilder prompt = new StringBuilder();
+        if (contextData != null && !contextData.isEmpty()) {
+            prompt.append("当前协作状态上下文：\n").append(contextData).append("\n\n");
+        }
 
-            // 根据设计师类型构建不同的提示词
-            switch (designerType) {
-                case "narrative":
-                    prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的场景节点。\n\n");
-                    break;
-                case "character":
-                    prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的角色节点。\n\n");
-                    break;
-                case "clue":
-                    prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的线索节点。\n\n");
-                    break;
-                case "atmosphere":
-                    prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的氛围节点。\n\n");
-                    break;
-                default:
-                    prompt.append("你是剧本杀创作助手，需要根据用户需求智能生成合适数量的节点。\n\n");
-            }
+        prompt.append("用户需求：").append(userInput).append("\n\n");
 
-            if (contextData != null && !contextData.isEmpty()) {
-                prompt.append("当前协作状态上下文：\n").append(contextData).append("\n\n");
-            }
+        // 根据设计师类型生成不同的字段结构
+        prompt.append("请根据用户需求智能决定生成合适数量的节点（通常2-6个），每个节点包含以下字段：\n");
+        prompt.append("{\n");
 
-            prompt.append("用户需求：").append(userInput).append("\n\n");
-
-            // 根据设计师类型生成不同的字段结构
-            prompt.append("请根据用户需求智能决定生成合适数量的节点（通常2-6个），每个节点包含以下字段：\n");
-            prompt.append("{\n");
-
+        switch (designerType) {
+            case "narrative":
+                prompt.append("  \"title\": \"场景名称\",\n");
+                prompt.append("  \"timeLabel\": \"时间标签(如DAY1 09:00)\",\n");
+                prompt.append("  \"characters\": \"涉及角色\",\n");
+                prompt.append("  \"clues\": \"相关线索\",\n");
+                prompt.append("  \"sceneDescription\": \"场景详细描述\",\n");
+                prompt.append("  \"nodeConnections\": \"与其他节点的关系\",\n");
+                prompt.append("  \"notes\": \"备注\"\n");
+                break;
+            case "character":
+                prompt.append("  \"name\": \"角色姓名\",\n");
+                prompt.append("  \"occupation\": \"职业\",\n");
+                prompt.append("  \"age\": \"年龄\",\n");
+                prompt.append("  \"background\": \"背景故事\",\n");
+                prompt.append("  \"personality\": \"性格特点\",\n");
+                prompt.append("  \"motivation\": \"动机\",\n");
+                prompt.append("  \"secrets\": \"秘密\",\n");
+                prompt.append("  \"relationships\": \"人际关系\",\n");
+                prompt.append("  \"notes\": \"备注\"\n");
+                break;
+            case "clue":
+                prompt.append("  \"title\": \"线索名称\",\n");
+                prompt.append("  \"type\": \"线索类型\",\n");
+                prompt.append("  \"description\": \"线索描述\",\n");
+                prompt.append("  \"location\": \"发现地点\",\n");
+                prompt.append("  \"relatedCharacters\": \"相关角色\",\n");
+                prompt.append("  \"importance\": \"重要程度\",\n");
+                prompt.append("  \"hiddenInfo\": \"隐藏信息\",\n");
+                prompt.append("  \"notes\": \"备注\"\n");
+                break;
+            case "atmosphere":
+                prompt.append("  \"title\": \"氛围名称\",\n");
+                prompt.append("  \"mood\": \"情绪氛围(如：紧张、平静、神秘)\",\n");
+                prompt.append("  \"lighting\": \"灯光设置\",\n");
+                prompt.append("  \"music\": \"背景音乐\",\n");
+                prompt.append("  \"weather\": \"天气状况\",\n");
+                prompt.append("  \"timeOfDay\": \"时间段\",\n");
+                prompt.append("  \"sceneElements\": \"场景元素\",\n");
+                prompt.append("  \"notes\": \"备注\"\n");
+                break;
+        }
             switch (designerType) {
                 case "narrative":
                     prompt.append("  \"title\": \"场景名称\",\n");
@@ -223,48 +343,46 @@ public class AIStreamController {
                     break;
             }
 
-            prompt.append("}\n\n");
-            prompt.append("请直接返回JSON数组格式，不要其他解释：");
+        prompt.append("}\n\n");
+        prompt.append("请直接返回JSON数组格式，不要其他解释：");
 
-            return prompt.toString();
-        }
+        return prompt.toString();
+    }
 
+    private List<Map<String, Object>> parseAiResponse(String aiResponse) {
+        try {
+            // 查找JSON数组
+            int start = aiResponse.indexOf('[');
+            int end = aiResponse.lastIndexOf(']');
 
-
-        private List<Map<String, Object>> parseAiResponse(String aiResponse) {
-            try {
-                // 查找JSON数组
-                int start = aiResponse.indexOf('[');
-                int end = aiResponse.lastIndexOf(']');
-
-                if (start != -1 && end != -1 && end > start) {
-                    String jsonPart = aiResponse.substring(start, end + 1);
-                    return objectMapper.readValue(jsonPart, List.class);
-                }
-
-                return createDefaultNodes();
-
-            } catch (Exception e) {
-                log.error("解析AI回复失败: {}", aiResponse, e);
-                return createDefaultNodes();
+            if (start != -1 && end != -1 && end > start) {
+                String jsonPart = aiResponse.substring(start, end + 1);
+                return objectMapper.readValue(jsonPart, List.class);
             }
+
+            return createDefaultNodes();
+
+        } catch (Exception e) {
+            log.error("解析AI回复失败: {}", aiResponse, e);
+            return createDefaultNodes();
         }
+    }
 
-        private List<Map<String, Object>> createDefaultNodes() {
-            List<Map<String, Object>> nodes = new ArrayList<>();
+    private List<Map<String, Object>> createDefaultNodes() {
+        List<Map<String, Object>> nodes = new ArrayList<>();
 
-            // 默认生成2个节点，避免固定数量
-            for (int i = 1; i <= 2; i++) {
-                Map<String, Object> node = new HashMap<>();
-                node.put("title", "AI生成场景" + i);
-                node.put("timeLabel", "DAY1 " + (8 + i) + ":00");
-                node.put("characters", "待定角色");
-                node.put("clues", "待定线索");
-                node.put("sceneDescription", "AI自动生成的场景描述");
-                node.put("nodeConnections", "与其他场景相关");
-                node.put("notes", "AI生成失败时的默认节点");
-                nodes.add(node);
-            }
-            return nodes;
+        // 默认生成2个节点，避免固定数量
+        for (int i = 1; i <= 2; i++) {
+            Map<String, Object> node = new HashMap<>();
+            node.put("title", "AI生成场景" + i);
+            node.put("timeLabel", "DAY1 " + (8 + i) + ":00");
+            node.put("characters", "待定角色");
+            node.put("clues", "待定线索");
+            node.put("sceneDescription", "AI自动生成的场景描述");
+            node.put("nodeConnections", "与其他场景相关");
+            node.put("notes", "AI生成失败时的默认节点");
+            nodes.add(node);
+        }
+        return nodes;
     }
 }
