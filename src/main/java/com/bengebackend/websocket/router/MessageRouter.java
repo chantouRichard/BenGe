@@ -119,6 +119,14 @@ public class MessageRouter {
             message.setPersonNodes(parseList(jsonNode.get("personNodes"), WebSocketMessage.PersonNode.class));
         }
 
+        if(jsonNode.has("atmosphereNodes")){
+            message.setAtmosphereNodes(parseList(jsonNode.get("atmosphereNodes"), WebSocketMessage.AtmosphereNode.class));
+        }
+
+        if(jsonNode.has("atmosphereEdges")){
+            message.setAtmosphereEdges(parseList(jsonNode.get("atmosphereEdges"), WebSocketMessage.AtmosphereEdge.class));
+        }
+
         return message;
     }
 
