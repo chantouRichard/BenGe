@@ -38,6 +38,18 @@ public class WebSocketMessage {
     /** 用户认证 Token（用于 auth 类型消息） */
     private String token;
 
+    /** 选择关键词数组 */
+    private List<String> key;
+
+    /** 确认选择的关键词 */
+    private boolean hasChosen;
+
+    /** 投票数量统计 */
+    private List<Integer> vote;
+
+    /** 确认是否投票 */
+    private boolean hasVoted;
+
     /** 角色名称（如“剧情设计师”“人物设计师”） */
     private String roleName;
 
@@ -63,6 +75,12 @@ public class WebSocketMessage {
      * 线索设计师 - 人物结点列表
      */
     private List<PersonNode> personNodes;
+
+    /** 场景设计师 - 氛围节点列表 */
+    private List<AtmosphereNode> atmosphereNodes;
+
+    /** 场景设计师 - 氛围边列表 */
+    private List<AtmosphereEdge> atmosphereEdges;
 
     /**
      * 剧情设计师节点结构
@@ -227,9 +245,7 @@ public class WebSocketMessage {
         /** 关系 ID 列表 */
         private List<Relationship> relationships;
     }
-    /**
-     * 人物设计师关系列表
-     */
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -249,7 +265,6 @@ public class WebSocketMessage {
         /** 当前状态（如 active、inactive） */
         private String status;
     }
-
 
     /**
      * 人物设计师边结构
@@ -384,4 +399,61 @@ public class WebSocketMessage {
         private List<String> tags;
         private String note;
     }
+
+    /**
+     * 场景设计师 - 氛围节点结构
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AtmosphereNode {
+        private String id;
+        private String type;
+        private Position position;
+        private AtmosphereContent data;
+    }
+
+    /**
+     * 场景设计师 - 氛围节点内容
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AtmosphereContent {
+        private String title;      // 节点标题
+        private String timeLabel;  // 时间标签
+        private String mood;       // 情绪氛围（如：平静、紧张）
+        private String lighting;   // 灯光设置
+        private String music;      // 背景音乐
+        private String weather;    // 天气
+        private String notes;      // 备注
+    }
+
+    /**
+     * 场景设计师 - 氛围边结构
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AtmosphereEdge {
+        private String id;
+        private String source;
+        private String target;
+        private String type;
+        private AtmosphereEdgeContent data;
+    }
+
+    /**
+     * 场景设计师 - 氛围边内容
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AtmosphereEdgeContent {
+        private String type;    // 边类型，如 atmosphere-influence
+        private String label;   // 显示标签
+        private String style;   // 线型，如 dashed
+        private String color;   // 颜色值，如 #ff6b6b
+    }
+
 }

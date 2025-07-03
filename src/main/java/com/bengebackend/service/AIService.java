@@ -20,6 +20,11 @@ public interface AIService {
     CompletableFuture<AIMsgDevide> GenFramework(List<Map<String, String>> msgs);
 
     /**
+     * 根据传入的消息生成剧本框架(流式输出)
+     */
+    CompletableFuture<AIMsgDevide> GenFrameworkStream(List<Map<String, String>> msgs, Consumer<String> callback);
+
+    /**
      * 传入剧本框架及其标题生成详细剧本
      */
     CompletableFuture<String> GenDetail(String Frame, String title);
