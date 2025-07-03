@@ -1,15 +1,15 @@
 <template>
   <div v-if="isVisible" class="collapsible-member-list" :style="{ top: positionTop + 'px' }">
     <div class="member-area" :class="{ collapsed: !isMemberOpen }">
-      <div class="member-header">
+      <!-- <div class="member-header">
         <h4 style="min-width: 72px">成员区</h4>
         <button @click="toggleMemberListVisibility" class="toggle-btn">
           {{ isMemberOpen ? '收起' : '展开' }}
         </button>
-      </div>
+      </div> -->
 
-      <transition name="collapse">
-        <div v-if="isMemberOpen" class="member-list">
+        <div class="member-list">
+          <img style="object-fit: cover;width: 24px;height: 24px;" src="../../../assets/third/open.png"/>
           <div
             class="member-item"
             v-for="(member, index) in socketState.members"
@@ -22,7 +22,6 @@
             </div>
           </div>
         </div>
-      </transition>
     </div>
   </div>
 </template>
@@ -67,17 +66,17 @@ const toggleMemberListVisibility = () => {
 <style scoped>
 .collapsible-member-list {
   position: fixed;
-  top: 50px;
+  top: 10px;
   right: 20px;
-  z-index: 9999;
+  z-index: 1000;
   background:transparent;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
   border-radius: 8px;
   width: 300px;
 }
 
 .member-area {
-  padding: 20px;
+  padding: 2px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -85,11 +84,11 @@ const toggleMemberListVisibility = () => {
   border-radius: 12px;
   background: transparent;
   /* 半透明白色背景 */
-  backdrop-filter: blur(8px);
+  /* backdrop-filter: blur(8px); */
   /* 毛玻璃模糊效果 */
-  box-sizing: border-box;
+  /* box-sizing: border-box; */
   /* 其他样式 */
-  border: 1px solid rgba(0, 0, 0, 0.4); /* 轻微的边框，增加层次感 */
+  /* border: 1px solid rgba(0, 0, 0, 0.4); */
 }
 
 .member-header {
@@ -107,18 +106,19 @@ const toggleMemberListVisibility = () => {
 
 .member-list {
   display: flex;
-  flex-direction: column;
-  margin-top: 10px;
   width: 100%;
   max-width: 100%;
   gap: 24px;
   overflow-y: auto;
+
+  align-items: flex-start;
 }
 
 .member-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   margin-bottom: 4px;
 }
 

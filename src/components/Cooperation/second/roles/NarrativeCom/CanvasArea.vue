@@ -1,8 +1,9 @@
 <template>
   <div class="canvas-container">
-    <VueFlow
+    <VueFlow ref="vueFlowRef"
       class="vue-flow"
       :style="{
+    backgroundSize: computedBackgroundSize,
     backgroundPosition: `${backgroundX}px ${backgroundY}px`
   }"
       :nodes="props.nodes"
@@ -135,6 +136,33 @@ import InferenceNode from '../ClueCom/InferenceNode.vue'
 import PersonNode from '../ClueCom/PersonNode.vue'
 import AtmosphereNode from '../AtmosphereCom/AtmosphereNode.vue'
 
+import html2canvas from 'html2canvas';
+const vueFlowRef = ref(null);
+function exportCanvas() {
+  const el = document.querySelector('.vue-flow'); // 这个比 viewport 更安全
+  if (!el) {
+    console.warn('画布容器未找到');
+    return;
+  }
+
+  html2canvas(el, {
+    useCORS: true,
+    scale: 2,
+    backgroundColor: null, // 可透明背景
+    logging: true,
+  }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = imgData;
+    link.download = 'canvas.png';
+    link.click();
+  }).catch(err => {
+    console.error('截图失败：', err);
+  });
+}
+
+
+
 const props = defineProps({
   nodes: {
     type: Array,
@@ -163,16 +191,26 @@ const props = defineProps({
 // }, { deep: true })
 
 const emit = defineEmits(['node-select', "edge-select" , 'delete-node' , 'node-position-change', "connect-node"])
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
+const zoom = ref(1)
 const backgroundX = ref(0)
 const backgroundY = ref(0)
 
+const computedBackgroundSize = computed(() => {
+  // 假设原始背景图大小为 100%，可以根据需要调整为 auto、cover 等
+  return `${zoom.value * 800}%`
+})
+
 const handleMove = (viewpoint) => {
-  console.log("画布位置:",viewpoint);
+  // Vue Flow 的 move 事件会返回 zoom 和 transform 信息
+  // console.log("handleMove：",viewpoint);
+
+  zoom.value = viewpoint.flowTransform.zoom // 缩放比例
   backgroundX.value = viewpoint.flowTransform.x;
   backgroundY.value = viewpoint.flowTransform.y;
 }
+
 
 // 处理节点事件
 const handleNodeClick = (node) => {
@@ -224,18 +262,7 @@ const forceUpdateNode = (id, newData) => {
   })
 }
 const forceUpdateEdge = (id, newData) => {
-  console.log('forceUpdateEdge', id, newData)
-  // 创建新对象触发响应式更新
-  // const updatedEdge = {
-  //   id,
-  //   data: {
-  //     ...edge.data,
-  //     ...newData
-  //   }
-  // };
 
-  // // 使用 VueFlow 的 updateEdge 方法
-  // updateEdge(updatedEdge, true); // true 表示完全替换边对象
   updateEdge(id, {
     data: { ...newData}
   })
@@ -243,7 +270,8 @@ const forceUpdateEdge = (id, newData) => {
 
 defineExpose({
   forceUpdateNode,
-  forceUpdateEdge
+  forceUpdateEdge,
+  exportCanvas
 })
 
 // 边连接完成事件（拖动新边）
@@ -280,37 +308,21 @@ const handleEdgeUpdate = ({ edge, connection }) => {
   edge.targetHandle = connection.targetHandle
 }
 
-// 实时获取结点坐标，提供给 CustomEdge 用于渲染
-// const getEdgeCoordinates = (sourceId, targetId) => {
-//   const sourceNode = props.nodes.find(n => n.id === sourceId)
-//   const targetNode = props.nodes.find(n => n.id === targetId)
-//   if (!sourceNode || !targetNode) return {}
 
-//   const { x: sourceX, y: sourceY } = sourceNode.position
-//   const { x: targetX, y: targetY } = targetNode.position
-
-//   return {
-//     sourceX: sourceX + 100, // 默认节点宽度中心偏移
-//     sourceY: sourceY + 40,
-//     targetX: targetX + 100,
-//     targetY: targetY + 40
-//   }
-// }
 </script>
 
 <style>
 .canvas-container {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   position: relative;
   overflow: hidden;
+
+  border-radius: 50px;
 }
 
 .vue-flow {
-  /* background: repeating-linear-gradient(0deg, #f7f7f7, #f7f7f7 24px, #e2e2e2 25px); */
-  /* background: transparent; */
-  /* background-color: #F0F1F5; */
-  background-image: url('../../../../../assets/second/canvasback.png');
+  background-image: url('../../../../../assets/second/background.png');
 }
 
 /* 覆盖VueFlow默认节点样式 */

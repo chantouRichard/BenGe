@@ -1,146 +1,159 @@
 <template>
-  <!-- 任务卡片 -->
-  <div
-    class="task-card"
-    :style="{
-      transform: isCardVisible ? 'translateX(0)' : 'translateX(-100%)',
-    }"
-  >
-    <div class="task-card-header">
-      <h1>你的角色：{{}}</h1>
-      <h2>{{ title }}</h2>
-    </div>
-    <p class="task-text">{{ taskText }}</p>
-    <button @click="toggleCard" class="toggle-btn">
-      {{ !isCardVisible ? ">" : "<" }}
-    </button>
-  </div>
+  <div :class="['task-card-wrapper', { 'slide-in': isSliding }]">
+    <!-- Task Card -->
+    <div class="task-card">
+      <div class="task-card-top">
+        <!-- 这是上面的矩形 -->
+        <div class="task-card-head">
+          <!-- 控制按钮 -->
+           <img style="object-fit: cover;width: 30px;height: 30px;" src="../../../assets/second/wink.png"/>
+           <h3 style="margin-left: 4px;">任务卡片</h3>
+          <div
+            v-if="isSliding"
+            class="task-card-toggle"
+            @click="toggleDrawer"
+          >
+            <i class="fas fa-caret-left"></i>
+            <!-- Font Awesome 左箭头图标，代表折叠 -->
+          </div>
+          <div v-else class="task-card-toggle" @click="toggleDrawer">
+            <i class="fas fa-caret-right"></i>
+            <!-- Font Awesome 右箭头图标，代表展开 -->
+          </div>
+        </div>
+        <div class="task-card-content">
+          <!-- 任务卡片内容 -->
+          <p style="width: 250px;">{{ content }}</p>
+        </div>
+      </div>
 
-  <!-- 控制卡片显示的固定按钮 -->
+      <!-- 底部矩形，稍微旋转 -->
+      <div class="task-card-bottom">
+        <div class="task-card-content">
+          <p>More details</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, defineProps } from "vue";
 
-// 接收父组件传入的属性
 const props = defineProps({
-  role: {
+  content: {
     type: String,
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-  taskText: {
-    type: String,
-    required: true,
-  },
-});
+    required: true
+  }
+})
 
-// 控制任务卡片是否显示
-const isCardVisible = ref(true);
-const cardPosition = ref(20); // 初始位置在屏幕外
+const isDrawerOpen = ref(true);
+const isSliding = ref(true);
 
-// 控制卡片滑动进入和退出
-const toggleCard = () => {
-  isCardVisible.value = !isCardVisible.value;
-  cardPosition.value = isCardVisible.value ? 20 : -220; // 进入和退出的动画
+const toggleDrawer = () => {
+  // 先触发旋转
+  isDrawerOpen.value = !isDrawerOpen.value;
+
+  // 延迟触发滑动动画
+  setTimeout(() => {
+    isSliding.value = isDrawerOpen.value;
+  }, 100); // 300ms 与旋转动画时长一致
 };
 </script>
 
 <style scoped>
-/* 任务卡片样式 */
-.task-card {
+.task-card-wrapper {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  transform: translateY(-50%);
-  width: 300px;
-  height: 300px;
-  backdrop-filter: blur(10px); /* 毛玻璃效果 */
-  border-radius: 10px;
-  padding: 20px;
-  color: white;
-  transition: left 0.3s ease; /* 滑动动画 */
-  z-index: 9999;
-  background: transparent;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
-  -webkit-backdrop-filter: blur(12px); /* Safari 支持 */
-
-  border-right: 1px solid rgba(255, 255, 255, 0.2); /* 细边界线 */
-
-  transition: transform 0.3s ease;
-
-  border-width: 4px;
-  border-color: black;
-}
-
-/* 任务卡片头部 */
-.task-card-header {
+  top: 100px;
+  left: -250px;
+  z-index: 9000;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-
-  color: black;
+  transition: transform 0.5s ease; /* 添加平滑过渡 */
 }
 
-h2 {
-  font-size: 18px;
-  font-weight: bold;
-  margin: 0;
+.task-card-wrapper.slide-in {
+  transform: translateX(100%); /* 向左滑动 */
 }
 
-.toggle-btn {
-  background: transparent;
-  border: none;
-  color: white;
-  background-color: black;
-  font-size: 20px;
-  cursor: pointer;
-
-  position: absolute;
-  left: 300px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 60px;
-
-  border-top-right-radius: 16px;
-  border-bottom-right-radius: 16px;
-
-  z-index: 9999;
-
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-/* 任务文本 */
-.task-text {
-  font-size: 14px;
-  margin-top: 10px;
-  color: #000000;
-}
-
-/* 控制卡片显示的固定按钮 */
-.control-btn {
-  position: fixed;
-  top: 300px;
-  left: 20px;
-  background-color: white;
-  color: black;
-  border-color: black;
-  border-width: 4px;
-  padding: 12px 20px;
-  border-radius: 50px;
-  cursor: pointer;
-  font-size: 16px;
+.task-card {
+  position: relative;
+  width: 300px;
+  height: 200px;
+  transform-origin: center;
   transition: transform 0.3s ease;
-  z-index: 9999;
 }
 
-.control-btn:hover {
-  transform: scale(1.1);
+.task-card-top {
+  position: absolute;
+  width: 100%;
+  height: 94%;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* 微微的下方阴影 */
+  /* background-color: white; */
+  background-image: url('../../../assets/second/cardback.png');
+  background-size: cover;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.task-card-head {
+  margin: 10px;
+  width: 100%;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+}
+
+.task-card-bottom {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 更轻微的阴影 */
+  background-color: white;
+  background-image: url('../../../assets/second/cardback.png');
+
+
+  transition: transform 0.5s ease;
+}
+.slide-in .task-card-bottom {
+  top: 4%;
+  left: 8%;
+  transform: rotate(8deg); /* 回正 */
+}
+
+.task-card-top {
+  background-color: white;
+  top: 0;
+  z-index: 2;
+  display: flex;
+}
+
+.task-card-bottom {
+  background-color: #f2f3f6;
+  top: 2%;
+  left: 2%;
+  transform: rotate(0deg); /* 微微旋转 */
+  z-index: 1;
+  display: flex;
+}
+
+.task-card-content {
+  text-align: center;
+  font-size: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+.task-card-toggle {
+  position: absolute;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 3;
 }
 </style>

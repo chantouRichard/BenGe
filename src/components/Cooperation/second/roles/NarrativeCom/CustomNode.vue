@@ -3,13 +3,9 @@
     <!-- 连接点，定义出边起点和终点 -->
     <Handle type="target" position="left" id="left" :class="['vue-flow__handle', 'handle-left']" />
     <Handle type="target" position="right" id="right" :class="['vue-flow__handle', 'handle-right']" />
-    <!-- <Handle type="target" position="top" id="top" :class="['vue-flow__handle', 'handle-top']" />
-    <Handle type="target" position="bottom" id="bottom" :class="['vue-flow__handle', 'handle-bottom']" /> -->
 
     <Handle type="source" position="left" id="left-source" :class="['vue-flow__handle', 'handle-left']" />
     <Handle type="source" position="right" id="right-source" :class="['vue-flow__handle', 'handle-right']" />
-    <!-- <Handle type="source" position="top" id="top-source" :class="['vue-flow__handle', 'handle-top']" />
-    <Handle type="source" position="bottom" id="bottom-source" :class="['vue-flow__handle', 'handle-bottom']" /> -->
     <div class="node-content">
       <span class="node-title">{{ props.data?.title || '未命名节点' }}</span>
       <button class="delete-button" @click.stop="handleDelete">
@@ -63,7 +59,6 @@ const handleDelete = (event) => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1;
   cursor: pointer;
-  /* transform: translate(-50%, -50%); 居中调整 */
   visibility: visible !important;
 }
 

@@ -199,7 +199,7 @@ const handleClose = () => {
   height: 100%;
   /* max-width: 400px; */
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 9000;
   display: flex;
   justify-content: flex-end;
 }

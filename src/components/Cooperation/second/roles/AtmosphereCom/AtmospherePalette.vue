@@ -1,4 +1,5 @@
 <template>
+  <teleport to="body">
   <div v-if="visible" class="palette-overlay" @click="handleOverlayClick">
     <div class="palette-panel" @click.stop>
       <div class="palette-header">
@@ -63,6 +64,7 @@
       </div>
     </div>
   </div>
+  </teleport>
 </template>
 
 <script setup>

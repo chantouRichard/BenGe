@@ -1,4 +1,5 @@
 <template>
+  <teleport to="body">
   <div class="overlay">
     <div class="selector-dialog">
       <button class="close-btn" @click="$emit('cancel')" aria-label="关闭弹窗">×</button>
@@ -35,6 +36,7 @@
       </div>
     </div>
   </div>
+  </teleport>
 </template>
 
 <script setup>

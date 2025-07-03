@@ -2,23 +2,17 @@
   <div class="edit-area">
 
     <!-- 全屏编辑区域 -->
-    <teleport to="body">
       <transition name="fullscreen-slide">
         <div class="canvas fullscreen">
-          <div style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;">第二阶段<br>你的角色是：{{ roles[userRole].name }}</div>
+          <!-- <div style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;">第二阶段<br>你的角色是：{{ roles[userRole].name }}</div> -->
           <!-- <button style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;" @click="$emit('nextStage')">下一阶段</button> -->
           <div class="canvas"> 
             <NarrativeWorkspace
               @updateGraph="handleGraphUpdate"
             />
-            <AtmosphereDesign
-              v-if="userRole == 3"
-              @updateGraph="handleGraphUpdate"
-            />
           </div>
         </div>
       </transition>
-    </teleport>
   </div>
 </template>
 
@@ -114,7 +108,9 @@ export default {
   width: 100%;
   height: 100%;
 
-  background-image: url(~@/assets/second/canvas.png);
+  /* background:transparent; */
+  background-image: url('../../../assets/chat-main-bg.png');
+
 
   background-size: cover;
   background-position: center;
