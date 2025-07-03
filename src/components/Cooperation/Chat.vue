@@ -107,11 +107,22 @@ const getCurrentTime = () => {
 const sendChatMessage = () => {
   if (newMessage.value.trim() === "") return;
 
-  let messageContent=newMessage.value;
+  let messageContent = newMessage.value;
 
-  if(newMessage.value.startsWith('@ai')){
-    const ContextData=collectContextData();
-    messageContent=`${newMessage.value}\n\n[CONTEXT_DATA]${JSON.stringify(ContextData)}[/CONTEXT_DATA]`;
+  if (newMessage.value.startsWith('@ai')) {
+    try {
+      const contextData = collectContextData();
+      // 使用更简洁的格式，避免标签解析问题
+      messageContent = `${newMessage.value}
+
+[CONTEXT_DATA]
+${JSON.stringify(contextData)}
+[/CONTEXT_DATA]`;
+    } catch (error) {
+      console.error('收集上下文数据失败:', error);
+      // 如果上下文收集失败，仍然发送原始消息
+      messageContent = newMessage.value;
+    }
   }
 
   const messageData = {

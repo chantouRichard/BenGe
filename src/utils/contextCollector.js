@@ -185,20 +185,36 @@ const collectAllEdges = () => {
   // 收集画布边
   if (canvasStore.edges) {
     canvasStore.edges.forEach(edge => {
+      // 根据连接的节点类型判断边的分类
+      const sourceNode = canvasStore.nodes?.find(n => n.id === edge.source)
+      const targetNode = canvasStore.nodes?.find(n => n.id === edge.target)
+
+      // 为角色-场景关系生成更清晰的relationship描述
+      let relationship = edge.data?.relationship || edge.data?.label || '连接'
+      if (edge.type === 'character-scene' && edge.data?.participationType) {
+        const typeMap = {
+          'protagonist': '主角参与',
+          'supporting': '配角参与',
+          'antagonist': '反派参与',
+          'witness': '见证者',
+          'victim': '受害者',
+          'helper': '帮助者',
+          'obstacle': '阻碍者',
+          'other': '其他参与'
+        }
+        relationship = typeMap[edge.data.participationType] || '参与'
+      }
+
       const edgeData = {
         id: edge.id,
         source: edge.source,
         target: edge.target,
         type: edge.type,
-        relationship: edge.data?.relationship || edge.data?.label || '连接',
+        relationship: relationship,
         description: edge.data?.description || '',
         data: { ...edge.data }
       }
-      
-      // 根据连接的节点类型判断边的分类
-      const sourceNode = canvasStore.nodes?.find(n => n.id === edge.source)
-      const targetNode = canvasStore.nodes?.find(n => n.id === edge.target)
-      
+
       if (sourceNode?.type === NODE_TYPES.ATMOSPHERE || targetNode?.type === NODE_TYPES.ATMOSPHERE) {
         edgesByType.atmosphere.push(edgeData)
       } else {
