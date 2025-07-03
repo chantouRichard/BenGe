@@ -99,21 +99,6 @@
               </div>
             </div>
           </div>
-          
-          <!-- 最近节点预览 -->
-          <div v-if="contextData.recentNodes?.length" class="recent-nodes">
-            <h5>最近节点</h5>
-            <div class="node-list">
-              <div 
-                v-for="node in contextData.recentNodes.slice(0, 3)" 
-                :key="node.id"
-                class="node-item"
-              >
-                <i :class="getNodeIcon(node.type)" class="node-icon"></i>
-                <span class="node-title">{{ node.title || node.name || '未命名' }}</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -249,15 +234,7 @@ const getDesignerDescription = (type) => designerConfig[type]?.description || ''
 const getDesignerIcon = (type) => designerConfig[type]?.icon || 'fas fa-magic'
 const getInputPlaceholder = (type) => designerConfig[type]?.placeholder || '请描述您的需求...'
 
-const getNodeIcon = (type) => {
-  const iconMap = {
-    custom: 'fas fa-theater-masks',
-    character: 'fas fa-user',
-    clue: 'fas fa-search',
-    atmosphere: 'fas fa-cloud'
-  }
-  return iconMap[type] || 'fas fa-circle'
-}
+
 
 const selectTemplate = (template) => {
   selectedTemplate.value = template
@@ -494,71 +471,124 @@ watch(() => props.generateError, (newError) => {
 
 .templates-section {
   width: 280px;
-  background: #f8fafc;
+  background: #ffffff;
   border-right: 1px solid #e2e8f0;
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto;
 }
 
 .templates-section h4 {
-  margin: 0 0 16px 0;
-  color: #2d3748;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 20px 0;
+  color: #1a202c;
+  font-size: 18px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #667eea;
 }
 
 .template-category {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .template-category h5 {
   margin: 0 0 12px 0;
-  color: #4a5568;
-  font-size: 14px;
-  font-weight: 500;
+  color: #667eea;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .template-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 14px 12px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  margin-bottom: 6px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.template-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #667eea;
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
 
 .template-item:hover {
-  background: #e2e8f0;
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateX(2px);
+}
+
+.template-item:hover::before {
+  transform: scaleY(1);
 }
 
 .template-item.active {
+  background: #f0f4ff;
+  border-color: #667eea;
+  border-width: 2px;
+}
+
+.template-item.active::before {
+  transform: scaleY(1);
   background: #667eea;
-  color: white;
+  width: 4px;
 }
 
 .template-icon {
-  font-size: 16px;
-  width: 20px;
+  font-size: 18px;
+  width: 24px;
   text-align: center;
+  color: #667eea;
+  transition: color 0.3s ease;
+}
+
+.template-item.active .template-icon {
+  color: #667eea;
 }
 
 .template-info {
   flex: 1;
+  min-width: 0;
 }
 
 .template-name {
   display: block;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
+  color: #2d3748;
+  line-height: 1.4;
+  margin-bottom: 2px;
 }
 
 .template-desc {
   display: block;
   font-size: 12px;
-  opacity: 0.7;
-  margin-top: 2px;
+  color: #718096;
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.template-item.active .template-name {
+  color: #1a202c;
+  font-weight: 700;
+}
+
+.template-item.active .template-desc {
+  color: #4a5568;
 }
 
 .input-section {
@@ -669,43 +699,7 @@ watch(() => props.generateError, (newError) => {
   margin-top: 2px;
 }
 
-.recent-nodes {
-  margin-top: 24px;
-}
 
-.recent-nodes h5 {
-  margin: 0 0 12px 0;
-  color: #4a5568;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.node-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: white;
-  border-radius: 6px;
-  margin-bottom: 6px;
-  border: 1px solid #e2e8f0;
-}
-
-.node-icon {
-  color: #667eea;
-  font-size: 14px;
-  width: 16px;
-  text-align: center;
-}
-
-.node-title {
-  font-size: 13px;
-  color: #2d3748;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 .result-section {
   padding: 20px 32px;
