@@ -26,3 +26,9 @@ server:
 logging:
   level:
     com.bengebackend: debug
+
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://127.0.0.1:6379"
+

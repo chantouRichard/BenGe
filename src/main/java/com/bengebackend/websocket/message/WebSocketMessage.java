@@ -38,6 +38,18 @@ public class WebSocketMessage {
     /** 用户认证 Token（用于 auth 类型消息） */
     private String token;
 
+    /** 选择关键词数组 */
+    private List<String> key;
+
+    /** 确认选择的关键词 */
+    private boolean hasChosen;
+
+    /** 投票数量统计 */
+    private List<Integer> vote;
+
+    /** 确认是否投票 */
+    private boolean hasVoted;
+
     /** 角色名称（如“剧情设计师”“人物设计师”） */
     private String roleName;
 
