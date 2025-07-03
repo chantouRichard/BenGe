@@ -32,6 +32,14 @@ public class AiMessageProcessor {
         try {
             // 清理消息内容，移除@ai前缀
             String cleanContent = content.replaceFirst("^@ai\\s*", "").trim();
+            String contextData="";
+            if(cleanContent.contains("[CONTEXT_DATA]")&&cleanContent.contains("[/CONTEXT_DATA]")){
+                int startIdx=cleanContent.indexOf("[CONTEXT_DATA]");
+                int endIdx=cleanContent.indexOf("[/CONTEXT_DATA]");
+                contextData=cleanContent.substring(startIdx,endIdx);
+                cleanContent=cleanContent.substring(0,startIdx).trim();
+            }
+
             if (cleanContent.isEmpty()) {
                 cleanContent = "你好";
             }
@@ -39,10 +47,13 @@ public class AiMessageProcessor {
             log.info("用户 {} 在房间 {} 向AI发送消息: {}", user.getUsername(), roomId, cleanContent);
             
             // 先广播用户的原始消息
-            broadcastUserMessage(roomId, userId, user, content);
+            broadcastUserMessage(roomId, userId, user, "@ai"+cleanContent);
+
+            String enhancePrompt= buildEnhancedPrompt(cleanContent, contextData, user.getUsername(), roomId);
+
             
             // 调用AI服务获取回复
-            String aiResponse = chatAiAssistant.chat(cleanContent);
+            String aiResponse = chatAiAssistant.chat(enhancePrompt);
             
             // 广播AI回复
             broadcastAiMessage(roomId, aiResponse);
@@ -54,7 +65,32 @@ public class AiMessageProcessor {
             broadcastAiErrorMessage(roomId);
         }
     }
-    
+
+
+
+    /**
+     * 构建增强的AI提示词
+     */
+    private String buildEnhancedPrompt(String userMessage, String contextData, String username, String roomId) {
+        StringBuilder prompt = new StringBuilder();
+
+        prompt.append("你是团队的AI创作助手，正在和大家一起协作设计剧本杀。请用自然、友好的语气参与讨论，就像团队中的一员。\n\n");
+
+        // 如果有上下文数据，直接提供给AI
+        if (!contextData.isEmpty()) {
+            prompt.append("当前协作数据：\n");
+            prompt.append("```json\n");
+            prompt.append(contextData);
+            prompt.append("\n```\n\n");
+        }
+
+        prompt.append(username).append("：").append(userMessage);
+
+        prompt.append("\n\n请基于当前的设计进度，用自然的聊天语气回复。不要列举分析步骤，直接给出你的讨论回答：");
+
+        return prompt.toString();
+    }
+
     /**
      * 广播用户消息
      */
