@@ -177,7 +177,7 @@ export default defineComponent({
       loading.value = true;
 
       try {
-        const response = await fetch("/api/Script/chat/stream", {
+        const response = await fetch("/api/ai/chat/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
