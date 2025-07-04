@@ -5,10 +5,11 @@ import { useCharacterStore } from "./character";
 import { useClueStore } from "./clue";
 import { useAtmosphereStore } from "./atmosphere";
 
-const canvasStore = useCanvasStore();
-const characterStore = useCharacterStore();
-const clueStore = useClueStore();
-const atmosphereStore = useAtmosphereStore();
+// 不要在顶层调用 useStore，先定义变量
+let canvasStore = null;
+let characterStore = null;
+let clueStore = null;
+let atmosphereStore = null;
 
 const socketState = reactive({
   socket: null,
@@ -27,7 +28,7 @@ const socketState = reactive({
   nodes: {},
   edges: {},
 
-  userRole:-1,
+  userRole: -1,
   roles: [
     {
       name: "剧情设计师",
@@ -130,15 +131,19 @@ function setupWebSocket() {
         socketState.currentUsername
       );
     } else if (msg.type === "chat") {
-      socketState.messages.push({
+      const isAIMessage = msg.username === "AI助手" || msg.userId === -1;
+      const newMessage = {
         ...msg,
         isMe: msg.userId === socketState.currentUserId,
         sender: msg.username,
         content: msg.content,
         time: msg.time,
         avatar: msg.avatar || socketState.avatar,
-      });
-      console.log("数组：", socketState.messages);
+        isAI: isAIMessage,
+      };
+
+      socketState.messages.push(newMessage);
+      console.log("消息数组更新，当前长度:", socketState.messages.length);
     } else if (msg.type === "system") {
       socketState.messages.push({
         type: "system",
@@ -154,8 +159,15 @@ function setupWebSocket() {
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
       handleRoleSelection(msg.roleName, msg.username);
-    } else if (msg.type === "canvas" || msg.type === "character" || msg.type === "clue" || msg.type === "atmosphere") {
+    } else if (
+      msg.type === "canvas" ||
+      msg.type === "character" ||
+      msg.type === "clue" ||
+      msg.type === "atmosphere"
+    ) {
       handleCanvas(msg);
+    } else if (msg.type === "vote") {
+      handleVote(msg);
     }
   };
 
@@ -251,14 +263,14 @@ function handleCanvas(msg) {
   } else if (msg.type == "character") {
     characterStore.nodes = msg.characterNodes || [];
     characterStore.edges = msg.characterEdges || [];
-  } else if(msg.type == "clue") {
+  } else if (msg.type == "clue") {
     clueStore.nodes = [
-    ...(msg.clueNodes || []),
-    ...(msg.inferenceNodes || []),
-    ...(msg.personNodes || []),
-  ];
+      ...(msg.clueNodes || []),
+      ...(msg.inferenceNodes || []),
+      ...(msg.personNodes || []),
+    ];
     clueStore.edges = msg.clueEdges || [];
-  } else{
+  } else {
     atmosphereStore.nodes = msg.atmosphereNodes || [];
     atmosphereStore.edges = msg.atmosphereEdges || [];
   }
@@ -271,6 +283,34 @@ function updateMembers(roleName, username) {
       member.selectedRole = roleName;
     }
   });
+}
+
+// 同步投票部分
+function handleVote(msg) {
+  if (msg.key && msg.username) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.key = msg.key;
+    }
+  }
+  if (msg.hasChosen) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.hasChosen = msg.hasChosen;
+    }
+  }
+  if (msg.vote) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.vote = msg.vote;
+    }
+  }
+  if (msg.hasVoted) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.hasVoted = msg.hasVoted;
+    }
+  }
 }
 
 //

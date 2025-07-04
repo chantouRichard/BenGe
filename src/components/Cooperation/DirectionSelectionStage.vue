@@ -1,42 +1,30 @@
 <template>
   <div class="direction-selection-stage">
-    <div class="header">
-      <div class="left-menu">
-        <div class="stage-title">
-          <i class="fa-solid fa-bars-staggered title-icon"></i>
-          <span class="title">方向选择</span>
-        </div>
-      </div>
-      <div class="right-menu">
-        <div class="back-image"></div>
-        <div class="menu-front">
-          <i class="fa-solid fa-scroll logo"></i>
-          <ElButton @click="$emit('updateStage',1)">下一阶段</ElButton>
-          <div class="menu-group">
-            <div class="menu-item">BenGe.Vision</div>
-            <i class="fa-solid fa-circle-info menu-icon"></i>
-            <img src="../../assets/login.png" alt="avatar" class="avatar" />
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="main-content">
       <!-- 左侧区域 -->
+
       <div class="left-panel">
+        <div class="left-panel-header">
+          <div style="font-size: 24px; font-weight: bold;margin-left: 50px;">BenGe.Vision</div>
+          <button class="next-btn" @click="$emit('updateStage', 1)">
+            下一阶段
+          </button>
+        </div>
         <DirectionSelect
-            v-if="!showVoteStage"
-            @confirm="handleDirectionConfirm"
-            class="direction-select-component"
+          v-if="!showVoteStage"
+          @confirm="handleDirectionConfirm"
+          class="direction-select-component"
         />
+        <div v-else-if="AIGenerate"></div>
         <VoteStage
-            v-else
-            :room-id="roomId"
-            :members="members"
-            :all-directions="allDirections"
-            @submitVote="handleVoteSubmit"
-            @regenerateSuggestion="handleRegenerateRequest"
-            class="vote-stage-component"
+          v-else
+          :room-id="roomId"
+          :members="members"
+          :all-directions="allDirections"
+          @submitVote="handleVoteSubmit"
+          @regenerateSuggestion="handleRegenerateRequest"
+          @next-stage="$emit('updateStage', 1)"
+          class="vote-stage-component"
         />
       </div>
 
@@ -46,13 +34,13 @@
         <MemberList members="members" />
 
         <!-- 聊天区 -->
-        <Chat
-            :room-id="String(roomId)"
-            :user-id="currentUser.id"
-            :user-name="currentUser.name"
-            :avatar="currentUser.avatar"
-            @membersUpdated="updateMembers"
-            class="chat-component"
+        <ChatPanel
+          :room-id="String(roomId)"
+          :user-id="currentUser.id"
+          :user-name="currentUser.name"
+          :avatar="currentUser.avatar"
+          @membersUpdated="updateMembers"
+          class="chat-component"
         />
       </div>
     </div>
@@ -60,15 +48,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import DirectionSelect from '@/components/Cooperation/first/DirectionSelect.vue';
+import { ref, computed, watch } from "vue";
+import { useRoute } from "vue-router";
+import DirectionSelect from "@/components/Cooperation/first/DirectionSelect.vue";
 import VoteStage from "@/components/Cooperation/first/VoteStage.vue";
-import Chat from './Chat.vue';
-import loginImage from '../../assets/login.png';
-import { socketState } from '@/stores/socket';
+import ChatPanel from "./first/ChatPanel.vue";
+import loginImage from "../../assets/login.png";
+import { socketState } from "@/stores/socket";
 import MemberList from "@/components/Cooperation/first/MemberList.vue";
-import { ElButton } from 'element-plus';
+import { ElButton } from "element-plus";
+import AIGenerateDialog from "./second/roles/AIGenerateDialog.vue";
 
 const route = useRoute();
 const isMemberOpen = ref(true);
@@ -82,7 +71,7 @@ const roomId = computed(() => {
 
 // 从localStorage获取用户信息
 const currentUser = computed(() => {
-  const username = localStorage.getItem('username') || '匿名用户';
+  const username = localStorage.getItem("username") || "匿名用户";
   return {
     id: socketState.userId || `user_${username}_${Date.now()}`,
     name: username,
@@ -101,27 +90,30 @@ const updateMembers = (membersList) => {
 
   // 更新socketState中的成员数据
   socketState.members = membersList
-      .filter(member =>
-          member &&
-          member.id != null &&
-          String(member.id) !== currentUserId &&
-          member.roomId === roomId.value
-      )
-      .map(m => ({
-        id: m.id,
-        username: m.name || m.username || '匿名用户',
-        avatar: m.avatar || loginImage,
-        selectedDirections: m.selectedDirections || []
-      }));
+    .filter(
+      (member) =>
+        member &&
+        member.id != null &&
+        String(member.id) !== currentUserId &&
+        member.roomId === roomId.value
+    )
+    .map((m) => ({
+      id: m.id,
+      username: m.name || m.username || "匿名用户",
+      avatar: m.avatar || loginImage,
+      selectedDirections: m.selectedDirections || [],
+    }));
 };
 
 const handleDirectionConfirm = (selectedDirections) => {
   // json格式发送到后端并收集所有成员的选择
-  socketState.socket.send(JSON.stringify({
-    type: 'submit_directions',
-    roomId: roomId.value,
-    directions: selectedDirections
-  }))
+  socketState.socket.send(
+    JSON.stringify({
+      type: "submit_directions",
+      roomId: roomId.value,
+      directions: selectedDirections,
+    })
+  );
   allDirections.value.push(selectedDirections);
 
   showVoteStage.value = true;
@@ -129,28 +121,28 @@ const handleDirectionConfirm = (selectedDirections) => {
 
 // 投票
 const handleVoteSubmit = (voteData) => {
-  socketState.socket.send(JSON.stringify({
-    type: 'submit_vote',
-    roomId: roomId.value,
-    directions: voteData.directions
-  }))
-}
+  socketState.socket.send(
+    JSON.stringify({
+      type: "submit_vote",
+      roomId: roomId.value,
+      directions: voteData.directions,
+    })
+  );
+};
 
-const handleRegenerateRequest = (requestData) => {
-  socketState.socket.send(JSON.stringify({
-    type: 'regenerate_suggestion',
-    roomId: roomId.value,
-    modification: requestData.modification
-  }))
-}
+const handleRegenerateRequest = (requestData) => {};
 
 // 监听所有方向数据
-watch(() => socketState.directionDate, (newData) => {
-  if (newData && newData.roomId === roomId.value) {
-    allDirections.value = newData.allDirections;
-    showVoteStage.value = true;
-  }
-}, { deep: true });
+watch(
+  () => socketState.directionDate,
+  (newData) => {
+    if (newData && newData.roomId === roomId.value) {
+      allDirections.value = newData.allDirections;
+      showVoteStage.value = true;
+    }
+  },
+  { deep: true }
+);
 
 defineExpose({
   roomId,
@@ -165,14 +157,21 @@ defineExpose({
 </script>
 
 <style scoped>
+.left-panel-header {
+  width: 100%;
+  height: 96px;
+
+  display: flex;
+  justify-content: space-between;
+}
 .direction-selection-stage {
-  width: 98%;
-  height: 95vh;
-  margin: 10px;
-  border-radius: 20px;
+  width: 100%;
+  height: 100vh;
+
+  padding: 120px;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(90deg, #EDEEF2 0%, #ECEDEF 38%, #ECEDF1 70%, #EDEEF3 100%);
+  background-image: url("@/assets/first/back.png");
   background-size: cover;
   background-repeat: no-repeat;
 }
@@ -184,7 +183,7 @@ defineExpose({
   width: 100%;
   height: 65px;
   padding: 0 0;
-  background-color: transparent;
+  background: transparent;
   border-color: transparent;
   border-radius: 20px;
 }
@@ -217,13 +216,8 @@ defineExpose({
   flex: 1;
   display: flex;
   align-items: center;
-  margin-left: auto;
-  gap: 30px;
   position: relative;
   height: 100%;
-  border-bottom-left-radius: 30px;
-  border-top-right-radius: 20px;
-  border-top-left-radius: 4px;
 }
 
 .back-image {
@@ -232,7 +226,7 @@ defineExpose({
   left: 0;
   width: 100%;
   height: 113%;
-  background-image: url('../../assets/header-back.png');
+  background-image: url("../../assets/header-back.png");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -253,7 +247,7 @@ defineExpose({
   border-bottom-left-radius: 30px;
   border-top-right-radius: 20px;
   border-top-left-radius: 4px;
-  background-color: transparent;
+  background: transparent;
   backdrop-filter: blur(10px);
   align-items: center;
   z-index: 2;
@@ -284,7 +278,13 @@ defineExpose({
 .menu-icon {
   cursor: pointer;
   font-size: 30px;
-  background-image: linear-gradient(45deg, #E6E6ED 0%, #C6C3DF 30%, #B5C4E1 70%, #B5BDDF 100%);
+  background-image: linear-gradient(
+    45deg,
+    #e6e6ed 0%,
+    #c6c3df 30%,
+    #b5c4e1 70%,
+    #b5bddf 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -294,23 +294,31 @@ defineExpose({
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background-color: #FCFEFE;
+  background-color: #fcfefe;
   z-index: 2;
 }
 
 .main-content {
   display: flex;
   flex: 1;
-  padding: 20px;
-  gap: 20px;
   height: calc(100% - 85px);
+
+  border-radius: 48px;
+
+  /* 亚克力风格核心 */
+  background: rgba(255, 255, 255, 0.15); /* 半透明白色 */
+  backdrop-filter: blur(12px); /* 毛玻璃模糊效果 */
+  -webkit-backdrop-filter: blur(12px); /* Safari 支持 */
+
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2); /* 柔和阴影 */
+  border-left: 1px solid rgba(255, 255, 255, 0.2); /* 细边界线 */
 }
 
 .left-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: white;
+  background: transparent;
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
@@ -332,12 +340,14 @@ defineExpose({
   width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+
+  border-radius: 36px;
+
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .chat-component {
   flex: 1;
-  background-color: white;
   border-radius: 15px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
@@ -358,5 +368,29 @@ defineExpose({
 .fade-leave-from {
   opacity: 1;
   max-height: 200px;
+}
+
+.next-btn {
+  display: block;
+  width: 96px;
+  height: 36px;
+  padding: 2px;
+  background-color: #397FF3;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+}
+
+.next-btn:hover {
+  background-color: #005cf0;
+}
+
+.next-btn:disabled {
+  background-color: #77767a;
+  cursor: not-allowed;
 }
 </style>

@@ -90,12 +90,12 @@ const formData = ref({
 })
 
 const initFormData = () => {
-  const data = props.nodeData?.node?.data || {}
+  const data = props.nodeData?.data || {}
   formData.value = {
     title: data.title || '',
     summary: data.summary || '',
-    evidence: (data.evidence || []).join('\n'),
-    tags: (data.tags || []).join(', '),
+    evidence: Array.isArray(data.evidence) ? data.evidence.join('\n') : (data.evidence || ''),
+    tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
     note: data.note || ''
   }
 }

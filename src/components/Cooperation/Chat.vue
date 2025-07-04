@@ -30,7 +30,7 @@
           <div v-if="!message.isSystem" class="message-sender">
             {{ message.sender }}
           </div>
-          <div class="message-bubble">{{ message.content }}</div>
+          <div class="message-bubble" v-html="renderMarkdown(message.content)"></div>
           <div class="message-time">{{ message.time }}</div>
         </div>
       </div>
@@ -51,95 +51,18 @@
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import loginImage from "@/assets/login.png";
 import { socketState } from '@/stores/socket';
-import { useCanvasStore } from '@/stores/canvasStore';
-import { useCharacterStore } from '@/stores/character';
 import { nextTick } from 'vue';
+import { collectContextData } from '@/utils/contextCollector';
+import MarkdownIt from 'markdown-it';
+import DOMPurify from 'dompurify';
 
-const canvasStore = useCanvasStore();
-const characterStore = useCharacterStore();
-
-const collectContextData = () => {
-  return {
-    chat: socketState.messages
-      .map(msg => ({
-        user: msg.username || msg.sender,
-        text: msg.content,
-        time: msg.time
-      })),
-    
-    // 画布节点数据（场景、氛围、线索等）
-    canvasNodes: canvasStore.nodes.map(node => ({
-      id: node.id,
-      type: node.type,
-      title: node.data?.title || '未命名',
-      // 根据节点类型提取关键信息
-      summary: getNodeSummary(node)
-    })),
-    
-    // 画布连接关系
-    canvasEdges: canvasStore.edges.map(edge => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      type: edge.type,
-      relationship: edge.data?.relationship || edge.data?.label || '连接',
-      description: edge.data?.description || ''
-    })),
-    
-    // 角色节点数据
-    characterNodes: characterStore.nodes.map(node => ({
-      id: node.id,
-      type: node.type,
-      name: node.data?.name || '未命名角色',
-      occupation: node.data?.occupation || '',
-      background: node.data?.background?.substring(0, 100) || '',
-      personality: Array.isArray(node.data?.personality) ? 
-        node.data.personality.join(', ') : ''
-    })),
-    
-    // 角色关系
-    characterEdges: characterStore.edges.map(edge => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      relationship: edge.data?.relationship || '关系',
-      description: edge.data?.description || '',
-      strength: edge.data?.strength || ''
-    })),
-    
-    // 房间信息
-    room: {
-      id: socketState.roomId,
-      members: socketState.members.length,
-      stage: '第二阶段协作设计'
-    }
-  };
-};
-
-const getNodeSummary = (node) => {
-  switch(node.type) {
-    case 'custom': // 场景节点
-      return `场景: ${node.data?.sceneDescription || ''}, 时间: ${node.data?.timeLabel || ''}, 涉及角色: ${node.data?.characters || ''}`;
-      
-    case 'character': // 角色节点
-      return `角色: ${node.data?.name || ''}, 职业: ${node.data?.occupation || ''}, 性格: ${Array.isArray(node.data?.personality) ? node.data.personality.join(', ') : ''}`;
-      
-    case 'atmosphere': // 氛围节点
-      return `氛围: ${node.data?.mood || ''}, 灯光: ${node.data?.lighting || ''}, 音乐: ${node.data?.music || ''}`;
-      
-    case 'clue': // 线索节点
-      return `线索: ${node.data?.detail || ''}, 相关事件: ${node.data?.relatedEvent || ''}`;
-      
-    case 'inference': // 推理节点
-      return `推理: ${node.data?.summary || ''}, 证据: ${node.data?.evidence || ''}`;
-      
-    case 'person': // 人物节点
-      return `人物: ${node.data?.name || ''}, 简介: ${node.data?.bio || ''}`;
-      
-    default:
-      return JSON.stringify(node.data).substring(0, 100);
-  }
-};
+// 初始化Markdown渲染器
+const md = new MarkdownIt({
+  html: false, // 禁用HTML标签以提高安全性
+  breaks: true, // 转换换行符
+  linkify: true, // 自动识别链接
+  typographer: false // 禁用typographer避免符号转换问题
+});
 // 接收 props
 const props = defineProps({
   roomId: {
@@ -184,6 +107,28 @@ const toggleMemberList = () => {
   isMemberListVisible.value = !isMemberListVisible.value;
 };
 
+// Markdown渲染函数
+const renderMarkdown = (content) => {
+  if (!content) return '';
+
+  try {
+    // 清理内容，移除可能的多余符号和空白
+    let cleanContent = content.trim();
+
+    // 渲染Markdown
+    const rendered = md.render(cleanContent);
+
+    // 使用DOMPurify清理HTML，防止XSS攻击
+    const sanitized = DOMPurify.sanitize(rendered);
+
+    return sanitized;
+  } catch (error) {
+    console.error('Markdown渲染失败:', error);
+    // 渲染失败时返回原始文本，但进行HTML转义
+    return content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+};
+
 // 获取当前时间
 const getCurrentTime = () => {
   const now = new Date();
@@ -194,11 +139,23 @@ const getCurrentTime = () => {
 const sendChatMessage = () => {
   if (newMessage.value.trim() === "") return;
 
-  let messageContent=newMessage.value;
+  let messageContent = newMessage.value;
 
-  if(newMessage.value.startsWith('@ai')){
-    const ContextData=collectContextData();
-    messageContent=`${newMessage.value}\n\n[CONTEXT_DATA]${JSON.stringify(ContextData)}[/CONTEXT_DATA]`;
+  // 对于@ai消息，收集上下文数据并以JSON格式发送
+  if (newMessage.value.startsWith('@ai')) {
+    try {
+      const contextData = collectContextData();
+      // 将用户消息和上下文数据组合为JSON格式
+      const aiMessageData = {
+        userMessage: newMessage.value.replace(/^@ai\s*/, '').trim() || '你好',
+        contextData: contextData
+      };
+      messageContent = `@ai:${JSON.stringify(aiMessageData)}`;
+    } catch (error) {
+      console.error('收集上下文数据失败:', error);
+      // 如果上下文收集失败，发送简单的@ai消息
+      messageContent = newMessage.value;
+    }
   }
 
   const messageData = {
@@ -210,6 +167,8 @@ const sendChatMessage = () => {
 
   if (socketState.socket && socketState.socket.readyState === WebSocket.OPEN) {
     socketState.socket.send(JSON.stringify(messageData));
+    // 发送消息后自动滚动到底部
+    scrollToBottom();
   } else {
     console.error("WebSocket连接未就绪");
   }
@@ -217,28 +176,167 @@ const sendChatMessage = () => {
   newMessage.value = "";
 };
 
-// 滚动到最底部
-const scrollToBottom = () => {
+// 检查用户是否在查看历史消息
+const isUserScrollingUp = () => {
+  if (!messagesContainer.value) return false;
+  const container = messagesContainer.value;
+
+  // 更宽松的阈值，考虑到新消息可能导致内容高度变化
+  const threshold = 300; // 增加阈值到300px
+  const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+
+  console.log('📏 [SCROLL DEBUG] 滚动位置检查:', {
+    scrollHeight: container.scrollHeight,
+    scrollTop: container.scrollTop,
+    clientHeight: container.clientHeight,
+    distanceFromBottom: distanceFromBottom,
+    threshold: threshold,
+    isScrollingUp: distanceFromBottom > threshold
+  });
+
+  return distanceFromBottom > threshold;
+};
+
+// 滚动到最底部（带平滑效果和智能判断）
+const scrollToBottom = (force = false) => {
+  console.log('🎯 [SCROLL DEBUG] scrollToBottom被调用, force:', force);
+
   nextTick(() => {
-    // 确保 messagesContainer 已加载
-    if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+    if (!messagesContainer.value) {
+      console.log('❌ [SCROLL DEBUG] messagesContainer未找到');
+      return;
     }
+
+    const container = messagesContainer.value;
+    console.log('📊 [SCROLL DEBUG] 容器信息:', {
+      scrollHeight: container.scrollHeight,
+      scrollTop: container.scrollTop,
+      clientHeight: container.clientHeight,
+      offsetHeight: container.offsetHeight
+    });
+
+    // 如果用户正在查看历史消息且不是强制滚动，则不自动滚动
+    if (!force && isUserScrollingUp()) {
+      console.log('🚫 [SCROLL DEBUG] 用户正在查看历史消息，跳过自动滚动');
+      return;
+    }
+
+    console.log('✅ [SCROLL DEBUG] 开始执行滚动');
+
+    // 平滑滚动到底部
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth'
+    });
+
+    // 验证滚动结果
+    setTimeout(() => {
+      console.log('🔍 [SCROLL DEBUG] 滚动完成后的位置:', {
+        scrollTop: container.scrollTop,
+        scrollHeight: container.scrollHeight,
+        isAtBottom: Math.abs(container.scrollHeight - container.scrollTop - container.clientHeight) < 5
+      });
+    }, 200);
   });
 };
+
+// Refs - 移到前面确保正确初始化
+const messagesContainer = ref(null);
 
 // 监听 props 更新
 watch(() => props.initialMessages, (newVal) => {
   messages.value = newVal;
 });
 
+// 用于跟踪消息数量和滚动状态的变量
+let lastMessageCount = 0;
+let wasNearBottom = true; // 记录新消息到达前是否接近底部
 
-// Refs
-const messagesContainer = ref(null);
+// 检查是否接近底部（用于判断是否应该自动滚动）
+const isNearBottom = () => {
+  if (!messagesContainer.value) return true;
+  const container = messagesContainer.value;
+  const threshold = 150; // 150px阈值
+  const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+  return distanceFromBottom <= threshold;
+};
+
+// 监听消息数组变化
+watch(() => socketState.messages, (newMessages) => {
+  console.log('🔍 [SCROLL DEBUG] 消息数组变化检测');
+  console.log('当前消息数量:', newMessages?.length);
+  console.log('上次记录数量:', lastMessageCount);
+
+  const currentCount = newMessages?.length || 0;
+  const hasNewMessage = currentCount > lastMessageCount;
+
+  if (hasNewMessage && currentCount > 0) {
+    const latestMessage = newMessages[currentCount - 1];
+    console.log('🆕 [SCROLL DEBUG] 检测到新消息:', {
+      sender: latestMessage.sender,
+      username: latestMessage.username,
+      isAI: latestMessage.isAI,
+      isMe: latestMessage.isMe,
+      contentPreview: latestMessage.content?.substring(0, 50) + '...'
+    });
+
+    // 判断是否应该自动滚动
+    const shouldAutoScroll = wasNearBottom || latestMessage.isMe;
+    console.log('📊 [SCROLL DEBUG] 滚动决策:', {
+      wasNearBottom: wasNearBottom,
+      isMyMessage: latestMessage.isMe,
+      shouldAutoScroll: shouldAutoScroll
+    });
+
+    if (shouldAutoScroll) {
+      console.log('🚀 [SCROLL DEBUG] 准备执行自动滚动');
+
+      nextTick(() => {
+        console.log('📋 [SCROLL DEBUG] nextTick执行');
+        setTimeout(() => {
+          console.log('⏰ [SCROLL DEBUG] setTimeout执行，强制滚动到底部');
+          scrollToBottom(true); // 强制滚动，忽略isUserScrollingUp检查
+        }, latestMessage.isAI ? 200 : 50); // AI消息需要更多时间渲染
+      });
+    } else {
+      console.log('🚫 [SCROLL DEBUG] 用户不在底部，跳过自动滚动');
+    }
+  }
+
+  // 更新状态
+  lastMessageCount = currentCount;
+  // 延迟更新wasNearBottom状态，避免在DOM更新过程中误判
+  setTimeout(() => {
+    wasNearBottom = isNearBottom();
+    console.log('📍 [SCROLL DEBUG] 更新底部状态:', wasNearBottom);
+  }, 100);
+}, {
+  deep: true,
+  flush: 'post'
+});
+
+// 组件挂载时滚动到底部
+onMounted(() => {
+  // 初始化状态
+  lastMessageCount = socketState.messages?.length || 0;
+  wasNearBottom = true;
+
+  console.log('🚀 [SCROLL DEBUG] 组件挂载，初始化状态:', {
+    messageCount: lastMessageCount,
+    wasNearBottom: wasNearBottom
+  });
+
+  // 延迟执行确保组件完全挂载
+  nextTick(() => {
+    setTimeout(() => {
+      scrollToBottom(true);
+    }, 200);
+  });
+});
 </script>
 
 
-<style>
+<style scoped>
 .chat-container {
   display: flex;
   flex-direction: column;
@@ -327,6 +425,104 @@ const messagesContainer = ref(null);
   word-break: break-word;
 }
 
+/* Markdown渲染样式 */
+.message-bubble h1,
+.message-bubble h2,
+.message-bubble h3,
+.message-bubble h4,
+.message-bubble h5,
+.message-bubble h6 {
+  margin: 8px 0 4px 0;
+  font-weight: bold;
+}
+
+.message-bubble h1 { font-size: 1.2em; }
+.message-bubble h2 { font-size: 1.1em; }
+.message-bubble h3 { font-size: 1.05em; }
+.message-bubble h4,
+.message-bubble h5,
+.message-bubble h6 { font-size: 1em; }
+
+.message-bubble p {
+  margin: 4px 0;
+}
+
+.message-bubble ul,
+.message-bubble ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.message-bubble li {
+  margin: 2px 0;
+}
+
+.message-bubble strong {
+  font-weight: bold;
+}
+
+.message-bubble em {
+  font-style: italic;
+}
+
+.message-bubble code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.message-bubble pre {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 4px 0;
+}
+
+.message-bubble pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.message-bubble blockquote {
+  border-left: 3px solid rgba(0, 0, 0, 0.2);
+  margin: 4px 0;
+  padding-left: 10px;
+  font-style: italic;
+}
+
+.message-bubble a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* 针对AI消息的特殊样式 */
+.message-other .message-bubble code {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.message-other .message-bubble pre {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.message-other .message-bubble blockquote {
+  border-left-color: rgba(0, 0, 0, 0.15);
+}
+
+.message-me .message-bubble code {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.message-me .message-bubble pre {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.message-me .message-bubble blockquote {
+  border-left-color: rgba(255, 255, 255, 0.3);
+}
+
 .message-me .message-bubble {
   background-color: #5d98f5;
   border-top-right-radius: 4px;
@@ -399,8 +595,9 @@ const messagesContainer = ref(null);
 /* 图标本身 */
 .send-button i {
   font-size: 16px;
-  color: white;
+  color: #2563eb;
   pointer-events: none; /* 避免事件冲突 */
+  transition: all 0.3s ease;
 }
 
 .send-button:hover {
@@ -408,4 +605,8 @@ const messagesContainer = ref(null);
   transform: scale(1.05);
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
 }
+.send-button:hover i {
+  color: white;
+}
+
 </style>

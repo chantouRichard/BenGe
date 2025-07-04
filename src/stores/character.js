@@ -44,6 +44,9 @@ export const useCharacterStore = defineStore('characterStore', () => {
   // 是否展示边选择器
   const showEdgeSelector = ref(false)
 
+  // 当前创建的边类型 ('relationship' 或 'character-scene')
+  const edgeType = ref('relationship')
+
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
     console.log('点击创建边按钮')
@@ -105,6 +108,70 @@ export const useCharacterStore = defineStore('characterStore', () => {
     selectedNodesForEdge.value = [];
     isCreatingEdge.value = false;
     showEdgeSelector.value = false;
+    edgeType.value = 'relationship';
+  };
+
+  // 用户在角色-场景编辑器中，确认创建角色-场景关系
+  const handleCharacterSceneEdgeConfirm = (sceneData) => {
+    if (selectedNodesForEdge.value.length === 2) {
+      const [sourceNode, targetNode] = selectedNodesForEdge.value;
+
+      // 创建角色-场景边
+      const newEdge = reactive({
+        id: `character-scene-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
+        source: sourceNode.id,
+        target: targetNode.id,
+        sourceHandle: 'right-source',
+        targetHandle: 'left',
+        type: 'character-scene',
+        data: reactive({
+          participationType: sceneData.participationType,
+          importance: sceneData.importance,
+          description: sceneData.description,
+          label: sceneData.label,
+          style: sceneData.style,
+          showLabel: true
+        })
+      });
+
+      edges.push(newEdge);
+      broadcast();
+    }
+
+    selectedNodesForEdge.value = [];
+    isCreatingEdge.value = false;
+    showEdgeSelector.value = false;
+    edgeType.value = 'relationship';
+  };
+
+  // 用户在角色-场景编辑器中，确认修改角色-场景关系
+  const handleCharacterSceneEdgeEditConfirm = (sceneData) => {
+    if (!editingEdgeId.value) {
+      console.warn('没有正在编辑的边ID');
+      return;
+    }
+
+    const edge = edges.find((e) => e.id === editingEdgeId.value);
+
+    if (edge) {
+      // 更新边数据
+      edge.data = {
+        ...edge.data,
+        participationType: sceneData.participationType,
+        importance: sceneData.importance,
+        description: sceneData.description,
+        label: sceneData.label,
+        style: sceneData.style
+      };
+
+      editingEdgeId.value = null;
+      showEdgeSelector.value = false;
+      edgeType.value = 'relationship';
+
+      broadcast();
+    } else {
+      console.error('未找到要编辑的角色-场景边:', editingEdgeId.value);
+    }
   };
 
   // 用户在关系选择器中修改关系，确认
@@ -149,6 +216,7 @@ export const useCharacterStore = defineStore('characterStore', () => {
     isCreatingEdge.value = false
     showEdgeSelector.value = false
     editingEdgeId.value = null  // 重置编辑状态
+    edgeType.value = 'relationship'  // 重置边类型
   }
 
   // 在边选择器中，删除边
@@ -182,7 +250,31 @@ export const useCharacterStore = defineStore('characterStore', () => {
       }
 
       if (selectedNodesForEdge.value.length === 2) {
-        showEdgeSelector.value = true;
+        const [sourceNode, targetNode] = selectedNodesForEdge.value;
+
+        // 判断连接类型
+        const isCharacterToCharacter = sourceNode.type === 'character' && targetNode.type === 'character';
+        const isCharacterToScene = (sourceNode.type === 'character' && targetNode.type === 'custom') ||
+                                   (sourceNode.type === 'custom' && targetNode.type === 'character');
+
+        if (isCharacterToCharacter) {
+          // 角色间关系 - 显示角色关系编辑器
+          showEdgeSelector.value = true;
+          edgeType.value = 'relationship';
+        } else if (isCharacterToScene) {
+          // 角色-场景关系 - 显示角色场景编辑器
+          showEdgeSelector.value = true;
+          edgeType.value = 'character-scene';
+        } else {
+          // 不支持的连接类型
+          console.warn('不支持的连接类型:', sourceNode.type, '->', targetNode.type);
+          alert('角色设计师只支持角色与角色、角色与场景之间的连接');
+
+          // 重置连接状态
+          isCreatingEdge.value = false;
+          selectedNodesForEdge.value = [];
+          showEdgeSelector.value = false;
+        }
       }
     } else {
       selectedNode.value = { ...actualNode };
@@ -307,9 +399,12 @@ export const useCharacterStore = defineStore('characterStore', () => {
     isCreatingEdge,
     selectedNodesForEdge,
     showEdgeSelector,
+    edgeType,
     handleCreateEdgeClick,
     handleEdgeSelect,
     handleEdgeConfirm,
+    handleCharacterSceneEdgeConfirm,
+    handleCharacterSceneEdgeEditConfirm,
     handleEdgeEditConfirm,
     handleEdgeCancel,
     handleDeleteEdge,
