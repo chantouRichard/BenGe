@@ -8,7 +8,7 @@
   >
     <!-- 主按钮 -->
     <button class="main-button">
-      <img src="../../../../../assets/second/role3.jpeg" alt="氛围工具" class="icon-main" />
+      <img src="../../../../../assets/second/role3.png" alt="氛围工具" class="icon-main" />
     </button>
 
     <!-- 展开面板 -->

@@ -1,43 +1,26 @@
 <template>
   <div>
     <!-- 悬浮球 -->
-    <div
-      v-if="!isChatOpen"
-      class="floating-ball"
-      :class="{ hidden: isHidden, 'semi-hidden': isSemiHidden }"
-      @mousedown="startDrag"
-      @click="handleClick"
-      :style="{ top: `${position.top}px`, left: `${position.left}px` }"
-    >
+    <div v-if="!isChatOpen" class="floating-ball" :class="{ hidden: isHidden, 'semi-hidden': isSemiHidden }"
+      @mousedown="startDrag" @click="handleClick" :style="{ top: `${position.top}px`, left: `${position.left}px` }">
       💬
     </div>
 
     <!-- 聊天窗口 -->
-    <div
-      v-if="isChatOpen"
-      class="chat-widget"
-      :style="{ top: `${adjustedPosition.top}px`, left: `${adjustedPosition.left}px` }"
-    >
+    <div v-if="isChatOpen" class="chat-widget"
+      :style="{ top: `${adjustedPosition.top}px`, left: `${adjustedPosition.left}px` }">
       <div class="chat-header">
         AI 助手
         <button class="close-button" @click="toggleChat">×</button>
       </div>
       <div class="chat-messages">
-        <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          :class="['message', msg.type]"
-        >
+        <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.type]">
           {{ msg.content }}
         </div>
         <div v-if="loading" class="loading">AI 正在输入...</div>
       </div>
       <div class="chat-input">
-        <textarea
-          v-model="userInput"
-          placeholder="请输入内容"
-          @keydown.enter.prevent="handleEnter"
-        ></textarea>
+        <textarea v-model="userInput" placeholder="请输入内容" @keydown.enter.prevent="handleEnter"></textarea>
         <button @click="sendMessage" :disabled="loading || !userInput.trim()">发送</button>
       </div>
     </div>
@@ -184,17 +167,19 @@ export default defineComponent({
       messages.push({ type: "user", content: userInput.value });
       const history = messages.map((msg) => msg.content);
       const requestBody = {
-        message: userInput.value,
-        history: history.slice(0, -1),
+        message: [
+          { role: "user", content: userInput.value }
+        ],
+        history: history.slice(0, -1)
       };
 
       userInput.value = "";
       loading.value = true;
 
       try {
-        const response = await fetch("/api/ai/chat/stream", {
+        const response = await fetch("/api/Script/chat/stream", {
           method: "POST",
-          headers: { "Content-Type": "application/json",Authorization: `Bearer ${localStorage.getItem("token")}`, },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
         });
 
@@ -456,6 +441,7 @@ button:disabled {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

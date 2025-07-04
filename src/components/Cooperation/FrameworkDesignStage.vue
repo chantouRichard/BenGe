@@ -227,10 +227,12 @@ watch(
   width: 100%;
   height: 100vh;
   /* 使用视口高度，确保充满整个屏幕 */
-
-  background-image: url("@/assets/second/secondback2.jpeg");
+  display: flex;
+  flex-direction: column;
+  background-image: url("@/assets/second/secondback3.png");
   background-size: cover;
   background-repeat: no-repeat;
+  overflow: hidden;
 }
 
 .header {
@@ -275,9 +277,9 @@ watch(
   min-width: 827px;
   margin: auto;
   margin-top: 50px;
-  background-color: rgba(0, 0, 0, 0.3);
-  /* 半透明白色背景 */
-  backdrop-filter: blur(8px);
+  /*background-color: rgba(0, 0, 0, 0.3);*/
+  /* 半透明白色背景
+  backdrop-filter: blur(8px);*/
   /* 毛玻璃模糊效果 */
   height: calc(100% - 150px);
   min-height: 500px;
@@ -285,8 +287,8 @@ watch(
   /* 确保 padding 不超宽 */
   border-radius: 20px;
 
-  /* 其他样式 */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* 轻微的边框，增加层次感 */
+  /* 其他样式
+  border: 1px solid rgba(255, 255, 255, 0.3); 轻微的边框，增加层次感 */
 }
 
 .right-area {

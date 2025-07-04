@@ -8,20 +8,17 @@
         </button>
       </div> -->
 
-        <div class="member-list">
-          <img style="object-fit: cover;width: 24px;height: 24px;" src="../../../assets/third/open.png"/>
-          <div
-            class="member-item"
-            v-for="(member, index) in socketState.members"
-            :key="index"
-            @click="$emit('clickMember', { member, index })"
-          >
-            <img :src="member.avatar" alt="avatar" class="member-avatar" />
-            <div class="member-info">
-              <span class="member-name" >{{ member.username }}</span>
-            </div>
+      <div class="member-list">
+        <i class="fa-solid fa-bars-staggered"
+          style="width: 30px; height: 30px; font-size: 26px; line-height: 30px; color: #6FB2F5;"></i>
+        <div class="member-item" v-for="(member, index) in socketState.members" :key="index"
+          @click="$emit('clickMember', { member, index })">
+          <img :src="member.avatar" alt="avatar" class="member-avatar" />
+          <div class="member-info">
+            <span class="member-name">{{ member.username }}</span>
           </div>
         </div>
+      </div>
     </div>
   </div>
 </template>
@@ -59,7 +56,7 @@ const isMemberOpen = ref(props.isMemberOpen);
 // 切换成员列表显示
 const toggleMemberListVisibility = () => {
   isMemberOpen.value = !isMemberOpen.value;
-  console.log("成员列表：",socketState.members);
+  console.log("成员列表：", socketState.members);
 };
 </script>
 
@@ -69,7 +66,7 @@ const toggleMemberListVisibility = () => {
   top: 10px;
   right: 20px;
   z-index: 1000;
-  background:transparent;
+  background: transparent;
   /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
   border-radius: 8px;
   width: 300px;

@@ -1,4 +1,6 @@
 <template>
+  <div class="back-bg"></div>
+  <div class="front-bg"></div>
   <div class="container">
     <div class="header">
       <div class="left-menu">
@@ -448,6 +450,26 @@ function updateMembers(membersList) {
 </script>
 
 <style scoped>
+.back-bg {
+  background-image: url("../../assets/chat-main-bg.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;  
+}
+
+.front-bg {
+  z-index: 2;
+  height: 100%;
+  width: 100%;
+  background: transparent;
+  backdrop-filter: blur(4px);
+}
+
 .member-header {
   display: flex;
   height: 40px;
@@ -553,10 +575,13 @@ function updateMembers(membersList) {
 }
 
 .container {
-  width: 98%;
-  height: 95vh;
+  width: 95%;
+  height: 92%;
   /* 使用视口高度，确保充满整个屏幕 */
-  margin: 10px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -569,6 +594,7 @@ function updateMembers(membersList) {
   );
   background-size: cover;
   background-repeat: no-repeat;
+  z-index: 3;
 }
 
 .header {
@@ -649,7 +675,7 @@ function updateMembers(membersList) {
   border-top-right-radius: 20px;
   border-top-left-radius: 4px;
   background-color: transparent;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(2px);
   align-items: center;
   z-index: 2;
   padding-left: 20px;

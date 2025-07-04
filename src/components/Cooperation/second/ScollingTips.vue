@@ -3,13 +3,13 @@
     class="scrolling-tips"
     :style="{ width: containerWidth }"
   >
-  <img style="object-fit: cover;width: 30px;height: 30px;" src="../../../assets/second/tips.png"/>
+  <img style="object-fit: cover;width: 20px;height: 20px;" src="../../../assets/second/tips.png"/>
     <transition
       name="slide-fade"
       mode="out-in"
       @before-leave="onBeforeLeave"
     >
-      <p ref="tipEl" style="margin-left: 10px;" :key="currentTip">{{ currentTip }}</p>
+      <p ref="tipEl" style="margin-left: 10px; color:#8BC0FA;" :key="currentTip">{{ currentTip }}</p>
     </transition>
 
     <!-- 隐藏的预测文本，用于提前测量下一条宽度 -->
@@ -79,7 +79,7 @@ onMounted(() => {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  font-size: 24px;
+  font-size: 18px;
   color: black;
   background-color: #F5F8FD;
   padding: 8px 8px;

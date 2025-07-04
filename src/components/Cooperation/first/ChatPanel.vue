@@ -236,11 +236,21 @@ const sendChatMessage = () => {
 
   let messageContent = newMessage.value;
 
-  if (newMessage.value.startsWith("@ai")) {
-    const ContextData = collectContextData();
-    messageContent = `${newMessage.value}\n\n[CONTEXT_DATA]${JSON.stringify(
-      ContextData
-    )}[/CONTEXT_DATA]`;
+  // 对于@ai消息，收集上下文数据并以JSON格式发送
+  if (newMessage.value.startsWith('@ai')) {
+    try {
+      const contextData = collectContextData();
+      // 将用户消息和上下文数据组合为JSON格式
+      const aiMessageData = {
+        userMessage: newMessage.value.replace(/^@ai\s*/, '').trim() || '你好',
+        contextData: contextData
+      };
+      messageContent = `@ai:${JSON.stringify(aiMessageData)}`;
+    } catch (error) {
+      console.error('收集上下文数据失败:', error);
+      // 如果上下文收集失败，发送简单的@ai消息
+      messageContent = newMessage.value;
+    }
   }
 
   const messageData = {

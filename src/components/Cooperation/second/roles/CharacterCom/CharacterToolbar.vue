@@ -8,7 +8,7 @@
   >
     <!-- 主按钮 -->
     <button class="main-button">
-      <img src="../../../../../assets/second/role1.jpeg" alt="角色工具" class="icon-main" />
+      <img src="../../../../../assets/second/role1.png" alt="角色工具" class="icon-main" />
     </button>
 
     <!-- 展开面板 -->
@@ -61,7 +61,7 @@ const buttons = ref([
     hover: false,
   },
   {
-    icon: require("@/assets/second/role2.jpeg"),
+    icon: require("@/assets/second/role2.png"),
     action: "character-template",
     tooltip: "角色模板",
     color: "rgba(180, 140, 255, 0.7)",
