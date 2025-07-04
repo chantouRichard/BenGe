@@ -49,11 +49,10 @@ public class VoteLockConcurrencyTest {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            if(message.contains("\"type\":\"vote\"")) {
+            if (message.contains("\"type\":\"vote\"")) {
                 System.out.println("收到投票结果 from 用户的消息时间：" + System.currentTimeMillis());
             }
         }
-
 
         @Override
         public void onClose(int code, String reason, boolean remote) {
@@ -73,6 +72,7 @@ public class VoteLockConcurrencyTest {
             }
         }
     }
+
     @Test
     public void testConcurrentVoteWithLock() throws Exception {
         String url = "ws://localhost:" + port + "/ws";
@@ -82,17 +82,17 @@ public class VoteLockConcurrencyTest {
 
         String auth1 = objectMapper.writeValueAsString(Map.of(
                 "type", "auth",
-                "token", "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5IiwidXNlcm5hbWUiOiJ0ZXN0dXNlciIsImlhdCI6MTc1MTUyNjMyOSwiZXhwIjoxNzUxNjEyNzI5fQ.s2nb44azTYUVPAqAwy-w8T1DtqIDjbTVu52X_CMSnsk",
+                "token",
+                "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5IiwidXNlcm5hbWUiOiJ0ZXN0dXNlciIsImlhdCI6MTc1MTUyNjMyOSwiZXhwIjoxNzUxNjEyNzI5fQ.s2nb44azTYUVPAqAwy-w8T1DtqIDjbTVu52X_CMSnsk",
                 "roomId", roomId,
-                "avatar", "avatar1"
-        ));
+                "avatar", "avatar1"));
 
         String auth2 = objectMapper.writeValueAsString(Map.of(
                 "type", "auth",
-                "token", "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMSIsInVzZXJuYW1lIjoidGVzdHVzZXIxMjMiLCJpYXQiOjE3NTE1MjcxMjQsImV4cCI6MTc1MTYxMzUyNH0.6kQ_ywtUWf8wjAp14uzSftqRK6GpolhWpuPSvQtNj1M",
+                "token",
+                "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMSIsInVzZXJuYW1lIjoidGVzdHVzZXIxMjMiLCJpYXQiOjE3NTE1MjcxMjQsImV4cCI6MTc1MTYxMzUyNH0.6kQ_ywtUWf8wjAp14uzSftqRK6GpolhWpuPSvQtNj1M",
                 "roomId", roomId,
-                "avatar", "avatar2"
-        ));
+                "avatar", "avatar2"));
 
         String voteMessage1 = objectMapper.writeValueAsString(Map.of(
                 "type", "vote",
@@ -100,8 +100,7 @@ public class VoteLockConcurrencyTest {
                 "key", List.of("item1"),
                 "vote", List.of(1),
                 "hasVoted", true,
-                "hasChosen", true
-        ));
+                "hasChosen", true));
 
         String voteMessage2 = objectMapper.writeValueAsString(Map.of(
                 "type", "vote",
@@ -109,8 +108,7 @@ public class VoteLockConcurrencyTest {
                 "key", List.of("item1"),
                 "vote", List.of(2),
                 "hasVoted", true,
-                "hasChosen", true
-        ));
+                "hasChosen", true));
 
         TestWebSocketClient client1 = new TestWebSocketClient(new URI(url), latch, auth1, voteMessage1);
         TestWebSocketClient client2 = new TestWebSocketClient(new URI(url), latch, auth2, voteMessage2);

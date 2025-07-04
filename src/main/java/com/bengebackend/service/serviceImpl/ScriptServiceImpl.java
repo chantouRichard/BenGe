@@ -11,8 +11,6 @@ import com.bengebackend.model.ScriptHistory;
 import com.bengebackend.model.VisualElement;
 import com.bengebackend.service.*;
 
-import dev.langchain4j.model.output.structured.Description;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -95,7 +93,7 @@ public class ScriptServiceImpl implements ScriptService {
         newScript.setLastUpdated(LocalDateTime.now());
         newScript.setStage(1);
 
-        System.out.println("222222222:" + newScript);
+        System.out.println("新剧本创建成功：" + newScript);
         scriptMapper.insert(newScript);
 
         ScriptDetailDto dto = new ScriptDetailDto();

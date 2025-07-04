@@ -6,7 +6,7 @@ CREATE TABLE `users` (
     `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
     `password_hash` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
     PRIMARY KEY (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 -- 剧本表
@@ -22,7 +22,7 @@ CREATE TABLE `script` (
                           PRIMARY KEY (`id`),
                           KEY `IX_script_user_id` (`user_id`),
                           CONSTRAINT `FK_script_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`Id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 剧本历史表
 CREATE TABLE `script_history` (
@@ -34,7 +34,7 @@ CREATE TABLE `script_history` (
                                   PRIMARY KEY (`id`),
                                   KEY `IX_script_history_script_id` (`script_id`),
                                   CONSTRAINT `FK_script_history_script_script_id` FOREIGN KEY (`script_id`) REFERENCES `script` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 剧本分析表  
 CREATE TABLE `script_analysis` (
@@ -45,7 +45,7 @@ CREATE TABLE `script_analysis` (
                                    PRIMARY KEY (`id`),
                                    UNIQUE KEY `IX_script_analysis_script_id` (`script_id`),
                                    CONSTRAINT `FK_script_analysis_script_script_id` FOREIGN KEY (`script_id`) REFERENCES `script` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 可视化元素表
 CREATE TABLE `visual_element` (
@@ -59,7 +59,7 @@ CREATE TABLE `visual_element` (
                                   PRIMARY KEY (`id`),
                                   KEY `IX_visual_element_script_id` (`script_id`),
                                   CONSTRAINT `FK_visual_element_script_script_id` FOREIGN KEY (`script_id`) REFERENCES `script` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=152 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=152 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `room` (
                         `id` bigint NOT NULL AUTO_INCREMENT COMMENT '房间ID',

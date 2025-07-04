@@ -38,41 +38,41 @@ public class ScriptController {
     @Autowired
     private ContextDataProcessor contextDataProcessor;
 
-    /**
-     * 生成剧本方向标语
-     */
-
     @Autowired
     private QwenChatModel qwenChatModel;
 
+    /**
+     * 生成剧本方向标语
+     */
     @PostMapping("/directions")
     public ResponseEntity<Object> generateSlogan(@RequestBody SloganRequestEntity request) {
 
-        String response = qwenChatModel.chat("""
-                请根据以下关键词生成完整的剧本杀广告,
-                严格按照以下格式生成内容：
-                剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
-                每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
-                关键词包括以下几点：
-                """ + request.getPrompt());
-        if (response == null || response.isEmpty()) {
-            return ResponseEntity.badRequest().body("生成剧本方向标语失败");
-        }
-        // 解析生成的内容
-        String[] parts = response.split("\\n");
-        if (parts.length < 3) {
-            return ResponseEntity.badRequest().body("生成的内容格式不正确");
-        }
-        String background = parts[0].replace("剧本背景: ", "").trim();
-        String playerGoal = parts[1].replace("玩家目标: ", "").trim();
-        String coreIdea = parts[2].replace("核心创意: ", "").trim();
-        // 创建返回对象
-        SloganResponseDto sloganResponse = new SloganResponseDto();
-        sloganResponse.setSlogans(List.of(
-                new Slogan("剧本背景", background),
-                new Slogan("玩家目标", playerGoal),
-                new Slogan("核心创意", coreIdea)));
-        return ResponseEntity.ok(sloganResponse);
+        // String response = qwenChatModel.chat("""
+        // 请根据以下关键词生成完整的剧本杀广告,
+        // 严格按照以下格式生成内容：
+        // 剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
+        // 每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
+        // 关键词包括以下几点：
+        // """ + request.getPrompt());
+        // if (response == null || response.isEmpty()) {
+        // return ResponseEntity.badRequest().body("生成剧本方向标语失败");
+        // }
+        // // 解析生成的内容
+        // String[] parts = response.split("\\n");
+        // if (parts.length < 3) {
+        // return ResponseEntity.badRequest().body("生成的内容格式不正确");
+        // }
+        // String background = parts[0].replace("剧本背景: ", "").trim();
+        // String playerGoal = parts[1].replace("玩家目标: ", "").trim();
+        // String coreIdea = parts[2].replace("核心创意: ", "").trim();
+        // // 创建返回对象
+        // SloganResponseDto sloganResponse = new SloganResponseDto();
+        // sloganResponse.setSlogans(List.of(
+        // new Slogan("剧本背景", background),
+        // new Slogan("玩家目标", playerGoal),
+        // new Slogan("核心创意", coreIdea)));
+        // return ResponseEntity.ok(sloganResponse);
+        return ResponseEntity.ok("请调用AIStreamController中的流式接口,非流式输出暂未实现");
     }
 
     /**
@@ -80,8 +80,7 @@ public class ScriptController {
      */
     @PutMapping("/directions/stream")
     public ResponseEntity<String> streamGenerateSlogan(@RequestBody Object request) {
-
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok("请调用AIStreamController中的流式接口");
     }
 
     /**
@@ -89,8 +88,7 @@ public class ScriptController {
      */
     @PutMapping("/directions/stream-complete")
     public ResponseEntity<Object> streamCompleteGenerateSlogan(@RequestBody Object request) {
-
-        return ResponseEntity.ok().body("");
+        return ResponseEntity.ok().body("请调用AIStreamController中的流式接口");
     }
 
     /**
@@ -99,7 +97,7 @@ public class ScriptController {
     @PostMapping("/chat/stream")
     public ResponseEntity<String> chatStream(@RequestBody Object request) {
 
-        return ResponseEntity.ok("AI服务暂未实现");
+        return ResponseEntity.ok("请调用AIStreamController中的流式接口");
     }
 
     /**
@@ -139,13 +137,12 @@ public class ScriptController {
     @PostMapping("/create")
     public ResponseEntity<ScriptDetailDto> createNewScript() {
         Integer userId = getCurrentUserId();
-//        System.out.println("111111111111");
         ScriptDetailDto result = scriptService.initializeScriptAsync(userId);
         return ResponseEntity.ok(result);
     }
 
     /**
-     * 第二阶段对话 - 生成剧本框架
+     * 第二阶段 - 生成剧本框架
      */
     @PostMapping("/reply2nd")
     public ResponseEntity<ScriptFrameworkDto> handleUserMessage2nd(@RequestBody ScriptReplyRequestEntity request) {
@@ -168,7 +165,7 @@ public class ScriptController {
     }
 
     /**
-     * 第二阶段对话 - 流式生成
+     * 第二阶段对话 - 流式生成(注意：此接口已废弃，实际流式处理在AIStreamController中实现)
      */
     @PutMapping("/reply2nd/stream")
     public ResponseEntity<String> streamHandleUserMessage2nd(@RequestBody ScriptReplyRequestEntity request) {
@@ -220,7 +217,7 @@ public class ScriptController {
     }
 
     /**
-     * 更新剧本 - 从第一阶段进入第二阶段
+     * 更新剧本 - 第一阶段转入第二阶段
      */
     @PutMapping("/update")
     public ResponseEntity<ScriptDetailDto> updateScript(@RequestBody ScriptUpdateRequestEntity request) {
@@ -268,15 +265,16 @@ public class ScriptController {
         return 1; // 如果未认证，返回默认的 1
     }
 
-
     @PostMapping("/collaboration/generate")
-    public ResponseEntity<CollaborationScriptDto> generateCollaborationScript(@RequestBody CollaborationScriptRequestEntity request) {
+    public ResponseEntity<CollaborationScriptDto> generateCollaborationScript(
+            @RequestBody CollaborationScriptRequestEntity request) {
         log.info("收到协作剧本生成请求: {}", request.toString());
 
         try {
 
             // 使用现有的ContextDataProcessor处理协作数据
-            String contextSummary = contextDataProcessor.generateContextSummary(request.getContextData(), "collaboration");
+            String contextSummary = contextDataProcessor.generateContextSummary(request.getContextData(),
+                    "collaboration");
 
             // 构建AI提示词
             String prompt = buildCollaborationPrompt(contextSummary);
@@ -290,14 +288,15 @@ public class ScriptController {
 
             if (generatedScript != null && !generatedScript.trim().isEmpty()) {
                 String title = "协作剧本";
-                return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript,"剧本生成成功", true));
+                return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript, "剧本生成成功", true));
             } else {
                 return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, "AI生成剧本失败", false));
             }
         } catch (Exception e) {
             System.err.println("生成协作剧本失败: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null,  "服务器错误: " + e.getMessage(), false));
+            return ResponseEntity.status(500)
+                    .body(new CollaborationScriptDto(null, null, "服务器错误: " + e.getMessage(), false));
         }
     }
 
