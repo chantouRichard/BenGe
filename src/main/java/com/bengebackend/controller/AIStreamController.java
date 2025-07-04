@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import java.util.Arrays;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -23,13 +24,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 @RestController
-@RequestMapping("/api/ai")
-@CrossOrigin(origins = "*")
+@RequestMapping("api/ai")
 @Slf4j
 public class AIStreamController {
 
@@ -45,8 +43,15 @@ public class AIStreamController {
     @Autowired
     private ScriptService scriptService;
 
-    private final ExecutorService executor = Executors.newCachedThreadPool();
-
+    private final ExecutorService executor = new ThreadPoolExecutor(
+            2,                      // corePoolSize
+            10,                     // maximumPoolSize
+            60L,                    // keepAliveTime
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100), // 有界队列，最多缓存100个任务
+            Executors.defaultThreadFactory(),
+            new ThreadPoolExecutor.AbortPolicy() // 拒绝策略：抛出异常
+    );
     /**
      * Slogan流式生成接口
      */
@@ -82,12 +87,17 @@ public class AIStreamController {
      */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@RequestBody Map<String, Object> request) {
+        log.info("接收到请求：" + request);
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+//        System.out.println("isShutdown: " + executor.isShutdown());
+//        System.out.println("isTerminated: " + executor.isTerminated());
 
         executor.execute(() -> {
             try {
+//                System.out.println("✅ 子线程任务开始执行");
                 @SuppressWarnings("unchecked")
-                List<Map<String, String>> messages = (List<Map<String, String>>) request.get("messages");
+                List<Map<String, String>> messages = (List<Map<String, String>>) request.get("message");
 
                 if (messages == null) {
                     emitter.completeWithError(new IllegalArgumentException("messages参数不能为空"));

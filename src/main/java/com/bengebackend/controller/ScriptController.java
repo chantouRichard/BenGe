@@ -128,7 +128,7 @@ public class ScriptController {
     @PostMapping("/create")
     public ResponseEntity<ScriptDetailDto> createNewScript() {
         Integer userId = getCurrentUserId();
-        System.out.println("111111111111");
+//        System.out.println("111111111111");
         ScriptDetailDto result = scriptService.initializeScriptAsync(userId);
         return ResponseEntity.ok(result);
     }
