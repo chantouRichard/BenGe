@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import java.util.Arrays;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -52,6 +51,9 @@ public class AIStreamController {
             Executors.defaultThreadFactory(),
             new ThreadPoolExecutor.AbortPolicy() // 拒绝策略：抛出异常
     );
+    @Autowired
+    private ContextDataProcessor contextDataProcessor;
+
     /**
      * Slogan流式生成接口
      */
@@ -87,17 +89,12 @@ public class AIStreamController {
      */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@RequestBody Map<String, Object> request) {
-        log.info("接收到请求：" + request);
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-
-//        System.out.println("isShutdown: " + executor.isShutdown());
-//        System.out.println("isTerminated: " + executor.isTerminated());
 
         executor.execute(() -> {
             try {
-//                System.out.println("✅ 子线程任务开始执行");
                 @SuppressWarnings("unchecked")
-                List<Map<String, String>> messages = (List<Map<String, String>>) request.get("message");
+                List<Map<String, String>> messages = (List<Map<String, String>>) request.get("messages");
 
                 if (messages == null) {
                     emitter.completeWithError(new IllegalArgumentException("messages参数不能为空"));
