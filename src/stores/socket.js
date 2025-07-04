@@ -335,8 +335,9 @@ function handleVote(msg) {
       member.hasVoted = msg.hasVoted;
     }
   }
-  if(msg.options){
-    socketState.options = msg.options;
+  if(msg.content){
+    socketState.options = JSON.parse(msg.content);
+    console.log("socketState.options:",socketState.options);
   }
 }
 

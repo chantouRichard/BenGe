@@ -78,6 +78,6 @@ export function generateElementImage(scriptId, elementId) {
 }
 
 // 第二阶段交给AI整合（房主才能调用）
-export function generateCooperateFramework(JSON){
-  return "# 测试返回文本";
+export function generateCooperateFramework(data){
+  return request.post("script/collaboration/generate",data);
 }
