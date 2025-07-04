@@ -21,11 +21,7 @@ public class CollaborationScriptDto {
      * 剧本内容
      */
     private String content;
-    
-    /**
-     * 房间ID
-     */
-    private Integer roomId;
+
     
     /**
      * 响应消息
