@@ -1,24 +1,45 @@
 <template>
+  <transition
+    name="fade"
+    @before-enter="beforeEnter"
+    @before-leave="beforeLeave"
+  >
+    <div v-if="AIGenerate" class="ai-loading-container">
+      <video
+        class="loading-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        src="@/assets/first/book.mp4"
+      ></video>
+      <div class="loading-text">稍等，AI正在整合...</div>
+    </div>
+  </transition>
   <div class="vote-stage">
-    <h2 class="title">剧本方向投票</h2>
+    <h1 class="title">Script Direction Voting</h1>
     <div class="vote-info">
       <p>请从以下方向中选择1-2个进行投票 ({{ votesLeft }}票剩余)</p>
-      <p>当前参与投票成员: {{ members.length + 1 }}/{{ totalMembers }}</p>
     </div>
 
     <div class="vote-options">
       <div
-          v-for="(option, index) in sortedOptions"
-          :key="index"
-          class="vote-option"
-          :class="{
-          'selected': selectedOptions.includes(option.direction),
-          'leading': index < 3 && hasVotes
+        v-for="(option, index) in sortedOptions"
+        :key="index"
+        class="vote-option"
+        :class="{
+          selected: selectedOptions.includes(option.direction),
+          leading: index < 3 && hasVotes,
         }"
-          @click="toggleVote(option.direction)"
+        @click="
+          toggleVote(option.direction, topDirections.indexOf(option.direction))
+        "
       >
         <div class="option-content">
-          <span class="direction">{{ option.direction }}</span>
+          <span class="direction">{{ option.direction.title }}</span>
+          <span style="font-size: 12px; font-weight: bold">{{
+            option.direction.description
+          }}</span>
           <span class="vote-count">{{ option.votes }}票</span>
         </div>
         <div class="voters">
@@ -26,17 +47,15 @@
             {{ voter }}
           </span>
         </div>
-        <div v-if="index < 3 && hasVotes" class="top-badge">TOP {{ index + 1 }}</div>
+        <div v-if="index < 3 && hasVotes" class="top-badge">
+          TOP {{ index + 1 }}
+        </div>
       </div>
     </div>
 
     <div class="action-buttons">
-      <button
-          class="confirm-btn"
-          :disabled="!canConfirm"
-          @click="confirmVote"
-      >
-        {{ hasVoted ? '等待其他成员...' : '确认投票' }}
+      <button class="confirm-btn" :disabled="!canConfirm" @click="confirmVote">
+        {{ hasVoted ? "等待其他成员..." : "确认投票" }}
       </button>
     </div>
 
@@ -47,15 +66,15 @@
       </div>
       <div class="modification-area">
         <textarea
-            v-model="modificationRequest"
-            placeholder="输入您的修改意见..."
-            :disabled="isRegenerating"
+          v-model="modificationRequest"
+          placeholder="输入您的修改意见..."
+          :disabled="isRegenerating"
         ></textarea>
         <button
-            @click="requestRegeneration"
-            :disabled="isRegenerating || !modificationRequest.trim()"
+          @click="requestRegeneration"
+          :disabled="isRegenerating || !modificationRequest.trim()"
         >
-          {{ isRegenerating ? '生成中...' : '重新生成' }}
+          {{ isRegenerating ? "生成中..." : "重新生成" }}
         </button>
       </div>
     </div>
@@ -63,153 +82,279 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, defineProps, defineEmits } from 'vue'
+import { socketState } from "@/stores/socket";
+import { ref, computed, watch, defineProps, defineEmits } from "vue";
+const AIGenerate = ref(true);
 
 const props = defineProps({
   roomId: {
     type: String,
-    required: true
+    required: true,
   },
   members: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   allDirections: {
     type: Array,
-    default: () => []
-  }
-})
+    default: () => [],
+  },
+});
 
-const emit = defineEmits(['submitVote', 'regenerateSuggestion'])
+const emit = defineEmits(["submitVote", "regenerateSuggestion", "next-stage"]);
 
-const voteOptions = ref([])
-const selectedOptions = ref([])
-const hasVoted = ref(false)
-const totalMembers = ref(props.members.length + 1)
-const aiSuggestion = ref('')
-const modificationRequest = ref('')
-const isRegenerating = ref(false)
-const showAISuggestion = ref(false)
-const allVotesReceived = ref(false)
+const voteOptions = computed(() =>
+  topDirections.value.map((direction, index) => {
+    const totalVotes = socketState.members.reduce((sum, member) => {
+      if (
+        Array.isArray(member.vote) &&
+        typeof member.vote[index] === "number"
+      ) {
+        return sum + member.vote[index];
+      }
+      return sum;
+    }, 0);
+
+    // 可选扩展 voters 字段：谁投了该方向
+    const voters = socketState.members
+      .filter((member) => Array.isArray(member.vote) && member.vote[index] > 0)
+      .map((member) => member.username || "匿名");
+
+    return {
+      direction,
+      votes: totalVotes,
+      voters,
+    };
+  })
+);
+
+const selectedOptions = ref([]);
+const hasVoted = ref(false);
+const totalMembers = ref(props.members.length + 1);
+const aiSuggestion = ref("");
+const modificationRequest = ref("");
+const isRegenerating = ref(false);
+const showAISuggestion = ref(false);
+const allVotesReceived = ref(false);
+
+const topDirections = ref([]);
 
 // 初始化投票选项
-const initializeOptions = () => {
-  // 统计所有方向出现的次数
-  const directionCounts = {}
-  props.allDirections.forEach(directions => {
-    directions.forEach(dir => {
-      directionCounts[dir] = (directionCounts[dir] || 0) + 1
-    })
-  })
+const initializeOptions = async () => {
+  const allKeys = socketState.members.flatMap((member) => member.key || []);
+  const top6Keywords = [...new Set(allKeys)].slice(0, 6);
 
-  // 转换为投票选项格式
-  voteOptions.value = Object.keys(directionCounts).map(direction => ({
-    direction,
-    votes: 0,
-    voters: []
-  }))
-}
+  const directions = await generateDirections(top6Keywords);
+  topDirections.value = directions;
+  AIGenerate.value = false;
+};
+const generateDirections = async (keywords) => {
+  console.log("开始调用AI整合：", keywords);
+  const apiKey = "sk-166b19aaea874047815bf8c05daf4b6d"; // 替换成你自己的
+  const prompt = `请根据以下关键词整合出6个剧本方向，每个方向需要包含标题（title）和描述（description）。关键词如下：
 
-initializeOptions()
+${JSON.stringify(keywords)}
+
+请用如下格式返回：
+[
+  { "title": "xxx", "description": "..." },
+  ...
+]`;
+
+  const response = await fetch(
+    "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "qwen-plus",
+        messages: [
+          { role: "system", content: "你是一个创意助手，擅长剧本方向设计。" },
+          { role: "user", content: prompt },
+        ],
+      }),
+    }
+  );
+
+  const result = await response.json();
+  console.log("AI返回内容：".result);
+
+  const reply = result.choices?.[0]?.message?.content;
+  try {
+    const parsed = JSON.parse(reply);
+    return parsed;
+  } catch (e) {
+    console.error("AI 回复不是合法 JSON：", reply);
+    return [];
+  }
+};
+
+initializeOptions();
 
 // 计算属性
-const votesLeft = computed(() => 2 - selectedOptions.value.length)
-const canConfirm = computed(() => selectedOptions.value.length > 0 && !hasVoted.value)
+const votesLeft = computed(() => 2 - selectedOptions.value.length);
+const canConfirm = computed(
+  () => selectedOptions.value.length > 0 && !hasVoted.value
+);
 const sortedOptions = computed(() => {
-  return [...voteOptions.value].sort((a, b) => b.votes - a.votes)
-})
-const hasVotes = computed(() => voteOptions.value.some(opt => opt.votes > 0))
+  return [...voteOptions.value].sort((a, b) => b.votes - a.votes);
+});
+const hasVotes = computed(() => voteOptions.value.some((opt) => opt.votes > 0));
+const vote = ref([0, 0, 0, 0, 0, 0]);
 
 // 切换投票选择
-const toggleVote = (direction) => {
-  if (hasVoted.value) return
+const toggleVote = (direction, voteIndex) => {
+  if (voteIndex < 0 || voteIndex >= vote.value.length) return;
+  if (hasVoted.value) return;
 
-  const index = selectedOptions.value.indexOf(direction)
+  const index = selectedOptions.value.indexOf(direction);
   if (index === -1) {
     if (selectedOptions.value.length < 2) {
-      selectedOptions.value.push(direction)
+      selectedOptions.value.push(direction);
+      vote.value[voteIndex] = 1;
     }
   } else {
-    selectedOptions.value.splice(index, 1)
+    selectedOptions.value.splice(index, 1);
+    vote.value[voteIndex] = 0;
   }
-}
+
+  console.log("投票数组:", vote.value);
+  socketState.socket.send(JSON.stringify({ type: "vote", vote: vote.value }));
+};
 
 // 确认投票
 const confirmVote = () => {
-  if (selectedOptions.value.length === 0) return
+  if (selectedOptions.value.length === 0) return;
 
-  // 发送投票到后端
-  emit('submitVote', {
-    roomId: props.roomId,
-    directions: selectedOptions.value
-  })
-
-  hasVoted.value = true
-}
+  hasVoted.value = true;
+  console.log("有没有投票好：", hasVoted.value);
+  socketState.socket.send(
+    JSON.stringify({ type: "vote", hasVoted: hasVoted.value })
+  );
+};
 
 // 处理收到的投票更新
 const handleVoteUpdate = (data) => {
   // 更新投票数据
-  voteOptions.value = data.options
-  allVotesReceived.value = data.allVoted
+  voteOptions.value = data.options;
+  allVotesReceived.value = data.allVoted;
 
   // 如果所有人都投票了，显示AI建议
   if (allVotesReceived.value) {
-    showAISuggestion.value = true
+    showAISuggestion.value = true;
     // 这里应该从后端获取AI建议
-    aiSuggestion.value = "这是基于投票结果生成的AI创作建议..."
+    aiSuggestion.value = "这是基于投票结果生成的AI创作建议...";
   }
-}
+};
+
+import { userLoadingStore } from "@/stores/userLoadingStore";
+
+const loadingStore = userLoadingStore();
+// 判断成员是否全部选择了
+const allMembersVoted = computed(
+  () =>
+    socketState.members.length > 0 &&
+    socketState.members.every((member) => member.hasVoted === true)
+);
+watch(allMembersVoted, (newVal) => {
+  if (newVal) {
+    // showAISuggestion.value = true;
+    // 这里应该从后端获取AI建议
+    // aiSuggestion.value = "这是基于投票结果生成的AI创作建议...";
+    socketState.direction = sortedOptions.value[0].direction;
+    console.log("最终方向：", sortedOptions.value);
+
+    loadingStore.show2();
+
+    setTimeout(() => {
+      emit("next-stage", 1);
+      setTimeout(() => {
+        loadingStore.hide2();
+      });
+    }, 10000);
+  }
+});
 
 // 请求重新生成AI建议
 const requestRegeneration = () => {
-  if (isRegenerating.value) return
+  if (isRegenerating.value) return;
 
-  isRegenerating.value = true
+  isRegenerating.value = true;
   // 发送重新生成请求到后端
-  emit('regenerateSuggestion', {
+  emit("regenerateSuggestion", {
     roomId: props.roomId,
-    modification: modificationRequest.value
-  })
+    modification: modificationRequest.value,
+  });
 
   // 此处websocket监听更新
-}
+};
 
 // 监听成员变化
-watch(() => props.members, (newMembers) => {
-  totalMembers.value = newMembers.length + 1
-})
+watch(
+  () => props.members,
+  (newMembers) => {
+    totalMembers.value = newMembers.length + 1;
+  }
+);
 
 // 监听投票选项变化
-watch(() => props.allDirections, () => {
-  initializeOptions()
-})
+watch(
+  () => props.allDirections,
+  () => {
+    initializeOptions();
+  }
+);
+
+watch(
+  voteOptions,
+  (newVal) => {
+    console.log("voteOptions 更新了:", newVal);
+    console.log("socketState.members:", socketState.members);
+  },
+  { deep: true, immediate: true }
+);
 </script>
 
 <style scoped>
 .vote-stage {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 20px;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+
+  align-items: center;
+  justify-content: center;
 }
 
 .title {
-  text-align: center;
+  text-align: left;
   color: #333;
   margin-bottom: 20px;
+  width: 90%;
+
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
 .vote-info {
   text-align: center;
   margin-bottom: 20px;
   color: #666;
+
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+
+  display: flex;
 }
 
 .vote-info p {
+  width: 100%;
   margin: 5px 0;
 }
 
@@ -219,7 +364,9 @@ watch(() => props.allDirections, () => {
   gap: 15px;
   margin-bottom: 20px;
   flex: 1;
-  overflow-y: auto;
+
+  width: 100%;
+  padding: 10px;
 }
 
 .vote-option {
@@ -232,6 +379,10 @@ watch(() => props.allDirections, () => {
   position: relative;
   border: 2px solid transparent;
   overflow: hidden;
+  width: 200px;
+  height: 160px;
+
+  overflow-y: auto;
 }
 
 .vote-option:hover {
@@ -250,9 +401,14 @@ watch(() => props.allDirections, () => {
 
 .option-content {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 10px;
+
+  position: relative;
+
+  overflow-y: auto;
 }
 
 .direction {
@@ -261,6 +417,9 @@ watch(() => props.allDirections, () => {
 }
 
 .vote-count {
+  position: absolute;
+  top: 0;
+  right: 0;
   background-color: #f0f0f0;
   padding: 3px 8px;
   border-radius: 10px;
@@ -369,5 +528,38 @@ watch(() => props.allDirections, () => {
 .modification-area button:disabled {
   background-color: #c0c4cc;
   cursor: not-allowed;
+}
+
+.loading-video {
+  width: 200px; /* 你可以改成 100% 或 cover 效果 */
+  height: 200px;
+  object-fit: contain;
+}
+.ai-loading-container {
+  position: absolute;
+
+  background-color: #fcf9fc;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 24px;
+}
+.loading-text {
+  font-size: 36px;
+  font-weight: bold;
+}
+
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.6s ease;
+}
+
+.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+  opacity: 0;
 }
 </style>

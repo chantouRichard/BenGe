@@ -1,27 +1,32 @@
 <template>
   <div class="direction-select">
-    <h2 class="title">剧本方向选择</h2>
+    <div class="title">
+      <h1 style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Script Direction Selection</h1>
+      
+    </div>
 
     <div class="selection-container">
       <!-- 目标区域 (已选择) -->
       <div class="target-area">
         <h3>已选择的方向主题 (最多3个)</h3>
         <div
-            class="card-container"
-            @drop="onDrop($event, 'selected')"
-            @dragover.prevent
-            @dragenter.prevent
+          class="card-container"
+          @drop="onDrop($event, 'selected')"
+          @dragover.prevent
+          @dragenter.prevent
         >
           <div
-              v-for="(item, index) in selectedDirections"
-              :key="'selected-'+index"
-              class="direction-card"
-              draggable="true"
-              @dragstart="startDrag($event, item, 'selected')"
-              :title="item"
+            v-for="(item, index) in selectedDirections"
+            :key="'selected-' + index"
+            class="direction-card"
+            draggable="true"
+            @dragstart="startDrag($event, item, 'selected')"
+            :title="item"
           >
             <span class="card-content">{{ item }}</span>
-            <span class="remove-btn" @click="removeDirection(index, 'selected')">×</span>
+            <span class="remove-btn" @click="removeDirection(index, 'selected')"
+              >×</span
+            >
           </div>
           <div v-if="selectedDirections.length === 0" class="empty-placeholder">
             请从右侧拖入方向主题
@@ -33,192 +38,257 @@
       <div class="storage-area">
         <h3>可选的方向主题</h3>
         <div
-            class="card-container"
-            @drop="onDrop($event, 'unselected')"
-            @dragover.prevent
-            @dragenter.prevent
+          class="card-container"
+          @drop="onDrop($event, 'unselected')"
+          @dragover.prevent
+          @dragenter.prevent
         >
           <div
-              v-for="(item, index) in unselectedDirections"
-              :key="'unselected-'+index"
-              class="direction-card"
-              draggable="true"
-              @dragstart="startDrag($event, item, 'unselected')"
-              :title="item"
-          >
-            <span class="card-content">{{ item }}</span>
-            <span class="remove-btn" @click="deleteDirection(index)">×</span>
-          </div>
-          <div v-if="unselectedDirections.length === 0" class="empty-placeholder">
-            暂无更多可选主题
-          </div>
+      v-for="(item, index) in unselectedDirections"
+      :key="'unselected-' + index"
+      class="direction-card"
+      draggable="true"
+      @dragstart="startDrag($event, item, 'unselected')"
+      :title="item"
+      :style="getCardStyle(index)"
+    >
+      <span class="card-content">{{ item }}</span>
+      <span class="remove-btn" @click="deleteDirection(index)">×</span>
+    </div>
         </div>
       </div>
     </div>
 
+    <div style="display: flex;align-items: center;justify-content: space-between;">
     <div class="add-direction">
       <input
-          v-model="newDirection"
-          type="text"
-          placeholder="输入新的方向主题"
-          @keyup.enter="addNewDirection"
-      >
-      <button @click="addNewDirection">添加</button>
+        v-model="newDirection"
+        type="text"
+        placeholder="输入新的方向主题"
+        @keyup.enter="addNewDirection"
+        style="width: 300px;height: 36px;border-radius: 18px;"
+      />
+      <button @click="addNewDirection" class="confirm-btn" style="width: 84px;">添加</button>
     </div>
 
     <button
-        class="confirm-btn"
-        :disabled="selectedDirections.length === 0"
-        @click="confirmSelection"
+      class="confirm-btn"
+      :disabled="selectedDirections.length === 0"
+      @click="confirmSelection"
     >
       确认选择
     </button>
+    </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'DirectionSelect',
-  data() {
-    return {
-      selectedDirections: [],  // 已选择的方向
-      unselectedDirections: [  // 未选择的方向
-        '悬疑推理',
-        '浪漫爱情',
-        '科幻未来',
-        '历史传记',
-        '青春校园',
-        '恐怖惊悚'
-      ],
-      newDirection: '',        // 新方向输入
-      dragItem: null,          // 当前拖拽的项
-      dragSource: null         // 拖拽来源区域
-    }
-  },
-  methods: {
-    // 开始拖拽
-    startDrag(event, item, source) {
-      this.dragItem = item
-      this.dragSource = source
-      event.dataTransfer.effectAllowed = 'move'
-    },
+<script setup>
+import { ref, computed, onMounted, watch } from "vue";
+import { ElMessage } from "element-plus"; // 如果你用的是 Element Plus
+import { socketState } from "@/stores/socket";
+import { isOwner } from "@/api/room";
 
-    // 放置处理
-    onDrop(event, targetArea) {
-      if (!this.dragItem) return
-
-      // 如果拖到相同区域，不做处理
-      if (this.dragSource === targetArea) return
-
-      // 从源区域移除
-      if (this.dragSource === 'selected') {
-        const index = this.selectedDirections.indexOf(this.dragItem)
-        if (index !== -1) {
-          this.selectedDirections.splice(index, 1)
-        }
-      } else {
-        const index = this.unselectedDirections.indexOf(this.dragItem)
-        if (index !== -1) {
-          this.unselectedDirections.splice(index, 1)
-        }
-      }
-
-      // 添加到目标区域
-      if (targetArea === 'selected') {
-        // 检查是否已达到最大数量
-        if (this.selectedDirections.length >= 3) {
-          this.$message.warning('最多只能选择3个方向主题')
-          // 把项目放回原区域
-          if (this.dragSource === 'selected') {
-            this.selectedDirections.push(this.dragItem)
-          } else {
-            this.unselectedDirections.push(this.dragItem)
-          }
-          return
-        }
-        this.selectedDirections.push(this.dragItem)
-      } else {
-        this.unselectedDirections.push(this.dragItem)
-      }
-
-      this.dragItem = null
-      this.dragSource = null
-    },
-
-    // 移除方向（从已选择区域）
-    removeDirection(index, area) {
-      if (area === 'selected') {
-        const [removed] = this.selectedDirections.splice(index, 1)
-        this.unselectedDirections.push(removed)
-      }
-    },
-
-    // 删除方向（从可选区域）
-    deleteDirection(index) {
-      this.unselectedDirections.splice(index, 1)
-    },
-
-    // 添加新方向
-    addNewDirection() {
-      if (!this.newDirection.trim()) {
-        this.$message.warning('请输入有效方向主题')
-        return
-      }
-
-      if (this.unselectedDirections.includes(this.newDirection)) {
-        this.$message.warning('该方向主题已存在')
-        return
-      }
-
-      this.unselectedDirections.push(this.newDirection)
-      this.newDirection = ''
-    },
-
-    // 确认选择
-    confirmSelection() {
-      if (this.selectedDirections.length === 0) {
-        this.$message.warning('请至少选择一个方向主题')
-        return
-      }
-
-      this.$emit('confirm', this.selectedDirections)
-    }
+// 判断成员是否全部选择了
+const allMembersChosen = computed(
+  () =>
+    socketState.members.length > 0 &&
+    socketState.members.every((member) => member.hasChosen === true)
+);
+watch(allMembersChosen, (newVal) => {
+  if (newVal) {
+    emit("confirm", selectedDirections.value)
   }
+})
+
+const isOwnerResult = ref(false)
+
+onMounted(async () => {
+  isOwnerResult.value = !await isOwner(socketState.roomId)
+})
+
+const selectedDirections = ref([]);
+const unselectedDirections = ref([
+  "悬疑推理",
+  "浪漫爱情",
+  "科幻未来",
+  "历史传奇故事",
+  "青春校园",
+  "恐怖惊悚",
+]);
+
+const newDirection = ref("");
+const dragItem = ref(null);
+const dragSource = ref(null);
+
+const emit = defineEmits(["confirm"]);
+
+// 开始拖拽
+function startDrag(event, item, source) {
+  dragItem.value = item;
+  dragSource.value = source;
+  event.dataTransfer.effectAllowed = "move";
+}
+
+// 放置处理
+function onDrop(event, targetArea) {
+  if (!dragItem.value) return;
+
+  if (dragSource.value === targetArea) return;
+
+  const item = dragItem.value;
+
+  // 从原区域移除
+  if (dragSource.value === "selected") {
+    const index = selectedDirections.value.indexOf(item);
+    if (index !== -1) selectedDirections.value.splice(index, 1);
+  } else {
+    const index = unselectedDirections.value.indexOf(item);
+    if (index !== -1) unselectedDirections.value.splice(index, 1);
+  }
+
+  // 添加到目标区域
+  if (targetArea === "selected") {
+    if (selectedDirections.value.length >= 3) {
+      ElMessage.warning("最多只能选择3个方向主题");
+
+      // 放回原区域
+      if (dragSource.value === "selected") {
+        selectedDirections.value.push(item);
+      } else {
+        unselectedDirections.value.push(item);
+      }
+
+      return;
+    }
+
+    selectedDirections.value.push(item);
+  } else {
+    unselectedDirections.value.push(item);
+  }
+
+  console.log("选择了方向：", selectedDirections.value);
+  socketState.socket.send(
+    JSON.stringify({ type: "vote", key: selectedDirections.value })
+  );
+
+  dragItem.value = null;
+  dragSource.value = null;
+}
+
+// 从“已选”区域移除
+function removeDirection(index) {
+  const [removed] = selectedDirections.value.splice(index, 1);
+  unselectedDirections.value.push(removed);
+}
+
+// 从“可选”区域删除
+function deleteDirection(index) {
+  unselectedDirections.value.splice(index, 1);
+}
+
+// 添加新方向
+function addNewDirection() {
+  const value = newDirection.value.trim();
+  if (!value) {
+    ElMessage.warning("请输入有效方向主题");
+    return;
+  }
+
+  if (unselectedDirections.value.includes(value)) {
+    ElMessage.warning("该方向主题已存在");
+    return;
+  }
+
+  unselectedDirections.value.push(value);
+  newDirection.value = "";
+}
+
+// 确认选择
+function confirmSelection() {
+  if (selectedDirections.value.length === 0) {
+    ElMessage.warning("请至少选择一个方向主题");
+    return;
+  }
+  console.log("最终选择方向：", true);
+  socketState.socket.send(JSON.stringify({ type: "vote", hasChosen: true }));
+
+  // emit("confirm", selectedDirections.value);
+}
+// 缓存颜色，确保每个卡片只计算一次颜色
+const cardStyles = computed(() => {
+  return unselectedDirections.value.map(() => {
+    const isBlack = Math.random() > 0.5  // 随机决定是否为黑色背景
+    return {
+      backgroundColor: isBlack ? '#000' : '#fff',
+      color: isBlack ? '#fff' : '#000'
+    }
+  })
+})
+
+// 根据index返回每个卡片的颜色
+function getCardStyle(index) {
+  return cardStyles.value[index]
 }
 </script>
 
 <style scoped>
 .direction-select {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 20px;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   display: flex;
   flex-direction: column;
   height: 100%;
+
+  justify-content: center;
 }
 
 .title {
-  text-align: center;
   color: #333;
   margin-bottom: 20px;
   flex-shrink: 0;
+  display: flex;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+
+  justify-content: flex-start;
+  width: 90%;
+}
+.titleh1::before {
+  content: "<";
+}
+.titleh1::after {
+  content: ">";
 }
 
 .selection-container {
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 100px;
   gap: 20px;
   flex: 1;
   min-height: 0;
+  width: 90%;
 }
 
-.target-area, .storage-area {
+.target-area{
   width: 48%; /* 固定宽度 */
   height: 100%;
-  border: 2px dashed #ccc;
-  border-radius: 8px;
+  border: 3px solid #ccc;
+  border-radius: 24px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.storage-area {
+  width: 48%; /* 固定宽度 */
+  height: 100%;
+  border: 3px solid #ccc;
+  border-radius: 24px;
   padding: 15px;
   background-color: #f9f9f9;
   display: flex;
@@ -227,7 +297,7 @@ export default {
 }
 
 .target-area {
-  border-color: #67c23a;
+  border-color: #64D0A5;
   background-color: rgba(103, 194, 58, 0.05);
 }
 
@@ -244,25 +314,35 @@ h3 {
 }
 
 .card-container {
-  flex: 1;
-  overflow-y: auto;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 200px;
+  justify-content: flex-start;
+  flex-wrap: wrap;        /* 允许换行 */
+  gap: 16px;
+  overflow-y: auto;       /* 纵向滚动 */
+  overflow-x: hidden;     /* 禁止横向滚动 */
+
+  margin-top: 20px;
+  min-height: 49px;
 }
 
+
 .direction-card {
+  display: flex; /* 保持你卡片内容水平排列 */
+  align-items: center;
   padding: 12px 15px;
   background-color: white;
-  border-radius: 6px;
+  border-radius: 27px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   cursor: move;
   position: relative;
   transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  min-height: 40px;
+  
+  /* 控制宽度，不固定，也不占满一整行 */
+  flex: 0 1 auto; /* 不放大，可以缩小，自适应宽度 */
+  max-width: 200px; /* 或你希望的最大宽度 */
+
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .direction-card:hover {
@@ -272,8 +352,8 @@ h3 {
 
 .card-content {
   flex: 1;
-  word-wrap: break-word; /* 允许单词内换行 */
-  white-space: normal; /* 允许换行 */
+  word-wrap: break-word;
+  white-space: normal;
   overflow: hidden;
   padding-right: 20px;
 }
@@ -304,8 +384,9 @@ h3 {
 .add-direction {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
   flex-shrink: 0;
+
+  align-items: center;
 }
 
 .add-direction input {
@@ -321,7 +402,7 @@ h3 {
   background-color: #409eff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 24px;
   cursor: pointer;
   transition: background-color 0.3s;
 }
@@ -331,25 +412,51 @@ h3 {
 }
 
 .confirm-btn {
-  display: block;
-  width: 100%;
+  width: 120px;
+  height: 36px;
   padding: 12px;
-  background-color: #67c23a;
+  background-color: #337DF2;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 18px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-btn:hover {
+  background-color: #005cf0;
+}
+
+.confirm-btn:disabled {
+  background-color: #77767A;
+  cursor: not-allowed;
+}
+
+.owner-btn{
+  position: relative;
+  right: -200px;
+  display: block;
+  width: 96px;
+  padding: 12px;
+  background-color: #337DF2;
+  color: white;
+  border: none;
+  border-radius: 24px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
   flex-shrink: 0;
 }
 
-.confirm-btn:hover {
-  background-color: #85ce61;
-}
 
-.confirm-btn:disabled {
-  background-color: #c0c4cc;
+.owner-btn:disabled {
+  background-color: #77767A;
   cursor: not-allowed;
 }
 </style>

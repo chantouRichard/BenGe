@@ -1,28 +1,33 @@
 <template>
   <div id="app">
-    <router-view/>
-    <AIChatWidget v-if="loadingStore.aiAssistantLoading"/>
+    <router-view />
+    <AIChatWidget v-if="loadingStore.aiAssistantLoading" />
     <transition name="slide-fade" mode="out-in">
-      <FullScreenLoading v-if="loadingStore.loading"/>
+      <FullScreenLoading v-if="loadingStore.loading" />
+    </transition>
+    <transition name="slide-fade" mode="out-in">
+      <FullScreenLoading2 v-if="loadingStore.loading2" />
     </transition>
   </div>
 </template>
 
 <script setup>
-  import FullScreenLoading from './components/FullScreenLoading.vue'
-  import { userLoadingStore } from './stores/userLoadingStore';
-  import AIChatWidget from './components/AIChatWidget.vue';
+import FullScreenLoading from "./components/FullScreenLoading.vue";
+import FullScreenLoading2 from "./components/Cooperation/first/FullScreenLoading2.vue";
+import { userLoadingStore } from "./stores/userLoadingStore";
+import AIChatWidget from "./components/AIChatWidget.vue";
 
-  const loadingStore = userLoadingStore();
+const loadingStore = userLoadingStore();
 </script>
 
 <style>
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-html, body{
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -30,12 +35,13 @@ html, body{
   overflow: hidden;
 }
 
-#app{
+#app {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
-  /* 动画名要和 transition 组件的 name 属性一致 */
+/* 动画名要和 transition 组件的 name 属性一致 */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.6s ease;
@@ -63,5 +69,4 @@ html, body{
   transform: translateY(-100%); /* 向上退出 */
   opacity: 0;
 }
-
 </style>

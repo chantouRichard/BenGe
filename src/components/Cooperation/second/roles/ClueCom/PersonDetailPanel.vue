@@ -88,12 +88,12 @@ const formData = ref({
 })
 
 const initFormData = () => {
-  const data = props.nodeData?.node?.data || {}
+  const data = props.nodeData?.data || {}
   formData.value = {
     name: data.name || '',
     bio: data.bio || '',
-    clues: (data.clues || []).join(', '),
-    tags: (data.tags || []).join(', '),
+    clues: Array.isArray(data.clues) ? data.clues.join(', ') : (data.clues || ''),
+    tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
     note: data.note || ''
   }
 }

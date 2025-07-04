@@ -8,7 +8,11 @@
   >
     <!-- 主按钮 -->
     <button class="main-button">
-      <img src="../../../../../assets/icons/magic-wand.svg" alt="工具栏" class="icon-main" />
+      <img
+        src="../../../../../assets/icons/magic-wand.svg"
+        alt="工具栏"
+        class="icon-main"
+      />
     </button>
 
     <!-- 展开面板 -->
@@ -34,7 +38,9 @@
             class="icon-tool"
             :style="{
               transform: btn.hover ? 'scale(1.15)' : 'none',
-              filter: btn.hover ? 'drop-shadow(0 0 8px ' + btn.color + ')' : 'none',
+              filter: btn.hover
+                ? 'drop-shadow(0 0 8px ' + btn.color + ')'
+                : 'none',
             }"
           />
           <span class="tooltip">{{ btn.tooltip }}</span>
@@ -77,13 +83,30 @@ const buttons = ref([
     hover: false,
   },
   {
-  icon: require("@/assets/icons/magic-wand.svg"),
-  action: "ai-generate",
-  tooltip: "AI生成场景",
-  color: "rgba(255, 215, 0, 0.7)",
-  hover: false,
-}
+    icon: require("@/assets/icons/magic-wand.svg"),
+    action: "ai-generate",
+    tooltip: "AI生成场景",
+    color: "rgba(255, 215, 0, 0.7)",
+    hover: false,
+  },
 ]);
+
+// 判断是否房主
+import { isOwner } from "@/api/room";
+import { socketState } from "@/stores/socket";
+const addAiIntegrateButton = () => {
+  if (isOwner(socketState.roomId)) {
+    buttons.value.push({
+      icon: require("@/assets/icons/AI.svg"),
+      action: "ai-integrate",
+      tooltip: "AI整合",
+      color: "rgba(255, 215, 0, 0.7)",
+      hover: false,
+    });
+  }
+};
+
+addAiIntegrateButton();
 
 const isExpanded = ref(false);
 const isDragging = ref(false);
@@ -98,7 +121,7 @@ const toolballStyle = computed(() => ({
 }));
 
 const panelHoverStyle = computed(() => ({
-  backgroundImage: `radial-gradient(200px circle at ${panelHoverPos.value.x}px ${panelHoverPos.value.y}px, rgba(176, 227, 255, 0.35), transparent 80%)`
+  backgroundImage: `radial-gradient(200px circle at ${panelHoverPos.value.x}px ${panelHoverPos.value.y}px, rgba(176, 227, 255, 0.35), transparent 80%)`,
 }));
 
 const handlePanelMove = (e) => {
@@ -144,14 +167,14 @@ const startDrag = (e) => {
   window.addEventListener("touchend", endHandler);
 };
 defineEmits([
-  'add-node',
-  'add-edge',
-  'export-md',
-  'export-pdf',
-  'ai-generate'
-])
+  "add-node",
+  "add-edge",
+  "export-md",
+  "export-pdf",
+  "ai-generate",
+  "ai-integrate",
+]);
 </script>
-
 
 <style scoped>
 .toolball {
@@ -175,7 +198,8 @@ defineEmits([
   border: none;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(4px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 20px 2px rgba(100, 200, 255, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 20px 2px rgba(100, 200, 255, 0.5);
   cursor: pointer;
   transition: all 0.3s ease;
   display: grid;
@@ -185,7 +209,8 @@ defineEmits([
 .main-button:hover {
   transform: scale(1.05);
   background: linear-gradient(to top, #dce1ff, #ffffff);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 30px 4px rgba(100, 200, 255, 0.7);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 0 30px 4px rgba(100, 200, 255, 0.7);
 }
 
 .icon-main {
@@ -209,8 +234,13 @@ defineEmits([
   backdrop-filter: blur(12px);
   overflow: hidden;
   margin-left: 12px;
-  background: linear-gradient(to top, rgba(244, 246, 251, 0.7), rgba(255, 255, 255, 0.3));
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(
+    to top,
+    rgba(244, 246, 251, 0.7),
+    rgba(255, 255, 255, 0.3)
+  );
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
   transition: background 0.4s ease;
 }
 
@@ -230,7 +260,8 @@ defineEmits([
 .tool-button:hover {
   background: linear-gradient(135deg, #b0e3ff, #ffffff);
   border: 1px solid #9faeff;
-  box-shadow: 0 0 6px rgba(176, 227, 255, 0.6), 0 0 10px rgba(159, 174, 255, 0.4);
+  box-shadow: 0 0 6px rgba(176, 227, 255, 0.6),
+    0 0 10px rgba(159, 174, 255, 0.4);
   transform: scale(1.15);
 }
 
@@ -261,7 +292,8 @@ defineEmits([
 
 .panel-expand-enter-active,
 .panel-expand-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transition: opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
 .panel-expand-enter-from,

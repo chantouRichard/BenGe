@@ -82,6 +82,22 @@ const buttons = ref([
     hover: false,
   },
 ]);
+// 判断是否房主
+import { isOwner } from "@/api/room";
+import { socketState } from "@/stores/socket";
+const addAiIntegrateButton = () => {
+  if (isOwner(socketState.roomId)) {
+    buttons.value.push({
+      icon: require("@/assets/icons/AI.svg"),
+      action: "ai-integrate",
+      tooltip: "AI整合",
+      color: "rgba(255, 215, 0, 0.7)",
+      hover: false,
+    });
+  }
+};
+
+addAiIntegrateButton();
 
 // 交互状态
 const isExpanded = ref(false);
@@ -138,7 +154,8 @@ defineEmits([
   'add-relationship',
   'character-template',
   'export-characters',
-  'ai-generate'
+  'ai-generate',
+  'ai-integrate'
 ]);
 </script>
 

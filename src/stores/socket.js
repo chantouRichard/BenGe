@@ -5,10 +5,11 @@ import { useCharacterStore } from "./character";
 import { useClueStore } from "./clue";
 import { useAtmosphereStore } from "./atmosphere";
 
-const canvasStore = useCanvasStore();
-const characterStore = useCharacterStore();
-const clueStore = useClueStore();
-const atmosphereStore = useAtmosphereStore();
+// 不要在顶层调用 useStore，先定义变量
+let canvasStore = null;
+let characterStore = null;
+let clueStore = null;
+let atmosphereStore = null;
 
 const socketState = reactive({
   socket: null,
@@ -27,38 +28,65 @@ const socketState = reactive({
   nodes: {},
   edges: {},
 
-  userRole:-1,
+  userRole: -1,
   roles: [
-  {
-    name: "剧情设计师",
-    description:
-      "擅长构建故事主线与反转，通过精妙布局勾勒出跌宕起伏的剧情，掌控节奏与情感张力，引导玩家沉浸在虚构与现实交织的世界中。",
-    task:
-      "在画布上设计剧情主线与关键节点，包括起承转合、高潮反转、结局逻辑等，确保故事线完整且引人入胜。",
-  },
-  {
-    name: "角色设计师",
-    description:
-      "负责塑造人物性格与关系网络，为每一个角色赋予鲜明动机与成长轨迹，让玩家在扮演中感受真实的情感与冲突。",
-    task:
-      "在画布中添加并完善角色节点，设定角色背景、动机、技能、物品与相互关系，构建角色成长路径与互动关系网。",
-  },
-  {
-    name: "线索设计师",
-    description:
-      "精于埋设线索与误导，通过巧妙布局隐藏真相，引导推理节奏，确保玩家在抽丝剥茧中感受层层惊喜与挑战。",
-    task:
-      "在画布中添加线索节点及其关联关系，设计误导型线索、核心线索和关键证据链，明确每条线索的获取方式与逻辑归属。",
-  },
-  {
-    name: "氛围设计师",
-    description:
-      "以视觉、音效与文本语言营造沉浸式体验，塑造紧张或诡秘的氛围，让每一处场景都充满戏剧张力，增强整体代入感。",
-    task:
-      "在画布中标注关键场景与氛围要素（如灯光、音效、环境设定），为每段剧情或线索交付设计匹配的情绪基调与视觉风格。",
-  },
-]
-
+    {
+      name: "剧情设计师",
+      description:
+        "擅长构建故事主线与反转，通过精妙布局勾勒出跌宕起伏的剧情，掌控节奏与情感张力，引导玩家沉浸在虚构与现实交织的世界中。",
+      task: [
+        "亲爱的剧情大师，准备好画出故事的脉络了吗？",
+        "你的工作是搭建整个故事的时间线和关键事件，像导演一样统筹全局。",
+        "先来画几个重要时间节点吧！这些节点是整个剧本的骨架。",
+        "事件之间的关系也要梳理清楚，保证故事流畅又紧凑。",
+        "当你确定节点，别忘了告诉角色设计师和线索架构师，让他们准备配合哦！",
+        "需要灵感？找协作助理AI聊聊，给你意想不到的剧情闪光点！",
+        "加油，让我们一起把这场悬疑故事推向高潮！"
+      ],
+    },
+    {
+      name: "角色设计师",
+      description:
+        "负责塑造人物性格与关系网络，为每一个角色赋予鲜明动机与成长轨迹，让玩家在扮演中感受真实的情感与冲突。",
+      task: [
+        "嘿，角色塑造达人！让人物跳出纸面吧！",
+        "你的使命是创造活灵活现的人物和他们之间复杂微妙的关系。",
+        "根据剧情设计师的时间节点，安排角色何时出现、他们的背景和秘密。",
+        "构建角色关系网，谁是朋友，谁是敌人？让人物之间产生火花！",
+        "随时和线索架构师沟通，确保人物动机和线索逻辑一致。",
+        "记得用标签和注释帮团队快速理解每个角色。",
+        "角色鲜活了，故事才精彩！"
+      ],
+    },
+    {
+      name: "线索设计师",
+      description:
+        "精于埋设线索与误导，通过巧妙布局隐藏真相，引导推理节奏，确保玩家在抽丝剥茧中感受层层惊喜与挑战。",
+      task: [
+        "侦探专家上线，线索全盘掌控！",
+        "你的任务是设计推理的蛛丝马迹，让玩家循着线索步步深入真相。",
+        "按照时间线节点，布置关键线索和证据，设计合理的推理链条。",
+        "绑定线索与事件、角色，保证逻辑清晰，别让推理跑偏！",
+        "常和剧情设计师和角色设计师交流，确认线索和故事同步推进。",
+        "利用冲突检测AI，找出可能的逻辑漏洞。",
+        "把握好线索节奏，玩家才能越推越带劲！"
+      ],
+    },
+    {
+      name: "氛围设计师",
+      description:
+        "以视觉、音效与文本语言营造沉浸式体验，塑造紧张或诡秘的氛围，让每一处场景都充满戏剧张力，增强整体代入感。",
+      task: [
+        "场景魔法师，来营造氛围啦！",
+        "你是这场故事的“滤镜”和“布景师”，让每个场景生动立体。",
+        "根据剧情设计师的事件时间点，设计符合事件气氛的场景风格。",
+        "利用AI帮忙快速生成视觉素材或背景描述。",
+        "时刻关注剧情节奏，调整氛围色调，打造悬疑、紧张或神秘的感觉。",
+        "跟剧情设计师保持沟通，确保氛围与故事情绪一致。",
+        "场景有了氛围，故事才有“灵魂”！"
+      ],
+    },
+  ]
 });
 
 function setupWebSocket() {
@@ -103,15 +131,19 @@ function setupWebSocket() {
         socketState.currentUsername
       );
     } else if (msg.type === "chat") {
-      socketState.messages.push({
+      const isAIMessage = msg.username === "AI助手" || msg.userId === -1;
+      const newMessage = {
         ...msg,
         isMe: msg.userId === socketState.currentUserId,
         sender: msg.username,
         content: msg.content,
         time: msg.time,
         avatar: msg.avatar || socketState.avatar,
-      });
-      console.log("数组：", socketState.messages);
+        isAI: isAIMessage,
+      };
+
+      socketState.messages.push(newMessage);
+      console.log("消息数组更新，当前长度:", socketState.messages.length);
     } else if (msg.type === "system") {
       socketState.messages.push({
         type: "system",
@@ -127,8 +159,15 @@ function setupWebSocket() {
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
       handleRoleSelection(msg.roleName, msg.username);
-    } else if (msg.type === "canvas" || msg.type === "character" || msg.type === "clue" || msg.type === "atmosphere") {
+    } else if (
+      msg.type === "canvas" ||
+      msg.type === "character" ||
+      msg.type === "clue" ||
+      msg.type === "atmosphere"
+    ) {
       handleCanvas(msg);
+    } else if (msg.type === "vote") {
+      handleVote(msg);
     }
   };
 
@@ -224,14 +263,14 @@ function handleCanvas(msg) {
   } else if (msg.type == "character") {
     characterStore.nodes = msg.characterNodes || [];
     characterStore.edges = msg.characterEdges || [];
-  } else if(msg.type == "clue") {
+  } else if (msg.type == "clue") {
     clueStore.nodes = [
-    ...(msg.clueNodes || []),
-    ...(msg.inferenceNodes || []),
-    ...(msg.personNodes || []),
-  ];
+      ...(msg.clueNodes || []),
+      ...(msg.inferenceNodes || []),
+      ...(msg.personNodes || []),
+    ];
     clueStore.edges = msg.clueEdges || [];
-  } else{
+  } else {
     atmosphereStore.nodes = msg.atmosphereNodes || [];
     atmosphereStore.edges = msg.atmosphereEdges || [];
   }
@@ -244,6 +283,34 @@ function updateMembers(roleName, username) {
       member.selectedRole = roleName;
     }
   });
+}
+
+// 同步投票部分
+function handleVote(msg) {
+  if (msg.key && msg.username) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.key = msg.key;
+    }
+  }
+  if (msg.hasChosen) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.hasChosen = msg.hasChosen;
+    }
+  }
+  if (msg.vote) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.vote = msg.vote;
+    }
+  }
+  if (msg.hasVoted) {
+    const member = socketState.members.find((m) => m.username === msg.username);
+    if (member) {
+      member.hasVoted = msg.hasVoted;
+    }
+  }
 }
 
 //
