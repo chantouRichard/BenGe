@@ -32,3 +32,5 @@ redisson:
     singleServerConfig:
       address: "redis://127.0.0.1:6379"
 
+AI:
+  key: sk-166b19aaea874047815bf8c05daf4b6d

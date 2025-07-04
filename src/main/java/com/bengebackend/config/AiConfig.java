@@ -5,8 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
+import org.springframework.web.client.RestTemplate;
 
-/**
+ /**
  * AI配置类
  */
 @Configuration
@@ -21,5 +22,10 @@ public class AiConfig {
                 .apiKey(apiKey)
                 .modelName("qwen-turbo")
                 .build();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }
