@@ -1,5 +1,6 @@
 package com.bengebackend.websocket.message;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -301,7 +302,9 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段，保持向后兼容
     public static class CharacterEdgeContent {
+        // === 角色-角色关系字段 ===
         /** 关系类型（如亲属、敌对） */
         private String type;
 
@@ -316,6 +319,19 @@ public class WebSocketMessage {
 
         /** 显示用标签 */
         private String label;
+
+        // === 角色-场景关系字段 ===
+        /** 参与类型（如主角、配角、反派等） - 用于角色-场景关系 */
+        private String participationType;
+
+        /** 重要性（如关键、高、普通、低） - 用于角色-场景关系 */
+        private String importance;
+
+        /** 边样式（如实线、虚线） - 用于角色-场景关系 */
+        private String style;
+
+        /** 是否显示标签 - 用于角色-场景关系 */
+        private Boolean showLabel;
     }
 
     /**

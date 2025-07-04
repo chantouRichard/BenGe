@@ -33,7 +33,8 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/swagger-resources/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/webjars/**")).permitAll()
-                        // 其他全部认证
+                        .requestMatchers(new AntPathRequestMatcher("/api/ai/**")).permitAll()
+                            // 其他全部认证
                         .anyRequest().authenticated())
                 // 添加 JWT 过滤器，放在基本认证之前
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

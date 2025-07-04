@@ -13,6 +13,7 @@ import com.bengebackend.entity.ScriptReplyRequestEntity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import java.util.Arrays;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -20,17 +21,12 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 @RestController
-@RequestMapping("/api/ai")
-@CrossOrigin(origins = "*")
+@RequestMapping("api/ai")
 @Slf4j
 public class AIStreamController {
 
@@ -46,7 +42,17 @@ public class AIStreamController {
     @Autowired
     private ScriptService scriptService;
 
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = new ThreadPoolExecutor(
+            2,                      // corePoolSize
+            10,                     // maximumPoolSize
+            60L,                    // keepAliveTime
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100), // 有界队列，最多缓存100个任务
+            Executors.defaultThreadFactory(),
+            new ThreadPoolExecutor.AbortPolicy() // 拒绝策略：抛出异常
+    );
+    @Autowired
+    private ContextDataProcessor contextDataProcessor;
 
     /**
      * Slogan流式生成接口
@@ -195,6 +201,7 @@ public class AIStreamController {
 
     @PostMapping("/generate-nodes")
     public ResponseEntity<Map<String, Object>> generateNodes(@RequestBody Map<String, Object> request) {
+        log.info("原始request:{}", request);
         try {
             String userInput = (String) request.get("userInput");
             String designerType = (String) request.get("designerType");
@@ -210,7 +217,7 @@ public class AIStreamController {
             log.info("AI原始回复: {}", aiResponse);
 
             // 解析AI回复
-            List<Map<String, Object>> nodes = parseAiResponse(aiResponse);
+            List<Map<String, Object>> nodes = parseAiResponse(aiResponse, designerType);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -272,13 +279,13 @@ public class AIStreamController {
             case "character":
                 prompt.append("  \"name\": \"角色姓名\",\n");
                 prompt.append("  \"occupation\": \"职业\",\n");
-                prompt.append("  \"age\": \"年龄\",\n");
+                prompt.append("  \"age\": 年龄数字,\n");
                 prompt.append("  \"background\": \"背景故事\",\n");
-                prompt.append("  \"personality\": \"性格特点\",\n");
-                prompt.append("  \"motivation\": \"动机\",\n");
-                prompt.append("  \"secrets\": \"秘密\",\n");
-                prompt.append("  \"relationships\": \"人际关系\",\n");
-                prompt.append("  \"notes\": \"备注\"\n");
+                prompt.append("  \"personality\": [\"性格特点1\", \"性格特点2\", \"性格特点3\"],\n");
+                prompt.append("  \"skills\": [\"技能1\", \"技能2\", \"技能3\"],\n");
+                prompt.append("  \"items\": \"携带物品\",\n");
+                prompt.append("  \"notes\": \"备注\",\n");
+                prompt.append("  \"relationships\": []\n");
                 break;
             case "clue":
                 prompt.append("  \"title\": \"线索名称\",\n");
@@ -349,7 +356,7 @@ public class AIStreamController {
         return prompt.toString();
     }
 
-    private List<Map<String, Object>> parseAiResponse(String aiResponse) {
+    private List<Map<String, Object>> parseAiResponse(String aiResponse, String designerType) {
         try {
             // 查找JSON数组
             int start = aiResponse.indexOf('[');
@@ -360,27 +367,63 @@ public class AIStreamController {
                 return objectMapper.readValue(jsonPart, List.class);
             }
 
-            return createDefaultNodes();
+            return createDefaultNodes(designerType);
 
         } catch (Exception e) {
             log.error("解析AI回复失败: {}", aiResponse, e);
-            return createDefaultNodes();
+            return createDefaultNodes(designerType);
         }
     }
 
-    private List<Map<String, Object>> createDefaultNodes() {
+    private List<Map<String, Object>> createDefaultNodes(String designerType) {
         List<Map<String, Object>> nodes = new ArrayList<>();
 
         // 默认生成2个节点，避免固定数量
         for (int i = 1; i <= 2; i++) {
             Map<String, Object> node = new HashMap<>();
-            node.put("title", "AI生成场景" + i);
-            node.put("timeLabel", "DAY1 " + (8 + i) + ":00");
-            node.put("characters", "待定角色");
-            node.put("clues", "待定线索");
-            node.put("sceneDescription", "AI自动生成的场景描述");
-            node.put("nodeConnections", "与其他场景相关");
-            node.put("notes", "AI生成失败时的默认节点");
+
+            switch (designerType) {
+                case "character":
+                    node.put("name", "AI生成角色" + i);
+                    node.put("occupation", "待定职业");
+                    node.put("age", 25 + i);
+                    node.put("background", "AI自动生成的角色背景");
+                    node.put("personality", Arrays.asList("待定性格1", "待定性格2", "待定性格3"));
+                    node.put("skills", Arrays.asList("待定技能1", "待定技能2", "待定技能3"));
+                    node.put("items", "待定物品");
+                    node.put("notes", "AI生成失败时的默认角色节点");
+                    node.put("relationships", new ArrayList<>());
+                    break;
+                case "clue":
+                    node.put("title", "AI生成线索" + i);
+                    node.put("type", "物理证据");
+                    node.put("description", "AI自动生成的线索描述");
+                    node.put("location", "待定地点");
+                    node.put("relatedCharacters", Arrays.asList("待定角色"));
+                    node.put("importance", "中");
+                    node.put("hiddenInfo", "待定隐藏信息");
+                    node.put("notes", "AI生成失败时的默认线索节点");
+                    break;
+                case "atmosphere":
+                    node.put("title", "AI生成氛围" + i);
+                    node.put("timeLabel", "DAY1 " + (8 + i) + ":00");
+                    node.put("mood", "平静");
+                    node.put("lighting", "自然光");
+                    node.put("music", "无");
+                    node.put("weather", "晴朗");
+                    node.put("sceneElements", "待定场景元素");
+                    node.put("notes", "AI生成失败时的默认氛围节点");
+                    break;
+                default: // narrative
+                    node.put("title", "AI生成场景" + i);
+                    node.put("timeLabel", "DAY1 " + (8 + i) + ":00");
+                    node.put("characters", "待定角色");
+                    node.put("clues", "待定线索");
+                    node.put("sceneDescription", "AI自动生成的场景描述");
+                    node.put("nodeConnections", "与其他场景相关");
+                    node.put("notes", "AI生成失败时的默认节点");
+                    break;
+            }
             nodes.add(node);
         }
         return nodes;
