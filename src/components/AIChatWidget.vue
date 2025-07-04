@@ -177,9 +177,12 @@ export default defineComponent({
       loading.value = true;
 
       try {
-        const response = await fetch("/api/Script/chat/stream", {
+        const response = await fetch("/api/ai/chat/stream", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+          },
           body: JSON.stringify(requestBody),
         });
 

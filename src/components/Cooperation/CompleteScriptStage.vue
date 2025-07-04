@@ -67,19 +67,13 @@
       <div class="edit-area">
         <div class="edit-header">
           <h2>编辑区</h2>
-          <div
-            style="
+          <div style="
               margin-left: 20px;
               display: flex;
               align-items: center;
               gap: 10px;
-            "
-          >
-            <el-tag
-              :type="isConnected ? 'success' : 'danger'"
-              size="small"
-              style="font-size: 12px"
-            >
+            ">
+            <el-tag :type="isConnected ? 'success' : 'danger'" size="small" style="font-size: 12px">
               {{ connectionStatus }}
             </el-tag>
             <span style="font-size: 12px; color: #666">
@@ -87,20 +81,12 @@
             </span>
           </div>
           <div style="margin-left: auto; display: flex; gap: 10px">
-            <el-button
-              class="button"
-              @click="saveToServer"
-              :disabled="!isConnected"
-            >
+            <el-button class="button" @click="saveToServer" :disabled="!isConnected">
               <i class="fas fa-save fa-fw save-icon"></i>
               保存剧本
             </el-button>
             <el-button class="button print" @click="output">
-              <img
-                src="../../assets/output.png"
-                style="width: 16px; height: 16px; margin-right: 2px"
-              />导出剧本</el-button
-            >
+              <img src="../../assets/output.png" style="width: 16px; height: 16px; margin-right: 2px" />导出剧本</el-button>
           </div>
         </div>
         <div id="editor" style="height: calc(100% - 100px)"></div>
@@ -110,27 +96,15 @@
       <div class="member-area" :class="{ collapsed: !isMemberOpen }">
         <div class="member-header">
           <button class="toggle-btn" @click="toggleMemberArea">
-            <img
-              v-if="isMemberOpen"
-              style="object-fit: cover; width: 24px; height: 24px"
-              src="../../assets/third/close.png"
-            />
-            <img
-              v-if="!isMemberOpen"
-              style="object-fit: cover; width: 24px; height: 24px"
-              src="../../assets/third/open.png"
-            />
+            <img v-if="isMemberOpen" style="object-fit: cover; width: 24px; height: 24px"
+              src="../../assets/third/close.png" />
+            <img v-if="!isMemberOpen" style="object-fit: cover; width: 24px; height: 24px"
+              src="../../assets/third/open.png" />
           </button>
-          <span v-show="isMemberOpen" class="member-titlr"
-            >在线成员 ({{ socketState.members.length }})</span
-          >
+          <span v-show="isMemberOpen" class="member-titlr">在线成员 ({{ socketState.members.length }})</span>
         </div>
         <div class="member-list">
-          <div
-            class="member-item"
-            v-for="member in socketState.members"
-            :key="member.id"
-          >
+          <div class="member-item" v-for="member in socketState.members" :key="member.id">
             <div class="member-avatar-container">
               <img :src="member.avatar" alt="avatar" class="member-avatar" />
               <div class="online-indicator"></div>
@@ -145,13 +119,8 @@
         </div>
       </div>
     </div>
-    <FloatingChatWrapper
-      :room-id="roomId"
-      :user-id="currentUser.id"
-      :user-name="currentUser.name"
-      :avatar="currentUser.avatar"
-      @membersUpdated="updateMembers"
-    />
+    <FloatingChatWrapper :room-id="roomId" :user-id="currentUser.id" :user-name="currentUser.name"
+      :avatar="currentUser.avatar" @membersUpdated="updateMembers" />
   </div>
 </template>
 
@@ -291,21 +260,22 @@ onMounted(async () => {
     // 首次加载内容
     let hasInitialized = false;
 
-provider.once("synced", async () => {
-  if (hasInitialized) return;
-  hasInitialized = true;
+    provider.once("synced", async () => {
+      if (hasInitialized) return;
+      hasInitialized = true;
 
-  const quillContents = quill.getContents();
-  const isQuillEmpty =
-    quillContents.ops.length === 1 && quillContents.ops[0].insert === "\n";
+      const quillContents = quill.getContents();
+      const isQuillEmpty =
+        quillContents.ops.length === 1 && quillContents.ops[0].insert === "\n";
 
-  if (isQuillEmpty && socketState.CompleteScriptContent) {
-    const markdown = socketState.CompleteScriptContent;
-    const html = marked.parse(markdown);
-    quill.setContents([], "api");
-    quill.clipboard.dangerouslyPasteHTML(0, html, "api");
-  }
-});
+      if (isQuillEmpty && socketState.CompleteScriptContent) {
+        const markdown = socketState.CompleteScriptContent;
+        console.log("markdown:", markdown);
+        const html = marked.parse(markdown);
+        quill.setContents([], "api");
+        quill.clipboard.dangerouslyPasteHTML(0, html, "api");
+      }
+    });
 
   } catch (error) {
     console.error("初始化编辑器失败:", error);
@@ -459,7 +429,7 @@ function updateMembers(membersList) {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1;  
+  z-index: 1;
 }
 
 .front-bg {
@@ -585,13 +555,11 @@ function updateMembers(membersList) {
   border-radius: 20px;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(
-    90deg,
-    #edeef2 0%,
-    #ecedef 38%,
-    #ecedf1 70%,
-    #edeef3 100%
-  );
+  background: linear-gradient(90deg,
+      #edeef2 0%,
+      #ecedef 38%,
+      #ecedf1 70%,
+      #edeef3 100%);
   background-size: cover;
   background-repeat: no-repeat;
   z-index: 3;
@@ -705,13 +673,11 @@ function updateMembers(membersList) {
 .menu-icon {
   cursor: pointer;
   font-size: 30px;
-  background-image: linear-gradient(
-    45deg,
-    #e6e6ed 0%,
-    #c6c3df 30%,
-    #b5c4e1 70%,
-    #b5bddf 100%
-  );
+  background-image: linear-gradient(45deg,
+      #e6e6ed 0%,
+      #c6c3df 30%,
+      #b5c4e1 70%,
+      #b5bddf 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -787,13 +753,11 @@ function updateMembers(membersList) {
   left: -50%;
   width: 200%;
   height: 100%;
-  background: radial-gradient(
-    circle at 50% 0%,
-    #2541ec 0%,
-    #3182ce 50%,
-    transparent 100%
-  );
-  transform: translateY(-100%);
+  background: radial-gradient(circle at 50% 0%,
+      #2541ec 0%,
+      #3182ce 50%,
+      transparent 100%);
+  transform: translateY(-110%);
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: -1;
   pointer-events: none;
@@ -894,14 +858,12 @@ function updateMembers(membersList) {
 #editor {
   border-color: transparent;
   border-radius: 10px;
-  background: linear-gradient(
-    180deg,
-    #e5e7f3 0%,
-    #e3e7f4 25%,
-    #e0e6f6 50%,
-    #dfe4f7 75%,
-    #dde3f4 100%
-  );
+  background: linear-gradient(180deg,
+      #e5e7f3 0%,
+      #e3e7f4 25%,
+      #e0e6f6 50%,
+      #dfe4f7 75%,
+      #dde3f4 100%);
   padding: 10px;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   flex: 1;
