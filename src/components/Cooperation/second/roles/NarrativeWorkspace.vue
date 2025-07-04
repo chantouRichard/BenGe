@@ -64,14 +64,31 @@
         @cancel="canvasStore.handleEdgeCancel"
       />
 
+      <!-- 人物-场景边编辑器 -->
+      <CharacterSceneEdgeEditor
+        v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId && isCharacterSceneEdge()"
+        :source="getCharacterEdgeSourceNode()"
+        :target="getCharacterEdgeTargetNode()"
+        :initialParticipationType="getCurrentCharacterEdge()?.data?.participationType || 'protagonist'"
+        :initialImportance="getCurrentCharacterEdge()?.data?.importance || 'normal'"
+        :initialDescription="getCurrentCharacterEdge()?.data?.description || ''"
+        :initialLabel="getCurrentCharacterEdge()?.data?.label || ''"
+        :initialStyle="getCurrentCharacterEdge()?.data?.style || 'solid'"
+        :showDelete="true"
+        @confirm="handleCharacterSceneEdgeEditConfirm"
+        @cancel="characterStore.handleEdgeCancel"
+        @delete-edge="characterStore.handleDeleteEdge"
+      />
+
+      <!-- 普通边编辑器 -->
       <EdgeTypeSelector
-        v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId"
+        v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId && !isCharacterSceneEdge()"
         :initialType="
-          edges.find((e) => e.id === canvasStore.editingEdgeId)?.data?.type ||
+          edges?.find((e) => e.id === canvasStore.editingEdgeId)?.data?.type ||
           null
         "
         :initialLabel="
-          edges.find((e) => e.id === canvasStore.editingEdgeId)?.data?.label ||
+          edges?.find((e) => e.id === canvasStore.editingEdgeId)?.data?.label ||
           ''
         "
         :showDelete="true"
@@ -98,22 +115,31 @@
 
       <!-- 角色关系编辑器 -->
       <CharacterRelationEditor
-        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId"
+        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId && characterStore.edgeType === 'relationship'"
         :source="characterStore.selectedNodesForEdge[0]"
         :target="characterStore.selectedNodesForEdge[1]"
         @confirm="characterStore.handleEdgeConfirm"
         @cancel="characterStore.handleEdgeCancel"
       />
 
+      <!-- 角色-场景关系编辑器 -->
+      <CharacterSceneEdgeEditor
+        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId && characterStore.edgeType === 'character-scene'"
+        :source="characterStore.selectedNodesForEdge[0]"
+        :target="characterStore.selectedNodesForEdge[1]"
+        @confirm="characterStore.handleCharacterSceneEdgeConfirm"
+        @cancel="characterStore.handleEdgeCancel"
+      />
+
       <!-- 编辑现有关系 -->
       <CharacterRelationEditor
         v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId"
-        :source="getEdgeSourceNode()"
-        :target="getEdgeTargetNode()"
-        :initialType="getCurrentEdge()?.data?.type || ''"
-        :initialDescription="getCurrentEdge()?.data?.description || ''"
-        :initialStrength="getCurrentEdge()?.data?.strength || 5"
-        :initialStatus="getCurrentEdge()?.data?.status || 'active'"
+        :source="getCharacterEdgeSourceNode()"
+        :target="getCharacterEdgeTargetNode()"
+        :initialType="getCurrentCharacterEdge()?.data?.type || ''"
+        :initialDescription="getCurrentCharacterEdge()?.data?.description || ''"
+        :initialStrength="getCurrentCharacterEdge()?.data?.strength || 5"
+        :initialStatus="getCurrentCharacterEdge()?.data?.status || 'active'"
         :showDelete="true"
         @confirm="characterStore.handleEdgeEditConfirm"
         @cancel="characterStore.handleEdgeCancel"
@@ -209,6 +235,7 @@ import EdgeTypeSelector from "./NarrativeCom/EdgeTypeSelector.vue";
 import CharacterToolbar from "./CharacterCom/CharacterToolbar.vue";
 import CharacterDetailPanel from "./CharacterCom/CharacterDetailPanel.vue";
 import CharacterRelationEditor from "./CharacterCom/CharacterRelationEditor.vue";
+import CharacterSceneEdgeEditor from "./CharacterCom/CharacterSceneEdgeEditor.vue";
 //线索设计师组件导入
 import ClueToolbar from "./ClueCom/ClueToolbar.vue";
 import ClueDetailPanel from "./ClueCom/ClueDetailPanel.vue";
@@ -231,6 +258,7 @@ import { ref, computed } from "vue";
 import { defineProps } from 'vue'
 import { socketState } from '@/stores/socket'
 import  request  from '@/api/request';
+import { collectContextData } from '@/utils/contextCollector';
 
 // const effectiveNodes = computed(() => props.nodes || canvasStore.nodes)
 // const effectiveEdges = computed(() => props.edges || canvasStore.edges)
@@ -248,11 +276,13 @@ const currentDesignerType = ref('narrative')
 const aiGenerateResult = ref(null)
 const aiGenerateError = ref(null)
 const aiContextData = computed(() => {
+  const contextData = collectContextData()
   return {
-    chatCount: socketState.messages?.length || 0,
-    nodeCount: nodes.value?.length || 0,
-    characterCount: characterStore.nodes?.length || 0,
-    recentNodes: nodes.value?.slice(-5) || []
+    chatCount: contextData.chatCount || 0,
+    nodeCount: contextData.nodeCount || 0,
+    characterCount: contextData.characterCount || 0,
+    // 为了兼容现有UI，保留这些统计字段
+    ...contextData.context?.statistics
   }
 })
 
@@ -305,7 +335,10 @@ const handleDetailSave = (updatedData) => {
   }
 
   console.log("接受到的索引", newIndex);
-  canvasRef.value?.forceUpdateNode(updatedData.id, nodes.value[index].data);
+  // 直接使用更新后的数据进行强制更新
+  if (newIndex !== -1) {
+    canvasRef.value?.forceUpdateNode(updatedData.id, updatedData.data);
+  }
 };
 
 const handleDeleteNode = (id) => {
@@ -324,27 +357,57 @@ const handleDeleteNode = (id) => {
 };
 
 const handleNodeClick = (data) => {
-  if (data.node.type === "custom") {
+  // 根据用户角色直接分发到对应的store
+  if (socketState.userRole === 0) {
+    // 叙事设计师
     canvasStore.handleNodeClick(data);
-  } else if (data.node.type === "character") {
+  } else if (socketState.userRole === 1) {
+    // 角色设计师
     characterStore.handleNodeClick(data);
-  } else if (data.node.type === "atmosphere") {
-    atmosphereStore.handleNodeClick(data);
-  } else {
+  } else if (socketState.userRole === 2) {
+    // 线索设计师
     clueStore.handleNodeClick(data);
+  } else if (socketState.userRole === 3) {
+    // 氛围设计师
+    atmosphereStore.handleNodeClick(data);
   }
 };
-const handleEdgeSelect = (edge) => {
-  if (data.node.type === "custom") {
-    canvasStore.handleEdgeSelect(edge);
-  } else if (data.node.type === "character") {
-    characterStore.handleEdgeSelect(edge);
-  } else if (data.node.type === "atmosphere") {
-    atmosphereStore.handleEdgeSelect(edge);
+const handleEdgeSelect = (edgeId) => {
+  // 检查edges是否可用
+  if (!edges.value || !Array.isArray(edges.value)) {
+    console.warn('edges数据不可用:', edges.value);
+    return;
+  }
+
+  // 根据边ID查找边对象
+  const edge = edges.value.find(e => e.id === edgeId);
+  if (!edge) {
+    console.warn('未找到边对象:', edgeId);
+    return;
+  }
+
+  // 根据边的类型分发到对应的store
+  if (edge.type === 'character-scene') {
+    // 人物-场景边由characterStore处理
+    characterStore.handleEdgeSelect(edgeId);
+  } else if (edge.type === 'relationship') {
+    // 角色关系边由characterStore处理
+    characterStore.handleEdgeSelect(edgeId);
+  } else if (edge.type === 'custom') {
+    // 检查是否是线索相关的边
+    if (edge.data?.type?.includes('clue') || edge.data?.type?.includes('inference')) {
+      clueStore.handleEdgeSelect(edgeId);
+    } else {
+      canvasStore.handleEdgeSelect(edgeId);
+    }
   } else {
-    clueStore.handleEdgeSelect(edge);
+    // 默认由canvasStore处理
+    canvasStore.handleEdgeSelect(edgeId);
   }
 };
+
+
+
 const handleNodePositionChange = (payload) => {
   const { id, position } = payload;
   const node = nodes.value.find((n) => n.id === id);
@@ -361,9 +424,46 @@ const handleNodePositionChange = (payload) => {
   }
 };
 const handleConnectNode = (connection) => {
-  // connection: { source, target, sourceHandle, targetHandle }
-  // 统一交给 canvasStore 处理边
-  canvasStore.handleConnectNode(connection);
+  // connection: { source, target, sourceHandle, targetHandle, type, data }
+
+  // 查找源节点和目标节点
+  const sourceNode = nodes.value.find(n => n.id === connection.source);
+  const targetNode = nodes.value.find(n => n.id === connection.target);
+
+  if (!sourceNode || !targetNode) {
+    console.warn('无法找到连接的节点');
+    return;
+  }
+
+  // 定义线索相关的节点类型
+  const clueNodeTypes = ['clue', 'inference', 'person'];
+
+  // 检查连接类型
+  const isClueConnection = clueNodeTypes.includes(sourceNode.type) || clueNodeTypes.includes(targetNode.type);
+  const isCharacterRelationship = connection.type === 'relationship';
+
+  if (isClueConnection) {
+    // 线索相关连接 - 交给线索设计器处理
+    const newEdge = {
+      id: connection.id || `edge-${connection.source}-${connection.target}-${Date.now()}`,
+      source: connection.source,
+      target: connection.target,
+      sourceHandle: connection.sourceHandle,
+      targetHandle: connection.targetHandle,
+      type: 'custom',
+      data: {
+        type: 'clue-relation',
+        label: '线索关联'
+      }
+    };
+    clueStore.handleConnectNode(newEdge);
+  } else if (isCharacterRelationship) {
+    // 角色间关系 - 交给角色设计器处理
+    characterStore.handleConnectNode(connection);
+  } else {
+    // 其他连接（包括人物-场景连接）- 交给画布设计器处理
+    canvasStore.handleConnectNode(connection);
+  }
 };
 
 // 处理AI生成场景
@@ -391,23 +491,8 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
   aiGenerateError.value = null
 
   try {
-    // 收集当前上下文
-    const contextData = {
-      chat: socketState.messages.map(msg => ({
-        user: msg.username || msg.sender,
-        text: msg.content,
-        time: msg.time
-      })),
-      canvasNodes: canvasStore.nodes.map(node => ({
-        type: node.type,
-        title: node.data?.title || '未命名',
-        data: JSON.stringify(node.data).substring(0, 200)
-      })),
-      characterNodes: characterStore.nodes.map(node => ({
-        name: node.data?.name || '未命名角色',
-        occupation: node.data?.occupation || ''
-      }))
-    }
+    // 使用统一的上下文收集工具，收集完整的上下文数据
+    const contextData = collectContextData()
 
     const result = await request.post('/ai/generate-nodes', {
       userInput: userInput,
@@ -418,10 +503,14 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
     if (result.success && result.nodes) {
       // 根据设计师类型添加节点到相应的store
       result.nodes.forEach((nodeData, index) => {
-        // 对角色节点数据进行格式转换
+        // 对不同类型节点数据进行格式转换
         let processedData = nodeData
         if (currentDesignerType.value === 'character') {
           processedData = processCharacterNodeData(nodeData)
+        } else if (currentDesignerType.value === 'clue') {
+          processedData = processClueNodeData(nodeData)
+        } else if (currentDesignerType.value === 'atmosphere') {
+          processedData = processAtmosphereNodeData(nodeData)
         }
 
         const newNode = {
@@ -437,12 +526,18 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
         if (currentDesignerType.value === 'character') {
           characterStore.nodes.push(newNode)
           characterStore.broadcast && characterStore.broadcast()
-        } else {
+        } else if(currentDesignerType.value == 'clue'){
+          clueStore.nodes.push(newNode)
+          clueStore.broadcast && clueStore.broadcast()
+        }else if(currentDesignerType.value == 'atmosphere'){
+          canvasStore.nodes.push(newNode)
+          canvasStore.broadcast && canvasStore.broadcast()
+        }else {
           canvasStore.nodes.push(newNode)
           canvasStore.broadcast && canvasStore.broadcast()
         }
-      })
-
+      }
+    )
       // 设置成功结果，让对话框显示
       aiGenerateResult.value = {
         success: true,
@@ -526,6 +621,47 @@ const processCharacterNodeData = (nodeData) => {
   return processed
 }
 
+// 处理线索节点数据格式转换
+const processClueNodeData = (nodeData) => {
+  const processed = { ...nodeData }
+
+  // 安全处理relatedCharacters字段
+  let relatedEvent = ''
+  if (processed.relatedCharacters) {
+    if (Array.isArray(processed.relatedCharacters)) {
+      relatedEvent = processed.relatedCharacters.join(', ')
+    } else {
+      relatedEvent = String(processed.relatedCharacters)
+    }
+  }
+
+  // 将AI返回的字段映射到前端期望的字段
+  return {
+    title: processed.title || '新线索',
+    relatedEvent: relatedEvent,
+    detail: processed.description || '',
+    logic: processed.hiddenInfo || '',
+    tags: processed.type || '',
+    note: processed.notes || ''
+  }
+}
+
+// 处理氛围节点数据格式转换
+const processAtmosphereNodeData = (nodeData) => {
+  const processed = { ...nodeData }
+
+  // 将AI返回的字段映射到前端期望的字段
+  return {
+    title: processed.title || '氛围节点',
+    timeLabel: processed.timeLabel || '',
+    mood: processed.mood || processed.type || '平静',
+    lighting: processed.lighting || processed.description || '',
+    music: processed.music || '',
+    weather: processed.weather || '',
+    note: processed.notes || ''
+  }
+}
+
 // 处理氛围设计师AI生成
 const handleAtmosphereAiGenerate = async () => {
   currentDesignerType.value = 'atmosphere'
@@ -547,6 +683,63 @@ const handleLinkScene = () => {
     console.log('进入氛围与场景关联模式')
     console.log('请先点击氛围节点，再点击场景节点建立关联')
   }
+}
+
+// 处理氛围选择
+const handleAtmosphereSelect = (atmosphereData) => {
+  console.log('选择氛围:', atmosphereData)
+  // 这里可以添加氛围选择的处理逻辑
+  showPalette.value = false
+}
+
+// 边编辑相关辅助方法
+const isCharacterSceneEdge = () => {
+  if (!characterStore.editingEdgeId) return false
+  if (!edges.value || !Array.isArray(edges.value)) return false
+  const edge = edges.value.find(e => e.id === characterStore.editingEdgeId)
+  return edge?.type === 'character-scene'
+}
+
+const getCurrentEdge = (edgeId) => {
+  const id = edgeId || canvasStore.editingEdgeId
+  if (!id) return null
+  if (!edges.value || !Array.isArray(edges.value)) return null
+  return edges.value.find(e => e.id === id)
+}
+
+const getEdgeSourceNode = (edgeId) => {
+  const edge = getCurrentEdge(edgeId)
+  if (!edge) return null
+  return nodes.value.find(n => n.id === edge.source)
+}
+
+const getEdgeTargetNode = (edgeId) => {
+  const edge = getCurrentEdge(edgeId)
+  if (!edge) return null
+  return nodes.value.find(n => n.id === edge.target)
+}
+
+// 角色边相关辅助方法
+const getCurrentCharacterEdge = () => {
+  if (!characterStore.editingEdgeId) return null
+  return characterStore.edges.find(e => e.id === characterStore.editingEdgeId)
+}
+
+const getCharacterEdgeSourceNode = () => {
+  const edge = getCurrentCharacterEdge()
+  if (!edge) return null
+  return characterStore.nodes.find(n => n.id === edge.source)
+}
+
+const getCharacterEdgeTargetNode = () => {
+  const edge = getCurrentCharacterEdge()
+  if (!edge) return null
+  return characterStore.nodes.find(n => n.id === edge.target)
+}
+
+// 处理人物-场景边编辑确认
+const handleCharacterSceneEdgeEditConfirm = (edgeData) => {
+  characterStore.handleCharacterSceneEdgeEditConfirm(edgeData)
 }
 const handleAiIntegrate = () => {
   console.log("调用AI整合功能:");

@@ -115,6 +115,11 @@
         <CharacterRelationEdge v-bind="edgeProps"/>
       </template>
 
+      <!-- 人物场景关联边 -->
+      <template #edge-character-scene="edgeProps">
+        <CharacterSceneEdge v-bind="edgeProps"/>
+      </template>
+
       <!-- 线索、结论边 -->
       <template #edge-clue="edgeProps">
         <ClueEdges v-bind="edgeProps"/>
@@ -135,6 +140,7 @@ import ClueEdges from '../ClueCom/ClueEdges.vue'
 import InferenceNode from '../ClueCom/InferenceNode.vue'
 import PersonNode from '../ClueCom/PersonNode.vue'
 import AtmosphereNode from '../AtmosphereCom/AtmosphereNode.vue'
+import CharacterSceneEdge from '../CharacterCom/CharacterSceneEdge.vue'
 
 import html2canvas from 'html2canvas';
 const vueFlowRef = ref(null);
@@ -244,12 +250,16 @@ const handleNodeDragStop = (node) => {
 const nodeTypes = {
   custom: CustomNode,
   character: CharacterCard,
-  atmosphere: AtmosphereNode
+  atmosphere: AtmosphereNode,
+  clue: markRaw(ClueNode),
+  inference: markRaw(InferenceNode),
+  person: markRaw(PersonNode)
 }
 
 const edgeTypes = {
   custom: markRaw(CustomEdge),
-  relationship: markRaw(CharacterRelationEdge)
+  relationship: markRaw(CharacterRelationEdge),
+  'character-scene': markRaw(CharacterSceneEdge)
 }
 
 // 强制刷新结点
@@ -276,27 +286,60 @@ defineExpose({
 
 // 边连接完成事件（拖动新边）
 const handleConnect = (params) => {
-  // 检查源节点类型来决定边类型
+  // 查找源节点和目标节点
   const sourceNode = props.nodes.find(n => n.id === params.source);
-  const isCharacterNode = sourceNode?.type === 'character';
-  
-  const newEdge = {
-    id: `edge-${params.source}-${params.target}-${Date.now()}`,
-    source: params.source,
-    target: params.target,
-    sourceHandle: params.sourceHandle, // 指定起点 handle
-    targetHandle: params.targetHandle, // 指定终点 handle
-    type: isCharacterNode ? 'relationship' : 'custom',
-    data: isCharacterNode ? {
+  const targetNode = props.nodes.find(n => n.id === params.target);
+
+  if (!sourceNode || !targetNode) {
+    console.warn('无法找到连接的节点');
+    return;
+  }
+
+  // 检查是否是人物-场景连接
+  const isCharacterToScene = sourceNode.type === 'character' && targetNode.type === 'custom';
+  const isSceneToCharacter = sourceNode.type === 'custom' && targetNode.type === 'character';
+  const isCharacterToCharacter = sourceNode.type === 'character' && targetNode.type === 'character';
+
+  let edgeType, edgeData;
+
+  if (isCharacterToScene || isSceneToCharacter) {
+    // 人物-场景连接
+    edgeType = 'character-scene';
+    edgeData = {
+      participationType: 'protagonist', // 默认为主角参与
+      importance: 'normal',
+      description: '参与场景',
+      label: '参与',
+      showLabel: true
+    };
+  } else if (isCharacterToCharacter) {
+    // 角色间关系连接
+    edgeType = 'relationship';
+    edgeData = {
       type: 'friend',
       label: '关系',
       strength: 5,
       status: 'active'
-    } : {
+    };
+  } else {
+    // 其他类型连接
+    edgeType = 'custom';
+    edgeData = {
       type: 'dependency',
       label: '新边'
-    }
+    };
   }
+
+  const newEdge = {
+    id: `edge-${params.source}-${params.target}-${Date.now()}`,
+    source: params.source,
+    target: params.target,
+    sourceHandle: params.sourceHandle,
+    targetHandle: params.targetHandle,
+    type: edgeType,
+    data: edgeData
+  }
+
   emit('connect-node', newEdge)
 }
 

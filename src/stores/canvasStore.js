@@ -113,6 +113,35 @@ export const useCanvasStore = defineStore("story", () => {
     broadcast();
   };
 
+  // 处理人物-场景边编辑确认
+  const handleCharacterSceneEdgeEditConfirm = (edgeData) => {
+    if (!editingEdgeId.value) {
+      console.warn('没有正在编辑的边ID');
+      return;
+    }
+
+    const edge = edges.find((e) => e.id === editingEdgeId.value);
+
+    if (edge) {
+      // 更新边数据
+      edge.data = {
+        ...edge.data,
+        participationType: edgeData.participationType,
+        importance: edgeData.importance,
+        description: edgeData.description,
+        label: edgeData.label,
+        style: edgeData.style
+      };
+
+      editingEdgeId.value = null;
+      showEdgeSelector.value = false;
+
+      broadcast();
+    } else {
+      console.error('未找到要编辑的边:', editingEdgeId.value);
+    }
+  };
+
   // 用户在边选择器中，取消创建边
   const handleEdgeCancel = () => {
     selectedNodesForEdge.value = [];
@@ -389,6 +418,7 @@ export const useCanvasStore = defineStore("story", () => {
     handleEdgeSelect,
     handleEdgeConfirm,
     handleEdgeEditConfirm,
+    handleCharacterSceneEdgeEditConfirm,
     handleEdgeCancel,
     handleDeleteEdge,
     handleConnectNode,
