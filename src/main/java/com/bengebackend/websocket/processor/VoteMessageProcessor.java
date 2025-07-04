@@ -23,6 +23,8 @@ public class VoteMessageProcessor {
 
     public void processVoteUpdate(WebSocketSession session, String roomId, Integer userId, User user,
                                   List<String> key, boolean hasChosen, List<Integer> vote, boolean hasVoted){
+        log.info("=== processVoteUpdate 方法被调用 ===");
+
         try {
             WebSocketMessage message = new WebSocketMessage();
             message.setType("vote");
@@ -35,9 +37,12 @@ public class VoteMessageProcessor {
             message.setVote(vote);
             message.setHasVoted(hasVoted);
 
+            log.info("用户 {} 投票处理开始: {}", userId, System.currentTimeMillis());
+
             String messageJson = objectMapper.writeValueAsString(message);
             roomManager.broadcastToRoom(roomId, messageJson);
 
+            log.info("用户 {} 投票处理结束: {}", userId, System.currentTimeMillis());
             log.info("用户 {} 在房间 {} 更新了节点数据", user.getUsername(), roomId);
         } catch (Exception e) {
             log.error("处理节点更新失败: roomId={}, userId={}", roomId, userId, e);
