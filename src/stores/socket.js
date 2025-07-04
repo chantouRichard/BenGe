@@ -103,15 +103,19 @@ function setupWebSocket() {
         socketState.currentUsername
       );
     } else if (msg.type === "chat") {
-      socketState.messages.push({
+      const isAIMessage = msg.username === "AI助手" || msg.userId === -1;
+      const newMessage = {
         ...msg,
         isMe: msg.userId === socketState.currentUserId,
         sender: msg.username,
         content: msg.content,
         time: msg.time,
         avatar: msg.avatar || socketState.avatar,
-      });
-      console.log("数组：", socketState.messages);
+        isAI: isAIMessage,
+      };
+
+      socketState.messages.push(newMessage);
+      console.log("消息数组更新，当前长度:", socketState.messages.length);
     } else if (msg.type === "system") {
       socketState.messages.push({
         type: "system",
