@@ -3,7 +3,7 @@ import { ref } from "vue";
 
 export const userLoadingStore = defineStore("loading", () => {
   const loading = ref(false);
-  const aiAssistantLoading = ref(true);
+  const aiAssistantLoading = ref(false);
   const show = () => {
     loading.value = true;
   };

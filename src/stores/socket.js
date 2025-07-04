@@ -89,7 +89,23 @@ const socketState = reactive({
   ]
 });
 
-function setupWebSocket() {
+// 在这里初始化 store，确保只初始化一次
+async function ensureStores() {
+  if (!canvasStore) {
+    const { useCanvasStore } = await import("./canvasStore");
+    const { useCharacterStore } = await import("./character");
+    const { useClueStore } = await import("./clue");
+    const { useAtmosphereStore } = await import("./atmosphere");
+
+    canvasStore = useCanvasStore();
+    characterStore = useCharacterStore();
+    clueStore = useClueStore();
+    atmosphereStore = useAtmosphereStore();
+  }
+}
+
+async function setupWebSocket() {
+  await ensureStores();
   if (socketState.socket && socketState.isConnected) {
     console.warn("WebSocket 已经连接");
     return;

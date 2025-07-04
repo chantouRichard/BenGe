@@ -2,6 +2,7 @@
   <div class="cooperation-container">
     <div class="cooperation-bg"></div>
     <div class="room-list-container">
+      <div class="room-back-house"></div>
       <!-- 页面标题 -->
       <div class="page-title">
         <i class="fa-solid fa-house"></i>
@@ -498,7 +499,9 @@ onMounted(() => {
   height: 90%;
   margin-top: 40px;
   padding: 20px 20px 0 20px;
-  background: linear-gradient(#F5F6FB 0%, #F6F7F9 35%, #F4F6F5 70%, #F5F6FA 100%);
+  background:
+    radial-gradient(circle at top right, hsla(209, 84%, 54%, 0.231) 0%, #459adc4a 30%, hsla(200, 24%, 93%, 0.086) 50%) no-repeat,
+    linear-gradient(#F5F6FB 0%, #F6F7F9 35%, #F4F6F5 70%, #F5F6FA 100%);
   border-color: transparent;
   border-radius: 28px;
   box-shadow:
@@ -511,6 +514,22 @@ onMounted(() => {
   align-items: center;
   overflow: hidden;
   position: relative;
+}
+
+.room-back-house {
+  position: absolute;
+  top: 3%;
+  right: 10%;
+  width: 30%;
+  height: 40%;
+  background-image: url(../assets/room_house.png);
+  opacity: 0.7;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
+  transform-origin: center;
+  transform: rotate(8deg);
 }
 
 .page-title {
@@ -636,7 +655,8 @@ onMounted(() => {
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
-  height: 48px; /* 固定高度防止变形 */
+  height: 48px;
+  /* 固定高度防止变形 */
   position: relative;
   overflow: hidden;
   margin-bottom: 20px;
@@ -675,9 +695,11 @@ onMounted(() => {
   border-left: none;
   border-right: none;
   border-top: none;
-  background-color: #ffffff; /* 统一白色背景 */
-  box-shadow: 0 6px 18px rgba(64, 158, 255, 0.25), 
-              0 2px 10px rgba(64, 158, 255, 0.1); /* 同输入框风格 */
+  background-color: #ffffff;
+  /* 统一白色背景 */
+  box-shadow: 0 6px 18px rgba(64, 158, 255, 0.25),
+    0 2px 10px rgba(64, 158, 255, 0.1);
+  /* 同输入框风格 */
   font-size: 14px;
   color: #333;
   outline: none;
@@ -894,7 +916,7 @@ onMounted(() => {
 }
 
 .room-card:hover {
-  transform: perspective(1200px) rotateX(8deg) rotateY(-16deg) rotateZ(4deg) translateY(-4px);
+  transform: perspective(1200px) rotateX(8deg) rotateY(-16deg) rotateZ(4deg) translateY(-4px) scale(1.1);
 }
 
 .room-card.password-room {
@@ -1040,7 +1062,7 @@ onMounted(() => {
 .info-title {
   font-weight: 600;
   font-size: 15px;
-  color: #333;
+  color: #6e7fa0;
   margin-bottom: 8px;
 }
 
@@ -1060,7 +1082,7 @@ onMounted(() => {
 }
 
 .leave-button:hover {
-  color: #337ecc;
+  color: #6e7fa0;
 }
 
 .nav-right {
