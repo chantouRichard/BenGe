@@ -34,6 +34,7 @@ html, body{
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
   /* 动画名要和 transition 组件的 name 属性一致 */
 .slide-fade-enter-active,
