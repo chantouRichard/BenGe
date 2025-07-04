@@ -7,6 +7,7 @@
       @add-edge="canvasStore.handleCreateEdgeClick"
       @export="handleExport"
       @ai-generate="handleAiGenerate"
+      @ai-integrate="handleAiIntegrate"
     />
     <CharacterToolbar
       v-if="socketState.userRole == 1"
@@ -547,7 +548,9 @@ const handleLinkScene = () => {
     console.log('请先点击氛围节点，再点击场景节点建立关联')
   }
 }
-
+const handleAiIntegrate = () => {
+  console.log("调用AI整合功能:");
+}
 </script>
 
 <style scoped>

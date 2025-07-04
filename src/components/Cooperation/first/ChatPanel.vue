@@ -1,6 +1,18 @@
 <template>
   <div class="chat-container">
-    <div style="
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        margin-left: 20px;
+      "
+    >
+      <h4>聊天区</h4>
+    </div>
+    <div
+      style="
         width: 100px;
         margin-left: auto;
         margin-right: auto;
@@ -8,22 +20,31 @@
         border-color: black;
         border-width: 16px;
         border-radius: 5px;
-      ">
+      "
+    >
       现在开始聊天吧~
     </div>
     <!-- 聊天内容区域 -->
     <div class="chat-messages" ref="messagesContainer">
-      <div v-for="(message, index) in socketState.messages" :key="index" :class="[
-        'message',
-        message.isSystem
-          ? 'message-system'
-          : message.isMe
+      <div
+        v-for="(message, index) in socketState.messages"
+        :key="index"
+        :class="[
+          'message',
+          message.isSystem
+            ? 'message-system'
+            : message.isMe
             ? 'message-me'
             : 'message-other',
-      ]">
+        ]"
+      >
         <div v-if="!message.isSystem" class="message-avatar">
           <div class="avatar-circle">
-            <img :src="message.avatar" alt="avatar" style="width: 40px; height: 40px; border-radius: 20px" />
+            <img
+              :src="message.avatar"
+              alt="avatar"
+              style="width: 40px; height: 40px; border-radius: 20px"
+            />
           </div>
         </div>
         <div class="message-content">
@@ -38,8 +59,13 @@
 
     <!-- 输入区域 -->
     <div class="chat-input-area">
-      <input type="text" v-model="newMessage" @keyup.enter="sendChatMessage" placeholder="输入消息..."
-        class="message-input" />
+      <input
+        type="text"
+        v-model="newMessage"
+        @keyup.enter="sendChatMessage"
+        placeholder="输入消息..."
+        class="message-input"
+      />
       <div class="send-button" @click="sendChatMessage">
         <i class="fa-solid fa-paper-plane"></i>
       </div>
@@ -48,94 +74,108 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, computed } from "vue";
 import loginImage from "@/assets/login.png";
-import { socketState } from '@/stores/socket';
-import { useCanvasStore } from '@/stores/canvasStore';
-import { useCharacterStore } from '@/stores/character';
-import { nextTick } from 'vue';
+import { socketState } from "@/stores/socket";
+import { useCanvasStore } from "@/stores/canvasStore";
+import { useCharacterStore } from "@/stores/character";
+import { nextTick } from "vue";
 
 const canvasStore = useCanvasStore();
 const characterStore = useCharacterStore();
 
 const collectContextData = () => {
   return {
-    chat: socketState.messages
-      .map(msg => ({
-        user: msg.username || msg.sender,
-        text: msg.content,
-        time: msg.time
-      })),
-    
+    chat: socketState.messages.map((msg) => ({
+      user: msg.username || msg.sender,
+      text: msg.content,
+      time: msg.time,
+    })),
+
     // 画布节点数据（场景、氛围、线索等）
-    canvasNodes: canvasStore.nodes.map(node => ({
+    canvasNodes: canvasStore.nodes.map((node) => ({
       id: node.id,
       type: node.type,
-      title: node.data?.title || '未命名',
+      title: node.data?.title || "未命名",
       // 根据节点类型提取关键信息
-      summary: getNodeSummary(node)
+      summary: getNodeSummary(node),
     })),
-    
+
     // 画布连接关系
-    canvasEdges: canvasStore.edges.map(edge => ({
+    canvasEdges: canvasStore.edges.map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
       type: edge.type,
-      relationship: edge.data?.relationship || edge.data?.label || '连接',
-      description: edge.data?.description || ''
+      relationship: edge.data?.relationship || edge.data?.label || "连接",
+      description: edge.data?.description || "",
     })),
-    
+
     // 角色节点数据
-    characterNodes: characterStore.nodes.map(node => ({
+    characterNodes: characterStore.nodes.map((node) => ({
       id: node.id,
       type: node.type,
-      name: node.data?.name || '未命名角色',
-      occupation: node.data?.occupation || '',
-      background: node.data?.background?.substring(0, 100) || '',
-      personality: Array.isArray(node.data?.personality) ? 
-        node.data.personality.join(', ') : ''
+      name: node.data?.name || "未命名角色",
+      occupation: node.data?.occupation || "",
+      background: node.data?.background?.substring(0, 100) || "",
+      personality: Array.isArray(node.data?.personality)
+        ? node.data.personality.join(", ")
+        : "",
     })),
-    
+
     // 角色关系
-    characterEdges: characterStore.edges.map(edge => ({
+    characterEdges: characterStore.edges.map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      relationship: edge.data?.relationship || '关系',
-      description: edge.data?.description || '',
-      strength: edge.data?.strength || ''
+      relationship: edge.data?.relationship || "关系",
+      description: edge.data?.description || "",
+      strength: edge.data?.strength || "",
     })),
-    
+
     // 房间信息
     room: {
       id: socketState.roomId,
       members: socketState.members.length,
-      stage: '第二阶段协作设计'
-    }
+      stage: "第二阶段协作设计",
+    },
   };
 };
 
 const getNodeSummary = (node) => {
-  switch(node.type) {
-    case 'custom': // 场景节点
-      return `场景: ${node.data?.sceneDescription || ''}, 时间: ${node.data?.timeLabel || ''}, 涉及角色: ${node.data?.characters || ''}`;
-      
-    case 'character': // 角色节点
-      return `角色: ${node.data?.name || ''}, 职业: ${node.data?.occupation || ''}, 性格: ${Array.isArray(node.data?.personality) ? node.data.personality.join(', ') : ''}`;
-      
-    case 'atmosphere': // 氛围节点
-      return `氛围: ${node.data?.mood || ''}, 灯光: ${node.data?.lighting || ''}, 音乐: ${node.data?.music || ''}`;
-      
-    case 'clue': // 线索节点
-      return `线索: ${node.data?.detail || ''}, 相关事件: ${node.data?.relatedEvent || ''}`;
-      
-    case 'inference': // 推理节点
-      return `推理: ${node.data?.summary || ''}, 证据: ${node.data?.evidence || ''}`;
-      
-    case 'person': // 人物节点
-      return `人物: ${node.data?.name || ''}, 简介: ${node.data?.bio || ''}`;
-      
+  switch (node.type) {
+    case "custom": // 场景节点
+      return `场景: ${node.data?.sceneDescription || ""}, 时间: ${
+        node.data?.timeLabel || ""
+      }, 涉及角色: ${node.data?.characters || ""}`;
+
+    case "character": // 角色节点
+      return `角色: ${node.data?.name || ""}, 职业: ${
+        node.data?.occupation || ""
+      }, 性格: ${
+        Array.isArray(node.data?.personality)
+          ? node.data.personality.join(", ")
+          : ""
+      }`;
+
+    case "atmosphere": // 氛围节点
+      return `氛围: ${node.data?.mood || ""}, 灯光: ${
+        node.data?.lighting || ""
+      }, 音乐: ${node.data?.music || ""}`;
+
+    case "clue": // 线索节点
+      return `线索: ${node.data?.detail || ""}, 相关事件: ${
+        node.data?.relatedEvent || ""
+      }`;
+
+    case "inference": // 推理节点
+      return `推理: ${node.data?.summary || ""}, 证据: ${
+        node.data?.evidence || ""
+      }`;
+
+    case "person": // 人物节点
+      return `人物: ${node.data?.name || ""}, 简介: ${node.data?.bio || ""}`;
+
     default:
       return JSON.stringify(node.data).substring(0, 100);
   }
@@ -194,11 +234,13 @@ const getCurrentTime = () => {
 const sendChatMessage = () => {
   if (newMessage.value.trim() === "") return;
 
-  let messageContent=newMessage.value;
+  let messageContent = newMessage.value;
 
-  if(newMessage.value.startsWith('@ai')){
-    const ContextData=collectContextData();
-    messageContent=`${newMessage.value}\n\n[CONTEXT_DATA]${JSON.stringify(ContextData)}[/CONTEXT_DATA]`;
+  if (newMessage.value.startsWith("@ai")) {
+    const ContextData = collectContextData();
+    messageContent = `${newMessage.value}\n\n[CONTEXT_DATA]${JSON.stringify(
+      ContextData
+    )}[/CONTEXT_DATA]`;
   }
 
   const messageData = {
@@ -228,28 +270,24 @@ const scrollToBottom = () => {
 };
 
 // 监听 props 更新
-watch(() => props.initialMessages, (newVal) => {
-  messages.value = newVal;
-});
-
+watch(
+  () => props.initialMessages,
+  (newVal) => {
+    messages.value = newVal;
+  }
+);
 
 // Refs
 const messagesContainer = ref(null);
 </script>
 
-
-<style scoped>
+<style>
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* max-height: 648px; */
   width: 100%;
-  background-color: #ffffff2d;
-  backdrop-filter: blur(3px);
-  border-radius: 16px;
   overflow: hidden;
-  /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
 }
 
 /* 头部样式 */
@@ -284,7 +322,7 @@ const messagesContainer = ref(null);
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  background-color: transparent;
+  background: transparent;
 }
 
 .message {
@@ -404,13 +442,15 @@ const messagesContainer = ref(null);
   transition: all 0.3s ease;
 }
 
+/* hover 效果 */
 .send-button:hover {
   background-color: #2563eb;
   transform: scale(1.05);
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
 }
+
+/* 关键点：按钮 hover 时图标变色 */
 .send-button:hover i {
   color: white;
 }
-
 </style>

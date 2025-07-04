@@ -4,20 +4,44 @@
       <div class="member-header">
         <h4>成员列表</h4>
         <button @click="toggleMemberListVisibility" class="toggle-btn">
-          <i :class="isMemberOpen ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+          <i
+            :class="
+              isMemberOpen
+                ? 'fa-solid fa-chevron-up'
+                : 'fa-solid fa-chevron-down'
+            "
+          ></i>
         </button>
       </div>
 
       <transition name="collapse">
         <div v-if="isMemberOpen" class="member-list">
           <div
-              class="member-item"
-              v-for="(member, index) in socketState.members"
-              :key="index"
-              @click="$emit('clickMember', { member, index })"
+            class="member-item"
+            v-for="(member, index) in socketState.members"
+            :key="index"
+            @click="$emit('clickMember', { member, index })"
           >
-            <img :src="member.avatar" alt="avatar" class="member-avatar" />
-            <span class="member-name">{{ member.username }}</span>
+            <div style="display: flex;flex-direction: column;justify-content: center;">
+              <div class="avatar-wrapper">
+                <img :src="member.avatar" alt="avatar" class="member-avatar" />
+                <!-- 绿色角标 -->
+                <span v-if="member.hasChosen" class="voted-badge">已选好</span>
+              </div>
+              <span class="member-name">{{ member.username }}</span>
+            </div>
+            <div class="member-tags">
+              <template
+                v-if="Array.isArray(member.key) && member.key.length > 0"
+              >
+                <span class="tag" v-for="(tag, i) in member.key" :key="i">
+                  #{{ tag }}
+                </span>
+              </template>
+              <template v-else>
+                <span class="tag no-selection">#无选择方向</span>
+              </template>
+            </div>
           </div>
         </div>
       </transition>
@@ -26,8 +50,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { socketState } from '@/stores/socket';
+import { ref } from "vue";
+import { socketState } from "@/stores/socket";
 
 const props = defineProps({
   members: {
@@ -42,7 +66,7 @@ const isMemberOpen = ref(true);
 // 切换成员列表显示
 const toggleMemberListVisibility = () => {
   isMemberOpen.value = !isMemberOpen.value;
-  console.log("成员列表：",socketState.members);
+  console.log("成员列表：", socketState.members);
 };
 </script>
 
@@ -50,10 +74,12 @@ const toggleMemberListVisibility = () => {
 .member-list-container {
   width: 100%;
   margin-bottom: 20px;
+
+  background: transparent;
 }
 
 .member-area {
-  background-color: white;
+  background: transparent;
   border-radius: 15px;
   padding: 15px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
@@ -83,27 +109,52 @@ const toggleMemberListVisibility = () => {
 }
 
 .member-list {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 15px;
-  max-height: 200px;
+  gap: 4px;
   overflow-y: auto;
   padding-right: 5px;
 }
 
 .member-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 5px;
 }
 
+.avatar-wrapper {
+  position: relative;
+
+  overflow: visible;
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: center;
+
+  height: 48px;
+  width: 64px;
+}
+
 .member-avatar {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  object-fit: cover;
-  background-color: #f0f0f0;
+}
+
+.voted-badge {
+  position: absolute;
+  top: 0px;
+  right: -10px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+
+  padding: 2px;
 }
 
 .member-name {
@@ -152,5 +203,25 @@ const toggleMemberListVisibility = () => {
 .collapse-leave-from {
   max-height: 200px;
   opacity: 1;
+}
+
+.member-tags {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag {
+  background-color: #dceeff;
+  color: #007bff;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.no-selection {
+  background-color: #f0f0f0;
+  color: #999;
 }
 </style>
