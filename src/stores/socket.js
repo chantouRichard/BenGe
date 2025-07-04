@@ -93,6 +93,7 @@ const socketState = reactive({
     title: "",
     description: "",
   },
+  AICompleteScriptContent:"",
   CompleteScriptContent:"",
 });
 
@@ -192,7 +193,11 @@ async function setupWebSocket() {
       handleCanvas(msg);
     } else if (msg.type === "vote") {
       handleVote(msg);
-    }
+    }  else if(msg.type == "enter-third-stage"){
+    socketState.CompleteScriptContent= msg.content;
+  } else if(msg.type == "enter-second-stage"){
+    socketState.direction = JSON.parse(msg.content);
+  }
   };
 
   socketState.socket.onclose = () => {
@@ -280,6 +285,12 @@ function handleRoleSelection(roleName, username) {
 // 同步画布
 function handleCanvas(msg) {
   console.log("接收到canvas：", msg);
+  if(msg.content){
+    console.log("进入：",socketState.AICompleteScriptContent);
+    socketState.AICompleteScriptContent = msg.content;
+    console.log("OKOK:",socketState.AICompleteScriptContent);
+    return;
+  }
 
   if (msg.type == "canvas") {
     canvasStore.nodes = msg.nodes || [];

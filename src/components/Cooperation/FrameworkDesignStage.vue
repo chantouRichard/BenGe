@@ -137,6 +137,7 @@ function updateMembers(membersList) {
 import { watch } from "vue";
 import { userLoadingStore } from "@/stores/userLoadingStore";
 const loadingStore = userLoadingStore();
+
 // 监听 CompleteScriptContent 的变化
 watch(
   () => socketState.CompleteScriptContent,
