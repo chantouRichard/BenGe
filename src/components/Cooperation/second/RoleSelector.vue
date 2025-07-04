@@ -1,28 +1,60 @@
 <template>
   <div class="choose-area">
     <div class="choose-header">
-      <h2 style="color: white">请选择你的角色</h2>
+      <h1 class="select-role-title">请选择你的角色</h1>
       <button class="button" style="margin-left: auto" @click="confirmSelection">
         选择完毕
       </button>
     </div>
     <div class="role-list">
-      <div v-for="(role, index) in roles" :key="index" class="role-wrapper">
+      <div v-for="(role, index) in roles"
+           :key="index"
+           class="role-wrapper"
+           :class="{'blur-others': hoverIndex !== null && hoverIndex !== index}"
+           @mouseenter="hoverIndex = index"
+           @mouseleave="hoverIndex = null"
+      >
         <div class="card-container">
-          <!-- 显示已选择角色的用户名 -->
+          <!-- 已选择角色打勾 -->
+          <div v-if="socketState.roleSelections[roles[index].name]" class="selected-check">
+            <i class="el-icon--check"></i>
+          </div>
+          <!-- 显示已选择的角色用户名 -->
           <div v-if="socketState.roleSelections[roles[index].name]" class="role-username">
             {{ socketState.roleSelections[roles[index].name] }}
           </div>
-          <img
-            :src="getRoleImage(index)"
-            alt="角色图片"
-            class="role-image"
-            @click="selectRole(index)"
-          />
+
+          <div class="image-container">
+            <!-- 模糊背景框 -->
+            <div class="blur-background"></div>
+
+            <!-- 鼠标未悬浮展示角色图片1 -->
+            <img
+                :src="getRoleImage(index,1)"
+                alt="角色图片"
+                class="role-image"
+                :class="{ 'active': hoverIndex !== index }"
+            />
+            <!-- 鼠标悬浮展示角色图片2 -->
+            <img
+                :src="getRoleImage(index,2)"
+                alt="角色图片"
+                class="role-image"
+                :class="{'active': hoverIndex === index }"
+                @click="selectRole(index,2)"
+            />
+          </div>
         </div>
-        <div class="role-text">{{ role.name }}</div>
-        <div class="role-description">{{ role.description }}</div>
       </div>
+
+        <!-- 角色信息展示面板 -->
+        <div class="role-info-panel " v-for="(role, index) in roles" :key="index" :class="{'active':hoverIndex === index }">
+          <!-- 角色名称 -->
+          <div class="role-text">{{ role.name }}</div>
+          <!-- 角色描述 -->
+          <div class="role-description">{{ role.description }}</div>
+        </div>
+
     </div>
   </div>
 </template>
@@ -46,9 +78,12 @@ const emit = defineEmits(['selected', 'confirm']);
 // 响应式数据
 const selectedRole = ref(null);  // 当前成员选择的角色
 
-// 获取角色图片
-function getRoleImage(index) {
-  return require(`@/assets/second/role${index + 1}.jpeg`);
+// 当前悬停的角色索引
+const hoverIndex = ref(null);
+
+// 获取角色图片（type控制悬停时展示对应角色第二张图片）
+function getRoleImage(index, imgType) {
+  return require(`@/assets/second/role${index + 1}-${imgType}.png`);
 }
 
 // 选择角色
@@ -97,126 +132,238 @@ function confirmSelection() {
 
 
 <style scoped>
-.button{
+.button {
   background-color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
 }
-.choose-area{
-    display: flex;
-    flex-direction: column;
-    /* align-items: center; */
 
-    width: 100%;
+.choose-area {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1400px;
 }
+
 .choose-header {
   display: flex;
   margin: 0px 20px 20px;
   justify-content: space-between;
   width: 100%;
+  align-items: center;
+}
+
+.select-role-title {
+  color: white;
+  font-family: 'Microsoft YaHei', sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
 }
 
 .role-list {
   display: flex;
   width: 100%;
   margin: auto;
-  min-width: 700px;
-  justify-content: space-evenly;
-  gap: 20px;
+  min-width: auto;
+  justify-content: center;
+  gap: clamp(20px, 3vw, 40px);
+  padding: 20px;
+  perspective: 1000px;
 }
 
 .role-wrapper {
-  width: 280px;
+  width: clamp(180px, 18vw, 220px);
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  transition: transform 0.3s ease;
-  position: relative; /* ✅ 卡片允许自身浮动 */
-
+  transition: all 0.3s ease;
+  position: relative;
   cursor: pointer;
+  padding: 0 clamp(10px, 1.5vw, 20px);
+  margin-bottom: 100px;
+  margin-top: -50px;
 }
+
+/* 有卡片被悬停时，其他卡片 */
+.role-wrapper.blur-others {
+  opacity: 0.6;
+  filter: blur(1px);
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+/* 左侧卡片向左下方偏移 */
+.role-wrapper.blur-others:has(~ .role-wrapper:hover) {
+  transform:
+      scale(0.9)
+      translateX(-40px)
+      translateY(5px)
+      rotateY(20deg); /* 3D倾斜效果 */
+}
+
+/* 右侧卡片向右下方偏移 */
+.role-wrapper:hover ~ .role-wrapper.blur-others {
+  transform:
+      scale(0.9)
+      translateX(40px)
+      translateY(5px)
+      rotateY(-20deg); /* 反向倾斜 */
+}
+
+/* 被悬停的卡片保持高亮 */
+.role-wrapper:hover {
+  width: 100%;
+  height: 90%;
+  top: 0;
+  opacity: 1;
+  filter: none;
+  z-index: 10; /* 确保悬停卡片在最上层 */
+}
+
+/* 扩大被悬停的卡片的图片容器的显示区域 */
+.role-wrapper:hover .card-container {
+  transform: scale(1.1) translateY(100px);
+  z-index: 10;
+  height: 140%;
+  margin-top: -20%;
+}
+
+/* 选中状态的样式 */
+.role-wrapper.selected {
+  opacity: 0.7;
+}
+
+.selected-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 30px;
+  height: 30px;
+  background-color: #409EFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  z-index: 2;
+}
+
 .role-username {
   position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 10px;
+  right: 10px;
   background: rgba(0, 0, 0, 0.5);
   color: white;
   padding: 2px 8px;
   font-size: 16px;
   border-radius: 3px;
+  z-index: 2;
 }
 
-.disabled {
-  pointer-events: none; /* 禁用已选择的角色 */
-  opacity: 0.5; /* 让已选择的角色看起来不可选 */
-}
-
-/* 悬浮时卡片整体上移 */
-.role-wrapper:hover {
-  transform: translateY(-100px); /* ✅ 只这个卡片上移 */
-  z-index: 1; /* ✅ 避免 hover 卡片被其他卡片遮住 */
-}
-
-/* 整个卡片容器：木纹背景 + 图片 */
 .card-container {
   width: 100%;
-  height: 240px;
-  padding: 10px;
-  background-image: url("@/assets/second/wood.jpg");
-  background-size: cover;
-  background-repeat: no-repeat;
+  height: clamp(240px, 40vh, 400px);
   border-radius: 10px;
-  /* overflow: hidden; */
-  transition: transform 0.3s ease;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  position: relative;
+  transform-style: preserve-3d;
+  margin-top: 0;
 }
 
-/* 图片本身只是填充，无需动画 */
+.image-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  transition: all 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+/* 模糊背景框样式 */
+.blur-background {
+  position: absolute;
+  background: #B3B2C7;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+  border-radius: 10px;
+  border: 2px solid white;
+}
+
+/* 悬停时显示模糊背景 */
+.role-wrapper:hover .blur-background {
+  width: 100%;
+  height: 60%;
+  top: 5%;
+  left: 0;
+}
+
 .role-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 5px;
-}
-
-/* 文字样式 + 动画 */
-.role-text {
-  font-size: 24px;
-  color: white;
-  transition: font-size 0.3s ease;
-}
-
-/* 悬浮：整个卡片旋转 + 缩放；文字变大 */
-.role-wrapper:hover .card-container {
-  transform: scale(1.1) rotate(4deg);
-}
-
-.role-wrapper:hover .role-text {
-  font-size: 28px;
-}
-/* 介绍文字默认透明 + 占位 */
-/* 介绍文字默认透明 */
-.role-description {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  color: #555;
-  font-size: 14px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px;
-  overflow: hidden;
-
   position: absolute;
-  top: 300px;
+  top: 0;
+  left: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
 }
 
-/* 悬浮时显示文字 */
-.role-wrapper:hover .role-description {
+.role-image.active {
   opacity: 1;
-  color: white;
-  font-size: 18px;
+  transform: scale(1.05);
+}
+
+.role-image:nth-child(1) {
+  opacity: 1;
+}
+
+/* hover 状态下使用 contain */
+.role-wrapper:hover .role-image {
+  object-fit: contain;
+}
+
+/* 右下方信息面板 */
+.role-info-panel {
+  position: absolute;
+  width: clamp(200px, 28vh, 500px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 3;
+  pointer-events: none;
+  /* 默认位置 */
+  top: calc(100% + 5px);
+  left: 90%;
+  transform: translateX(-50%) translateY(10px);
+}
+
+.role-info-panel.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.role-text {
+  font-size: 20px;
+  color: #fff;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.role-description {
+  font-size: 14px;
+  color: #eee;
+  line-height: 1.5;
 }
 
 </style>
