@@ -56,10 +56,12 @@ const socketState = reactive({
     },
   ],
   // 第一阶段存储的方向
+  options:[],
   direction: {
     title: "",
     description: "",
   },
+  CompleteScriptContent:"",
 });
 
 
@@ -300,6 +302,9 @@ function handleVote(msg) {
     if (member) {
       member.hasVoted = msg.hasVoted;
     }
+  }
+  if(msg.options){
+    socketState.options = msg.options;
   }
 }
 

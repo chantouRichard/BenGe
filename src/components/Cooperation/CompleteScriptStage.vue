@@ -65,8 +65,19 @@
       <div class="edit-area">
         <div class="edit-header">
           <h2>编辑区</h2>
-          <div style="margin-left: 20px; display: flex; align-items: center; gap: 10px">
-            <el-tag :type="isConnected ? 'success' : 'danger'" size="small" style="font-size: 12px">
+          <div
+            style="
+              margin-left: 20px;
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            "
+          >
+            <el-tag
+              :type="isConnected ? 'success' : 'danger'"
+              size="small"
+              style="font-size: 12px"
+            >
               {{ connectionStatus }}
             </el-tag>
             <span style="font-size: 12px; color: #666">
@@ -74,44 +85,71 @@
             </span>
           </div>
           <div style="margin-left: auto; display: flex; gap: 10px">
-            <el-button class="button" @click="saveToServer" :disabled="!isConnected">
+            <el-button
+              class="button"
+              @click="saveToServer"
+              :disabled="!isConnected"
+            >
               <i class="fas fa-save fa-fw save-icon"></i>
               保存剧本
             </el-button>
             <el-button class="button print" @click="output">
-              <img src="../../assets/output.png" style="width: 16px; height: 16px; margin-right: 2px" />导出剧本</el-button>
+              <img
+                src="../../assets/output.png"
+                style="width: 16px; height: 16px; margin-right: 2px"
+              />导出剧本</el-button
+            >
           </div>
         </div>
-        <div id="editor" style="height: calc(100% - 100px);"></div>
+        <div id="editor" style="height: calc(100% - 100px)"></div>
       </div>
 
       <!-- 成员区 -->
       <div class="member-area" :class="{ collapsed: !isMemberOpen }">
         <div class="member-header">
           <button class="toggle-btn" @click="toggleMemberArea">
-            <img v-if="isMemberOpen" style="object-fit: cover;width: 24px;height: 24px;" src="../../assets/third/close.png"/>
-            <img v-if="!isMemberOpen" style="object-fit: cover;width: 24px;height: 24px;" src="../../assets/third/open.png"/>
+            <img
+              v-if="isMemberOpen"
+              style="object-fit: cover; width: 24px; height: 24px"
+              src="../../assets/third/close.png"
+            />
+            <img
+              v-if="!isMemberOpen"
+              style="object-fit: cover; width: 24px; height: 24px"
+              src="../../assets/third/open.png"
+            />
           </button>
-          <span v-show="isMemberOpen" class="member-titlr">在线成员 ({{ socketState.members.length }})</span>
-          
+          <span v-show="isMemberOpen" class="member-titlr"
+            >在线成员 ({{ socketState.members.length }})</span
+          >
         </div>
-          <div class="member-list">
-            <div class="member-item" v-for="member in socketState.members" :key="member.id">
-              <div class="member-avatar-container">
-                <img :src="member.avatar" alt="avatar" class="member-avatar" />
-                <div class="online-indicator"></div>
-              </div>
-              <span v-show="isMemberOpen" class="member-name">{{ member.username }}</span>
+        <div class="member-list">
+          <div
+            class="member-item"
+            v-for="member in socketState.members"
+            :key="member.id"
+          >
+            <div class="member-avatar-container">
+              <img :src="member.avatar" alt="avatar" class="member-avatar" />
+              <div class="online-indicator"></div>
             </div>
-            <div v-if="socketState.members.length === 0" class="no-members">
-              暂无其他成员在线
-            </div>
+            <span v-show="isMemberOpen" class="member-name">{{
+              member.username
+            }}</span>
           </div>
+          <div v-if="socketState.members.length === 0" class="no-members">
+            暂无其他成员在线
+          </div>
+        </div>
       </div>
     </div>
-    <FloatingChatWrapper :room-id="roomId" :user-id="currentUser.id" :user-name="currentUser.name"
-      :avatar="currentUser.avatar" @membersUpdated="updateMembers" />
-
+    <FloatingChatWrapper
+      :room-id="roomId"
+      :user-id="currentUser.id"
+      :user-name="currentUser.name"
+      :avatar="currentUser.avatar"
+      @membersUpdated="updateMembers"
+    />
   </div>
 </template>
 
@@ -135,11 +173,11 @@ import { socketState } from "@/stores/socket";
 const route = useRoute();
 const isMemberOpen = ref(true);
 const isConnected = ref(false);
-const connectionStatus = ref('连接中...');
+const connectionStatus = ref("连接中...");
 
 const toggleMemberArea = () => {
   isMemberOpen.value = !isMemberOpen.value;
-}
+};
 
 // 注册光标模块
 Quill.register("modules/cursors", QuillCursors);
@@ -151,13 +189,13 @@ const roomId = computed(() => {
 
 // 从localStorage获取用户信息
 const currentUser = computed(() => {
-  const username = localStorage.getItem('username') || '匿名用户';
+  const username = localStorage.getItem("username") || "匿名用户";
   const userId = `user_${username}_${Date.now()}`;
   return {
     id: userId,
     name: username,
     color: getRandomColor(),
-    avatar: loginImage
+    avatar: loginImage,
   };
 });
 
@@ -167,7 +205,7 @@ let quill, ydoc, provider, cursorsModule;
 
 onMounted(async () => {
   try {
-    connectionStatus.value = '初始化编辑器...';
+    connectionStatus.value = "初始化编辑器...";
 
     // 初始化 Yjs 文档
     ydoc = new Y.Doc();
@@ -187,10 +225,14 @@ onMounted(async () => {
     // 获取 cursors 模块实例
     cursorsModule = quill.getModule("cursors");
 
-    connectionStatus.value = '连接协作服务器...';
+    connectionStatus.value = "连接协作服务器...";
 
     // 初始化 WebSocket Provider - 使用动态房间ID
-    provider = new WebsocketProvider("ws://localhost:1234", `room-${roomId.value}`, ydoc);
+    provider = new WebsocketProvider(
+      "ws://localhost:1234",
+      `room-${roomId.value}`,
+      ydoc
+    );
 
     // 设置本地用户信息
     provider.awareness.setLocalStateField("user", {
@@ -204,16 +246,16 @@ onMounted(async () => {
     new QuillBinding(ytext, quill, provider.awareness);
 
     // 监听连接状态
-    provider.on('status', (event) => {
-      console.log('Y.js连接状态:', event.status);
-      if (event.status === 'connected') {
+    provider.on("status", (event) => {
+      console.log("Y.js连接状态:", event.status);
+      if (event.status === "connected") {
         isConnected.value = true;
-        connectionStatus.value = '已连接';
-        ElMessage.success('协作服务器连接成功');
-      } else if (event.status === 'disconnected') {
+        connectionStatus.value = "已连接";
+        ElMessage.success("协作服务器连接成功");
+      } else if (event.status === "disconnected") {
         isConnected.value = false;
-        connectionStatus.value = '连接断开';
-        ElMessage.warning('协作服务器连接断开');
+        connectionStatus.value = "连接断开";
+        ElMessage.warning("协作服务器连接断开");
       }
     });
 
@@ -227,7 +269,11 @@ onMounted(async () => {
         const user = state.user;
         const selection = state.selection;
         if (user && selection) {
-          cursorsModule.createCursor(clientID.toString(), user.name, user.color);
+          cursorsModule.createCursor(
+            clientID.toString(),
+            user.name,
+            user.color
+          );
           cursorsModule.moveCursor(clientID.toString(), selection);
         }
       }
@@ -238,36 +284,37 @@ onMounted(async () => {
       provider.awareness.setLocalStateField("selection", range ?? null);
     });
 
+
+
     // 首次加载内容
-    provider.once("synced", async () => {
-      connectionStatus.value = '同步完成';
-      if (ytext.length === 0) {
-        try {
-          // 尝试从后端加载剧本内容
-          const res = await axios.get(`/api/script/room/${roomId.value}`);
-          const content = res.data?.content || `# 房间 ${roomId.value} 的剧本\n\n开始你们的创作吧！`;
-          const html = marked.parse(content);
-          quill.setContents(quill.clipboard.convert(html), "api");
-        } catch (err) {
-          console.error("加载初始内容失败", err);
-          // 使用默认内容
-          const defaultContent = `# 房间 ${roomId.value} 的剧本\n\n开始你们的创作吧！`;
-          const html = marked.parse(defaultContent);
-          quill.setContents(quill.clipboard.convert(html), "api");
-        }
-      }
-    });
+    let hasInitialized = false;
+
+provider.once("synced", async () => {
+  if (hasInitialized) return;
+  hasInitialized = true;
+
+  const quillContents = quill.getContents();
+  const isQuillEmpty =
+    quillContents.ops.length === 1 && quillContents.ops[0].insert === "\n";
+
+  if (isQuillEmpty && socketState.CompleteScriptContent) {
+    const markdown = socketState.CompleteScriptContent;
+    const html = marked.parse(markdown);
+    quill.setContents([], "api");
+    quill.clipboard.dangerouslyPasteHTML(0, html, "api");
+  }
+});
 
   } catch (error) {
-    console.error('初始化编辑器失败:', error);
-    ElMessage.error('初始化编辑器失败，请刷新页面重试');
-    connectionStatus.value = '连接失败';
+    console.error("初始化编辑器失败:", error);
+    ElMessage.error("初始化编辑器失败，请刷新页面重试");
+    connectionStatus.value = "连接失败";
   }
 });
 
 function format(name, value = true) {
   if (quill) {
-    if (name === 'clean') {
+    if (name === "clean") {
       quill.removeFormat(quill.getSelection());
     } else {
       quill.format(name, value);
@@ -284,7 +331,7 @@ onBeforeUnmount(() => {
 async function saveToServer() {
   try {
     if (!quill) {
-      ElMessage.error('编辑器未初始化');
+      ElMessage.error("编辑器未初始化");
       return;
     }
 
@@ -309,31 +356,31 @@ async function saveToServer() {
     // POST /api/script/room/save
     // 参数: { roomId, content, title }
     try {
-      const response = await axios.post('/api/script/room/save', {
+      const response = await axios.post("/api/script/room/save", {
         roomId: roomId.value,
         content: markdown,
-        title: `房间${roomId.value}的剧本`
+        title: `房间${roomId.value}的剧本`,
       });
 
-      if (response.data === 'success' || response.status === 200) {
-        ElMessage.success('剧本保存成功！');
+      if (response.data === "success" || response.status === 200) {
+        ElMessage.success("剧本保存成功！");
         console.log("✅ 保存成功，内容：\n", markdown);
       } else {
-        ElMessage.error('保存失败：' + (response.data || '未知错误'));
+        ElMessage.error("保存失败：" + (response.data || "未知错误"));
       }
     } catch (apiError) {
       // 如果后端接口不存在，先在本地保存
-      console.warn('后端保存接口未实现，使用本地保存:', apiError.message);
-      ElMessage.warning('后端接口未实现，内容已保存到控制台');
+      console.warn("后端保存接口未实现，使用本地保存:", apiError.message);
+      ElMessage.warning("后端接口未实现，内容已保存到控制台");
       console.log("✅ 本地保存内容：\n", markdown);
 
       // 可以保存到 localStorage 作为临时方案
       localStorage.setItem(`room_${roomId.value}_script`, markdown);
-      ElMessage.success('剧本已临时保存到本地');
+      ElMessage.success("剧本已临时保存到本地");
     }
   } catch (error) {
-    console.error('保存失败:', error);
-    ElMessage.error('保存失败：' + error.message);
+    console.error("保存失败:", error);
+    ElMessage.error("保存失败：" + error.message);
   }
 }
 
@@ -347,7 +394,7 @@ function getRandomColor() {
 function output() {
   try {
     if (!quill) {
-      ElMessage.error('编辑器未初始化');
+      ElMessage.error("编辑器未初始化");
       return;
     }
 
@@ -369,30 +416,32 @@ function output() {
     const markdown = turndownService.turndown(html);
 
     // 创建下载链接
-    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `房间${roomId.value}_剧本_${new Date().toISOString().slice(0, 10)}.md`;
+    link.download = `房间${roomId.value}_剧本_${new Date()
+      .toISOString()
+      .slice(0, 10)}.md`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    ElMessage.success('剧本导出成功！');
+    ElMessage.success("剧本导出成功！");
     console.log("✅ 导出 Markdown：\n", markdown);
   } catch (error) {
-    console.error('导出失败:', error);
-    ElMessage.error('导出失败：' + error.message);
+    console.error("导出失败:", error);
+    ElMessage.error("导出失败：" + error.message);
   }
 }
 
 function updateMembers(membersList) {
   // 直接更新整个成员列表
-  members.value = membersList.map(member => ({
+  members.value = membersList.map((member) => ({
     id: member.id,
     name: member.username,
-    avatar: member.avatar || loginImage
+    avatar: member.avatar || loginImage,
   }));
   console.log("成员列表已更新:", members.value);
 }
@@ -409,7 +458,6 @@ function updateMembers(membersList) {
 .member-title {
   font-size: 16px;
   font-weight: bold;
-
 }
 
 .toggle-btn {
@@ -443,8 +491,7 @@ function updateMembers(membersList) {
 .member-list {
   position: absolute;
   display: grid;
-  grid-template-columns: repeat(auto-fit,
-      minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   /* 自动换行、每列最小120px */
   margin-top: 40px;
   justify-content: center;
@@ -513,7 +560,13 @@ function updateMembers(membersList) {
   border-radius: 20px;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(90deg, #EDEEF2 0%, #ECEDEF 38%, #ECEDF1 70%, #EDEEF3 100%);
+  background: linear-gradient(
+    90deg,
+    #edeef2 0%,
+    #ecedef 38%,
+    #ecedf1 70%,
+    #edeef3 100%
+  );
   background-size: cover;
   background-repeat: no-repeat;
 }
@@ -574,7 +627,7 @@ function updateMembers(membersList) {
   left: 0;
   width: 100%;
   height: 113%;
-  background-image: url('../../assets/header-back.png');
+  background-image: url("../../assets/header-back.png");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -626,7 +679,13 @@ function updateMembers(membersList) {
 .menu-icon {
   cursor: pointer;
   font-size: 30px;
-  background-image: linear-gradient(45deg, #E6E6ED 0%, #C6C3DF 30%, #B5C4E1 70%, #B5BDDF 100%);
+  background-image: linear-gradient(
+    45deg,
+    #e6e6ed 0%,
+    #c6c3df 30%,
+    #b5c4e1 70%,
+    #b5bddf 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -636,7 +695,7 @@ function updateMembers(membersList) {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background-color: #FCFEFE;
+  background-color: #fcfefe;
   z-index: 2;
 }
 
@@ -696,13 +755,18 @@ function updateMembers(membersList) {
 
 /* 波浪渐变背景效果 */
 .ql-custom::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -50%;
   width: 200%;
   height: 100%;
-  background: radial-gradient(circle at 50% 0%, #2541EC 0%, #3182ce 50%, transparent 100%);
+  background: radial-gradient(
+    circle at 50% 0%,
+    #2541ec 0%,
+    #3182ce 50%,
+    transparent 100%
+  );
   transform: translateY(-100%);
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: -1;
@@ -726,13 +790,12 @@ function updateMembers(membersList) {
   pointer-events: none;
 }
 
-
 .edit-area {
   /* width: 66%; */
   flex: 1;
   min-width: 442px;
   background-color: white;
-  background: #F4F6F7;
+  background: #f4f6f7;
   border-radius: 15px;
   display: flex;
   flex-direction: column;
@@ -782,8 +845,8 @@ function updateMembers(membersList) {
 }
 
 .button.print {
-  background-color: #1E3DF0;
-  color: #F5F6F9;
+  background-color: #1e3df0;
+  color: #f5f6f9;
 }
 
 .button.save:hover i {
@@ -805,13 +868,16 @@ function updateMembers(membersList) {
 #editor {
   border-color: transparent;
   border-radius: 10px;
-  background: linear-gradient(180deg, #E5E7F3 0%, #E3E7F4 25%, #E0E6F6 50%, #DFE4F7 75%, #DDE3F4 100%);
+  background: linear-gradient(
+    180deg,
+    #e5e7f3 0%,
+    #e3e7f4 25%,
+    #e0e6f6 50%,
+    #dfe4f7 75%,
+    #dde3f4 100%
+  );
   padding: 10px;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
   flex: 1;
 }
-
-
-
-
 </style>

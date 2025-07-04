@@ -15,6 +15,7 @@
       @add-relationship="characterStore.handleCreateEdgeClick"
       @export-characters="handleExport"
       @ai-generate="handleCharacterAiGenerate"
+      @ai-integrate="handleAiIntegrate"
     />
     <ClueToolbar
       v-if="socketState.userRole == 2"
@@ -24,6 +25,7 @@
       @add-relationship="clueStore.handleCreateEdgeClick"
       @export-clues="handleExport"
       @ai-generate="handleClueAiGenerate"
+      @ai-integrate="handleAiIntegrate"
     />
     <AtmosphereToolbar
       v-if="socketState.userRole == 3"
@@ -32,7 +34,10 @@
       @link-scene="handleLinkScene"
       @export-atmo="handleExport"
       @ai-generate="handleAtmosphereAiGenerate"
+      @ai-integrate="handleAiIntegrate"
     />
+
+      <AiIntegrate v-if="ShowAiIntegrate && !loadingStore.loading3" @close="ShowAiIntegrate = false" @select="$emit('select')"/>
 
     <!-- 主画布 -->
     <CanvasArea
@@ -247,12 +252,18 @@ import AtmosphereDetailPanel from "./AtmosphereCom/AtmosphereDetailPanel.vue";
 import AtmospherePalette from "./AtmosphereCom/AtmospherePalette.vue";
 import AIGenerateDialog from './AIGenerateDialog.vue'
 
+import AiIntegrate from "../AiIntegrate.vue";
+
 import ClueEdgeSelector from "./ClueCom/ClueEdgeSelector.vue";
 import { useCharacterStore } from "@/stores/character";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { useClueStore } from "@/stores/clue";
 import { useAtmosphereStore } from "@/stores/atmosphere";
 import { ref, computed } from "vue";
+import { userLoadingStore } from "@/stores/userLoadingStore";
+const loadingStore = userLoadingStore();
+
+const ShowAiIntegrate = ref(false);
 
 // 传入参数
 import { defineProps } from 'vue'
@@ -741,8 +752,12 @@ const getCharacterEdgeTargetNode = () => {
 const handleCharacterSceneEdgeEditConfirm = (edgeData) => {
   characterStore.handleCharacterSceneEdgeEditConfirm(edgeData)
 }
+
 const handleAiIntegrate = () => {
-  console.log("调用AI整合功能:");
+  const contextData = collectContextData();
+  console.log("调用AI整合功能:",contextData);
+
+  ShowAiIntegrate.value = true;
 }
 </script>
 

@@ -23,12 +23,14 @@
         @nextStage="changeStage(2)"
       />
 
-        <SearchPanel />
-        <MemberList />
-        <TaskCard :role="userRole" :content="socketState.roles[socketState.userRole].task" />
-        <ScollingTips/>
-        <ChatPanel/>
-      
+      <SearchPanel />
+      <MemberList />
+      <TaskCard
+        :role="userRole"
+        :content="socketState.roles[socketState.userRole].task"
+      />
+      <ScollingTips />
+      <ChatPanel />
     </div>
   </div>
 </template>
@@ -131,6 +133,27 @@ function updateMembers(membersList) {
   }));
   console.log("成员列表已更新:", members.value);
 }
+
+import { watch } from "vue";
+import { userLoadingStore } from "@/stores/userLoadingStore";
+const loadingStore = userLoadingStore();
+// 监听 CompleteScriptContent 的变化
+watch(
+  () => socketState.CompleteScriptContent,
+  (newVal, oldVal) => {
+    if (newVal && newVal !== oldVal) {
+      loadingStore.show3();
+
+      setTimeout(() => {
+        emit("updateStage", 2);
+
+        setTimeout(() => {
+          loadingStore.hide3();
+        });
+      }, 4000);
+    }
+  }
+);
 </script>
 
 <style scoped>

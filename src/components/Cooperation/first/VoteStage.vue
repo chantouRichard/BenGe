@@ -139,14 +139,25 @@ const allVotesReceived = ref(false);
 
 const topDirections = ref([]);
 
+import { isOwner } from "@/api/room";
 // 初始化投票选项
 const initializeOptions = async () => {
   const allKeys = socketState.members.flatMap((member) => member.key || []);
   const top6Keywords = [...new Set(allKeys)].slice(0, 6);
 
-  const directions = await generateDirections(top6Keywords);
-  topDirections.value = directions;
-  AIGenerate.value = false;
+    await generateDirections(top6Keywords);
+
+    // 如果不是房主，监听 options 的变化
+    watch(
+      () => socketState.options,
+      (newOptions) => {
+        if (newOptions) {
+          topDirections.value = newOptions;
+          AIGenerate.value = false;
+        }
+      },
+      { immediate: true } // 确保初始化时就检查一次
+    );
 };
 const generateDirections = async (keywords) => {
   console.log("开始调用AI整合：", keywords);

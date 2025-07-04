@@ -8,12 +8,16 @@
     <transition name="slide-fade" mode="out-in">
       <FullScreenLoading2 v-if="loadingStore.loading2" />
     </transition>
+    <transition name="slide-fade" mode="out-in">
+      <FullScreenLoading3 v-if="loadingStore.loading3" />
+    </transition>
   </div>
 </template>
 
 <script setup>
 import FullScreenLoading from "./components/FullScreenLoading.vue";
 import FullScreenLoading2 from "./components/Cooperation/first/FullScreenLoading2.vue";
+import FullScreenLoading3 from "./components/Cooperation/second/FullScreenLoading3.vue";
 import { userLoadingStore } from "./stores/userLoadingStore";
 import AIChatWidget from "./components/AIChatWidget.vue";
 
