@@ -5,11 +5,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
@@ -33,8 +36,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                 Integer userId = tokenService.getUserIdFromToken(token);
                 String username = tokenService.getUsernameFromToken(token);
 
+                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+
+
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
                 authentication.setDetails(userId);  // 将 userId 存储在 Authentication 的 details 中
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
