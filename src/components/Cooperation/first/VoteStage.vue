@@ -139,25 +139,35 @@ const allVotesReceived = ref(false);
 
 const topDirections = ref([]);
 
-import { isOwner } from "@/api/room";
+import { AIIntegrateDirection } from "@/api/room";
 // 初始化投票选项
 const initializeOptions = async () => {
   const allKeys = socketState.members.flatMap((member) => member.key || []);
-  const top6Keywords = [...new Set(allKeys)].slice(0, 6);
+  const data = {
+    keyWords:allKeys,
+    roomId:socketState.roomId
+  }
+  console.log("所有Keys：", allKeys);
 
-    await generateDirections(top6Keywords);
+  try {
+    await AIIntegrateDirection(data);
+  } catch (error) {
+    console.log("请求出错：", error);
+  }
 
-    // 如果不是房主，监听 options 的变化
-    watch(
-      () => socketState.options,
-      (newOptions) => {
-        if (newOptions) {
-          topDirections.value = newOptions;
-          AIGenerate.value = false;
-        }
-      },
-      { immediate: true } // 确保初始化时就检查一次
-    );
+  // 如果不是房主，监听 options 的变化
+  watch(
+    () => socketState.options,
+    (newOptions) => {
+      if (newOptions) {
+        console.log("打印socketState：",socketState.options);
+        console.log("打印new：",newOptions);
+        topDirections.value = newOptions;
+        AIGenerate.value = false;
+      }
+    },
+    { immediate: true } // 确保初始化时就检查一次
+  );
 };
 const generateDirections = async (keywords) => {
   console.log("开始调用AI整合：", keywords);
@@ -331,15 +341,19 @@ watch(
 
 <style scoped>
 .vote-stage {
+
+  top: 100px;
   padding: 20px;
   font-family: "Arial", sans-serif;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
+  height: 80%;
+  width: 90%;
 
   align-items: center;
   justify-content: center;
+
+  position: absolute;
 }
 
 .title {
@@ -378,6 +392,11 @@ watch(
 
   width: 100%;
   padding: 10px;
+  height: 100%;
+  min-height: 360px;
+
+  overflow-y: auto;
+
 }
 
 .vote-option {
@@ -414,7 +433,6 @@ watch(
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: center;
   margin-bottom: 10px;
 
   position: relative;
@@ -425,6 +443,8 @@ watch(
 .direction {
   font-weight: bold;
   font-size: 16px;
+
+  text-align: left;
 }
 
 .vote-count {
@@ -550,14 +570,16 @@ watch(
   position: absolute;
 
   background-color: #fcf9fc;
-  width: 100%;
-  height: 100%;
+  width: 97%;
+  height: 94%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 
   border-radius: 24px;
+
+  z-index: 9000;
 }
 .loading-text {
   font-size: 36px;

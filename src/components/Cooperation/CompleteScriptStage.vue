@@ -255,27 +255,42 @@ onMounted(async () => {
       provider.awareness.setLocalStateField("selection", range ?? null);
     });
 
-
-
     // 首次加载内容
-    let hasInitialized = false;
+    // let hasInitialized = false;
+    // if (hasInitialized) return;
+    // hasInitialized = true;
+
+    // const quillContents = quill.getContents();
+    // const isQuillEmpty =
+    //   quillContents.ops.length === 1 && quillContents.ops[0].insert === "\n";
+
+    // console.log("quill.getLength:", quill.getText());
+    // console.log("Quill:", quill);
+    // quill.setText(socketState.CompleteScriptContent);
+    // if (!quill.getLength() && socketState.CompleteScriptContent) {
+    //   const markdown = socketState.CompleteScriptContent;
+    //   const html = marked.parse(markdown);
+    //   quill.setContents([], "api");
+    //   quill.clipboard.dangerouslyPasteHTML(0, html, "api");
+    // }
 
     provider.once("synced", async () => {
-      if (hasInitialized) return;
-      hasInitialized = true;
+  const ytext = ydoc.getText("quill");
 
-      const quillContents = quill.getContents();
-      const isQuillEmpty =
-        quillContents.ops.length === 1 && quillContents.ops[0].insert === "\n";
+  // 如果 ytext 是空的，说明是首次进入或首次写入
+  if (ytext.length === 0 && socketState.CompleteScriptContent) {
+    const markdown = socketState.CompleteScriptContent;
+    const html = marked.parse(markdown);
 
-      if (isQuillEmpty && socketState.CompleteScriptContent) {
-        const markdown = socketState.CompleteScriptContent;
-        console.log("markdown:", markdown);
-        const html = marked.parse(markdown);
-        quill.setContents([], "api");
-        quill.clipboard.dangerouslyPasteHTML(0, html, "api");
-      }
-    });
+    // 用 Quill 插入 HTML，触发绑定到 ytext 的变更
+    quill.setContents([], 'api'); // 清空旧内容
+    quill.clipboard.dangerouslyPasteHTML(0, html, 'api');
+
+    console.log("✏️ 初次插入内容成功！");
+  } else {
+    console.log("✅ 已有内容，跳过初始化。");
+  }
+});
 
   } catch (error) {
     console.error("初始化编辑器失败:", error);
