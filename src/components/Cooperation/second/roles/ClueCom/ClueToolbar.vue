@@ -13,7 +13,13 @@
 
     <!-- 展开面板 -->
     <transition name="panel-expand">
-      <div v-if="isExpanded" class="tool-panel">
+      <div
+          v-if="isExpanded"
+          class="tool-panel"
+          :class="[panelDirection === 'left' ? 'panel-left' : 'panel-right']"
+          @mousemove="handlePanelMove"
+          :style="panelHoverStyle"
+      >
         <button
           v-for="(btn, i) in buttons"
           :key="btn.action"
@@ -42,26 +48,26 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import {ref, computed, watch} from "vue";
 
-// 角色设计师专用按钮配置
+// 线索设计师专用按钮配置
 const buttons = ref([
   {
-    icon: require("@/assets/icons/plus-circle.svg"),
+    icon: require("@/assets/icons/plus-clue.svg"),
     action: "add-clue",
     tooltip: "添加线索",
     color: "rgba(255, 140, 100, 0.7)",
     hover: false,
   },
   {
-    icon: require("@/assets/icons/plus-circle.svg"),
+    icon: require("@/assets/icons/plus-conclusion.svg"),
     action: "add-inference",
     tooltip: "添加结论",
     color: "rgba(255, 140, 100, 0.7)",
     hover: false,
   },
   {
-    icon: require("@/assets/icons/plus-circle.svg"),
+    icon: require("@/assets/icons/plus-role.svg"),
     action: "add-person",
     tooltip: "建立相关人物",
     color: "rgba(255, 140, 100, 0.7)",
@@ -76,14 +82,14 @@ const buttons = ref([
   },
   
   {
-    icon: require("@/assets/second/role2.png"),
+    icon: require("@/assets/second/role-modle.svg"),
     action: "clue-template",
     tooltip: "角色模板",
     color: "rgba(180, 140, 255, 0.7)",
     hover: false,
   },
   {
-    icon: require("@/assets/icons/file-text.svg"),
+    icon: require("@/assets/icons/export.svg"),
     action: "export-clues",
     tooltip: "导出线索表",
     color: "rgba(100, 220, 180, 0.7)",
@@ -118,6 +124,17 @@ const isExpanded = ref(false);
 const isDragging = ref(false);
 const position = ref({ x: 40, y: 40 });
 const dragStartPos = ref(null);
+const panelHoverPos = ref({ x: 0, y: 0 });
+
+const panelDirection = ref('right');
+
+const updatePanelDirection = () => {
+  const viewportWidth = window.innerWidth;
+  const ballCenterX = position.value.x + 28;
+  panelDirection.value = ballCenterX > viewportWidth / 2 ? 'left' : 'right';
+};
+
+watch(position, updatePanelDirection, {immediate: true});
 
 // 动态样式
 const toolballStyle = computed(() => ({
@@ -126,27 +143,74 @@ const toolballStyle = computed(() => ({
   "--panel-width": `${buttons.value.length * 56 + 16}px`,
 }));
 
+const panelHoverStyle = computed(() => ({
+  backgroundImage: `radial-gradient(200px circle at ${panelHoverPos.value.x}px ${panelHoverPos.value.y}px, rgba(176, 227, 255, 0.35), transparent 80%)`,
+}));
+
+const handlePanelMove = (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  panelHoverPos.value = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+  };
+};
+
 // 拖拽逻辑
 const startDrag = (e) => {
   e.preventDefault();
   e.stopPropagation();
 
   isDragging.value = true;
-  const clientX = e.clientX || e.touches[0].clientX;
-  const clientY = e.clientY || e.touches[0].clientY;
+
+  // 添加安全检查，避免悬浮球移动到边界时出现报错问题
+  let clientX, clientY;
+  if (e.clientX !== undefined) {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  } else if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = position.value.x;
+    clientY = position.value.y;
+  }
+
   dragStartPos.value = {
     x: clientX - position.value.x,
     y: clientY - position.value.y,
   };
 
   const moveHandler = (moveEvent) => {
-    const clientX = moveEvent.clientX || moveEvent.touches[0].clientX;
-    const clientY = moveEvent.clientY || moveEvent.touches[0].clientY;
+    if (!isDragging.value) return;
+
+    let moveClientX, moveClientY;
+    if (moveEvent.clientX !== undefined) {
+      moveClientX = moveEvent.clientX;
+      moveClientY = moveEvent.clientY;
+    } else if (moveEvent.touches && moveEvent.touches.length > 0) {
+      moveClientX = moveEvent.touches[0].clientX;
+      moveClientY = moveEvent.touches[0].clientY;
+    } else {
+      return;
+    }
+
+    // 计算新位置并限制边界
+    const toolballSize = 56;
+    const newX = Math.max(0,
+        Math.min(moveClientX - dragStartPos.value.x,
+            window.innerWidth - toolballSize));
+    const newY = Math.max(0,
+        Math.min(moveClientY - dragStartPos.value.y,
+            window.innerHeight - toolballSize));
+
     position.value = {
-      x: clientX - dragStartPos.value.x,
-      y: clientY - dragStartPos.value.y,
+      x: newX,
+      y: newY
     };
+
+    updatePanelDirection();
   };
+
 
   const endHandler = () => {
     window.removeEventListener("mousemove", moveHandler);
@@ -208,10 +272,9 @@ defineEmits([
 
 .main-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 
-              0 0 0 1px rgba(255, 255, 255, 0.2),
-              0 0 30px 4px rgba(0, 119, 255, 0.7);
-  background-color: rgba(0, 110, 255, 0.9);
+  background: linear-gradient(to top, #dce1ff, #ffffff);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2),
+  0 0 30px 4px rgba(100, 200, 255, 0.7);
 }
 
 /* 图标样式 */
@@ -239,53 +302,65 @@ defineEmits([
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1),
-              inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   margin-left: 12px;
+  position: absolute;
+  align-items: center;
+}
+
+/* 面板左、右展开 */
+.tool-panel.panel-right {
+  left: calc(100% + 12px);
+}
+.tool-panel.panel-left {
+  right: calc(100% + 12px);
+  flex-direction: row-reverse;
 }
 
 .tool-button {
   position: relative;
+  z-index: 1;
   width: 44px;
   height: 44px;
-  margin: 0 6px;
-  background: rgba(255, 245, 235, 0.8);
-  border-radius: 50%;
-  border: 1px solid rgba(255, 140, 100, 0.5);
-  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-  cursor: pointer;
-  align-self: center;
-  opacity: 0;
-  transform: scale(0.8);
-  animation: button-appear 0.4s ease forwards;
-  animation-delay: calc(var(--delay-index) * 0.1s);
-  overflow: visible;
+  margin: 6px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.35);
+  transition: all 0.3s ease calc(var(--delay-index, 0) * 50ms);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
 .tool-button:hover {
-  background: rgba(255, 140, 100, 0.2);
-  border-color: rgba(0, 183, 255, 0.8);
+  background: linear-gradient(135deg, #b0e3ff, #ffffff);
+  border: 1px solid #9faeff;
+  box-shadow: 0 0 6px rgba(176, 227, 255, 0.6),
+  0 0 10px rgba(159, 174, 255, 0.4);
+  transform: scale(1.15);
+}
+
+.tool-button:hover .icon-tool {
+  filter: drop-shadow(0 0 6px rgba(150, 200, 255, 0.6)) saturate(140%);
   transform: scale(1.1);
 }
 
 .tooltip {
   position: absolute;
-  top: -35px;
+  top: 50px;
   left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
+  transform: translate(-50%, 8px);
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.75);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-  white-space: nowrap;
   opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  z-index: 9999;
+  transition: all 0.3s ease;
 }
 
 .tool-button:hover .tooltip {
   opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* 动画 */
@@ -304,6 +379,21 @@ defineEmits([
 .panel-expand-enter-from,
 .panel-expand-leave-to {
   opacity: 0;
-  transform: translateX(-20px) scale(0.8);
+}
+
+.panel-expand-enter-from.panel-right,
+.panel-expand-leave-to.panel-right {
+  transform: translateX(-20px);
+}
+
+.panel-expand-enter-from.panel-left,
+.panel-expand-leave-to.panel-left {
+  transform: translateX(20px);
+}
+
+.panel-expand-enter-to,
+.panel-expand-leave-from {
+  opacity: 1;
+  transform: translateX(0);
 }
 </style> 

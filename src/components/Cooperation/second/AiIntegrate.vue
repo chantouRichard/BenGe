@@ -63,20 +63,18 @@ onMounted(() => {
   AiIntegrate();
 });
 
-watch(
-  () => props.AIcontent,
-  (val) => {
-    editorContent.value = val;
-  }
-);
+
 
 const handleOverlayClick = () => {
   emit("close");
 };
 
-const emitContent = () => {
+import { enterThirdStage } from "@/api/script";
+const emitContent = async () => {
   socketState.CompleteScriptContent = editorContent.value;
   console.log("点击确认：", socketState.CompleteScriptContent);
+
+  await enterThirdStage(socketState.roomId,socketState.CompleteScriptContent);
 };
 
 // 产生AI整合的内容
@@ -129,10 +127,12 @@ const AiIntegrate = async () => {
   //   }, 3000);
   console.log("contextData:", contextData);
   const data = {
-    contextData:JSON.stringify(contextData),
-    roomId:socketState.roomId
-  }
-  await generateCooperateFramework(data);
+    contextData: JSON.stringify(contextData),
+    roomId: socketState.roomId,
+  };
+  const res = await generateCooperateFramework(data);
+  console.log("res:", res);
+  showAI.value = false;
 };
 </script>
 

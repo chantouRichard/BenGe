@@ -1,59 +1,74 @@
-import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
-import { socketState } from './socket';
+import { defineStore } from "pinia";
+import { reactive, ref } from "vue";
+import { socketState } from "./socket";
 
-export const useClueStore = defineStore('clueStore', () => {
-
+export const useClueStore = defineStore("clueStore", () => {
   // 生成结点的ID
-  const generateNodeId = () => 'node-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+  const generateNodeId = () =>
+    "node-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
 
-  // 所有角色节点数据
-  const nodes = ref([{
-    id: generateNodeId(),
-    type: 'clue',
-    position: { x: 100, y: 100 },
-    data: {
-        title: "新线索",
-        relatedEvent: "", // 关联的事件
-        detail: "", // 线索内容
-        logic: "", // 推理逻辑
-        tags: "", // 标签（逗号分隔）
-        note: "", // 备注
-    }
-  }])
+  // 所有线索节点数据
+  const nodes = ref([
+    {
+      id: generateNodeId(),
+      type: "clue",
+      position: { x: 600, y: 200 },
+      data: {
+        title: "打火机",
+        relatedEvent: "命案现场发现",
+        detail: "打火机带有‘LS’字样，疑似李四的私人物品",
+        logic: "嫌疑人可能在现场遗落打火机，需验证指纹",
+        tags: "物证,李四",
+        note: "可能是伪装嫁祸",
+      },
+    },
+    {
+      id: generateNodeId(),
+      type: "clue",
+      position: { x: 700, y: 250 },
+      data: {
+        title: "陌生车牌",
+        relatedEvent: "关键目击证词",
+        detail: "车牌为‘浙A·7B9Q8’，未登记在案",
+        logic: "可能是作案工具或潜逃车辆",
+        tags: "目击,车辆",
+        note: "需调取交通监控记录追踪",
+      },
+    },
+  ]);
 
   // 所有连线
-  const edges = reactive([])
+  const edges = reactive([]);
 
   // 当前选择结点
-  const selectedNode = ref(null)
+  const selectedNode = ref(null);
 
   // 当前选择边的ID
-  const editingEdgeId = ref(null)
+  const editingEdgeId = ref(null);
 
-  // 是否在创建边 
-  const isCreatingEdge = ref(false)
+  // 是否在创建边
+  const isCreatingEdge = ref(false);
 
   // 通过工具栏创建边时，存放的两个结点
-  const selectedNodesForEdge = ref([])
+  const selectedNodesForEdge = ref([]);
 
   // 是否展示边选择器
-  const showEdgeSelector = ref(false)
+  const showEdgeSelector = ref(false);
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
-    console.log('点击创建边按钮')
-    isCreatingEdge.value = true
-    selectedNodesForEdge.value = []
-    showEdgeSelector.value = false
-  }
+    console.log("点击创建边按钮");
+    isCreatingEdge.value = true;
+    selectedNodesForEdge.value = [];
+    showEdgeSelector.value = false;
+  };
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
-    console.log("点击的边的Id", edgeId)
-    editingEdgeId.value = edgeId
-    showEdgeSelector.value = true
-  }
+    console.log("点击的边的Id", edgeId);
+    editingEdgeId.value = edgeId;
+    showEdgeSelector.value = true;
+  };
 
   // 用户在关系选择器中，确认创建角色关系
   const handleEdgeConfirm = (relationData) => {
@@ -65,24 +80,28 @@ export const useClueStore = defineStore('clueStore', () => {
         id: `relationship-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
         source: sourceNode.id,
         target: targetNode.id,
-        sourceHandle: 'right-source',
-        targetHandle: 'left',
-        type: 'relationship',
+        sourceHandle: "right-source",
+        targetHandle: "left",
+        type: "relationship",
         data: reactive({
           type: relationData.type,
           description: relationData.description,
           strength: relationData.strength,
           status: relationData.status,
-          label: relationData.type || '关系'
-        })
+          label: relationData.type || "关系",
+        }),
       });
 
       edges.push(newEdge);
 
       // 同时在角色节点中记录关系
-      const sourceNodeIndex = nodes.value.findIndex(n => n.id === sourceNode.id);
-      const targetNodeIndex = nodes.value.findIndex(n => n.id === targetNode.id);
-      
+      const sourceNodeIndex = nodes.value.findIndex(
+        (n) => n.id === sourceNode.id
+      );
+      const targetNodeIndex = nodes.value.findIndex(
+        (n) => n.id === targetNode.id
+      );
+
       if (sourceNodeIndex !== -1) {
         if (!nodes.value[sourceNodeIndex].data.relationships) {
           nodes.value[sourceNodeIndex].data.relationships = [];
@@ -92,7 +111,7 @@ export const useClueStore = defineStore('clueStore', () => {
           type: relationData.type,
           description: relationData.description,
           strength: relationData.strength,
-          status: relationData.status
+          status: relationData.status,
         });
       }
       broadcast();
@@ -107,28 +126,33 @@ export const useClueStore = defineStore('clueStore', () => {
   const handleEdgeEditConfirm = (relationData) => {
     if (!editingEdgeId.value) return;
 
-    const edge = edges.find(e => e.id === editingEdgeId.value);
+    const edge = edges.find((e) => e.id === editingEdgeId.value);
     if (edge) {
       // 更新关系边数据
       edge.data.type = relationData.type;
       edge.data.description = relationData.description;
       edge.data.strength = relationData.strength;
       edge.data.status = relationData.status;
-      edge.data.label = relationData.type || '关系';
+      edge.data.label = relationData.type || "关系";
 
       // 同时更新角色节点中的关系记录
-      const sourceNodeIndex = nodes.value.findIndex(n => n.id === edge.source);
-      if (sourceNodeIndex !== -1 && nodes.value[sourceNodeIndex].data.relationships) {
-        const relationIndex = nodes.value[sourceNodeIndex].data.relationships.findIndex(
-          r => r.targetId === edge.target
-        );
+      const sourceNodeIndex = nodes.value.findIndex(
+        (n) => n.id === edge.source
+      );
+      if (
+        sourceNodeIndex !== -1 &&
+        nodes.value[sourceNodeIndex].data.relationships
+      ) {
+        const relationIndex = nodes.value[
+          sourceNodeIndex
+        ].data.relationships.findIndex((r) => r.targetId === edge.target);
         if (relationIndex !== -1) {
           nodes.value[sourceNodeIndex].data.relationships[relationIndex] = {
             targetId: edge.target,
             type: relationData.type,
             description: relationData.description,
             strength: relationData.strength,
-            status: relationData.status
+            status: relationData.status,
           };
         }
       }
@@ -141,15 +165,15 @@ export const useClueStore = defineStore('clueStore', () => {
 
   // 用户在边选择器中，取消创建边
   const handleEdgeCancel = () => {
-    selectedNodesForEdge.value = []
-    isCreatingEdge.value = false
-    showEdgeSelector.value = false
-    editingEdgeId.value = null  // 重置编辑状态
-  }
+    selectedNodesForEdge.value = [];
+    isCreatingEdge.value = false;
+    showEdgeSelector.value = false;
+    editingEdgeId.value = null; // 重置编辑状态
+  };
 
   // 在边选择器中，删除边
   const handleDeleteEdge = () => {
-    const index = edges.findIndex(e => e.id === editingEdgeId.value);
+    const index = edges.findIndex((e) => e.id === editingEdgeId.value);
     if (index !== -1) {
       edges.splice(index, 1);
     }
@@ -159,20 +183,20 @@ export const useClueStore = defineStore('clueStore', () => {
     showEdgeSelector.value = false;
 
     broadcast();
-  }
+  };
 
   // 连接结点
   const handleConnectNode = (newEdge) => {
-    edges.push(newEdge)
+    edges.push(newEdge);
     broadcast();
-  }
+  };
 
   // 点击结点，进入结点的信息编辑界面或者是在创建边
   const handleNodeClick = (node) => {
     const actualNode = node.node || node; // 处理两种可能的情况
 
     if (isCreatingEdge.value) {
-      if (!selectedNodesForEdge.value.find(n => n.id === actualNode.id)) {
+      if (!selectedNodesForEdge.value.find((n) => n.id === actualNode.id)) {
         selectedNodesForEdge.value.push(actualNode);
         broadcast();
       }
@@ -183,50 +207,48 @@ export const useClueStore = defineStore('clueStore', () => {
     } else {
       selectedNode.value = { ...actualNode };
     }
-  }
+  };
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log('保存的节点数据：', updatedData);
-  
+    console.log("保存的节点数据：", updatedData);
+
     if (!updatedData || !updatedData.id || !updatedData.data) {
-      console.warn('[handleDetailSave] 无效参数：', updatedData);
+      console.warn("[handleDetailSave] 无效参数：", updatedData);
       return -1;
     }
-  
+
     let index = -1;
-  
+
     // 如果当前有选中节点，才尝试查找并更新
     if (selectedNode.value) {
-      index = nodes.value.findIndex(n => n.id === updatedData.id);
-  
+      index = nodes.value.findIndex((n) => n.id === updatedData.id);
+
       if (index !== -1) {
         nodes.value[index].data = {
           ...nodes.value[index].data,
           ...updatedData.data,
         };
-  
+
         // ✅ 强制触发响应式更新
         nodes.value[index] = { ...nodes.value[index] };
-  
-        console.log('更新后的节点数据：', nodes.value[index]);
+
+        console.log("更新后的节点数据：", nodes.value[index]);
       } else {
-        console.warn('未找到对应的节点 ID:', updatedData.id);
+        console.warn("未找到对应的节点 ID:", updatedData.id);
         return -1;
       }
     } else {
-      console.warn('无选中节点，可能是编辑逻辑未正确触发');
+      console.warn("无选中节点，可能是编辑逻辑未正确触发");
       return -1;
     }
-  
+
     // 最后收起面板
     selectedNode.value = null;
-  
+
     broadcast();
     return index;
   };
-  
-  
 
   const handleAddClueNode = (event) => {
     const rect = event?.target?.getBoundingClientRect();
@@ -261,11 +283,11 @@ export const useClueStore = defineStore('clueStore', () => {
       type: "inference",
       position: { x, y },
       data: {
-        title: '推导结论1',
-      summary: '总结',
-      evidence: '证据',
-      tags: '',
-      note: ''
+        title: "推导结论1",
+        summary: "总结",
+        evidence: "证据",
+        tags: "",
+        note: "",
       },
     };
 
@@ -274,33 +296,33 @@ export const useClueStore = defineStore('clueStore', () => {
     broadcast();
   };
   const handleAddPersonNode = (event) => {
-  const rect = event?.target?.getBoundingClientRect();
-  const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
-  const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+    const rect = event?.target?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+    const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
 
-  const newNode = {
-    id: generateNodeId(),
-    type: "person", // 使用你在 VueFlow 中注册的人物节点组件类型
-    position: { x, y },
-    data: {
-      name: '新人物',
-      bio: '人物背景简介',
-      clues: [],       // 与线索有关的ID或标题
-      tags: ['可疑'],   // 人物特点标签
-      note: ''         // 附加备注
-    },
+    const newNode = {
+      id: generateNodeId(),
+      type: "person", // 使用你在 VueFlow 中注册的人物节点组件类型
+      position: { x, y },
+      data: {
+        name: "新人物",
+        bio: "人物背景简介",
+        clues: [], // 与线索有关的ID或标题
+        tags: ["可疑"], // 人物特点标签
+        note: "", // 附加备注
+      },
+    };
+
+    nodes.value.push(newNode);
+
+    broadcast(); // 如果你在同步节点给其他协作者，这一行保留
   };
-
-  nodes.value.push(newNode);
-
-  broadcast(); // 如果你在同步节点给其他协作者，这一行保留
-};
 
   // 结点的删除
   const handleDeleteNode = (nodeId) => {
-    const index = nodes.value.findIndex(n => n.id === nodeId);
+    const index = nodes.value.findIndex((n) => n.id === nodeId);
     if (index !== -1) {
-      nodes.value.splice(index, 1)
+      nodes.value.splice(index, 1);
 
       if (selectedNode.value?.id === nodeId) {
         selectedNode.value = null;
@@ -308,49 +330,48 @@ export const useClueStore = defineStore('clueStore', () => {
 
       for (let i = edges.length - 1; i >= 0; i--) {
         if (edges[i].source === nodeId || edges[i].target === nodeId) {
-          edges.splice(i, 1)
+          edges.splice(i, 1);
         }
       }
     }
     broadcast();
-  }
+  };
 
   // 处理结点的位置变化
   const handlePositionChange = (payload) => {
-    const { id, position } = payload
-    const nodeIndex = nodes.value.findIndex(n => n.id === id)
+    const { id, position } = payload;
+    const nodeIndex = nodes.value.findIndex((n) => n.id === id);
     if (nodeIndex !== -1) {
-      nodes.value[nodeIndex].position = position
-      nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] } // ✅ 强制 Vue 感知变化
+      nodes.value[nodeIndex].position = position;
+      nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] }; // ✅ 强制 Vue 感知变化
       // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
     }
     broadcast();
   };
-    // 广播节点和边的信息
-    const broadcast = () => {
-  // 分类节点
-  const clueNodes = nodes.value.filter(n => n.type === 'clue');
-  const inferenceNodes = nodes.value.filter(n => n.type === 'inference');
-  const personNodes = nodes.value.filter(n => n.type === 'person');
+  // 广播节点和边的信息
+  const broadcast = () => {
+    // 分类节点
+    const clueNodes = nodes.value.filter((n) => n.type === "clue");
+    const inferenceNodes = nodes.value.filter((n) => n.type === "inference");
+    const personNodes = nodes.value.filter((n) => n.type === "person");
 
-  console.log("clue:",clueNodes);
-  console.log("inference:",inferenceNodes);
-  console.log("personNodes:",personNodes);
-  // 构造消息体
-  const message = {
-    type: "clue", // 或者你可以改成 "clueSync"、"canvasUpdate"，看你的协议设计
-    clueNodes,
-    inferenceNodes,
-    personNodes,
-    clueEdges: edges,
+    console.log("clue:", clueNodes);
+    console.log("inference:", inferenceNodes);
+    console.log("personNodes:", personNodes);
+    // 构造消息体
+    const message = {
+      type: "clue", // 或者你可以改成 "clueSync"、"canvasUpdate"，看你的协议设计
+      clueNodes,
+      inferenceNodes,
+      personNodes,
+      clueEdges: edges,
+    };
+
+    // 发送广播消息
+    socketState.socket.send(JSON.stringify(message));
+
+    console.log("广播的节点信息：", message);
   };
-
-  // 发送广播消息
-  socketState.socket.send(JSON.stringify(message));
-
-  console.log("广播的节点信息：", message);
-};
-
 
   return {
     nodes,
@@ -373,6 +394,6 @@ export const useClueStore = defineStore('clueStore', () => {
     handleAddInferenceNode,
     handleAddPersonNode,
     handleDeleteNode,
-    handlePositionChange
-  }
-})
+    handlePositionChange,
+  };
+});

@@ -37,7 +37,7 @@
       @ai-integrate="handleAiIntegrate"
     />
 
-      <AiIntegrate v-if="ShowAiIntegrate && !loadingStore.loading3" @close="ShowAiIntegrate = false" @select="$emit('select')"/>
+      <AiIntegrate v-if="ShowAiIntegrate && !loadingStore.loading3" :AIContent="AIContent.value" @close="ShowAiIntegrate = false" @select="$emit('select')"/>
 
     <!-- 主画布 -->
     <CanvasArea
@@ -759,6 +759,21 @@ const handleAiIntegrate = () => {
 
   ShowAiIntegrate.value = true;
 }
+
+import { watch } from "vue";
+const AIContent = ref("");
+// 监听AI返回整合剧本的内容
+watch(
+  () => socketState.AICompleteScriptContent,
+  (newData) => {
+    if (newData) {
+      ShowAiIntegrate.value = true;
+      console.log("newData:", newData);
+      AIContent.value = newData;
+    }
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>

@@ -58,26 +58,6 @@
         {{ hasVoted ? "等待其他成员..." : "确认投票" }}
       </button>
     </div>
-
-    <div v-if="showAISuggestion" class="ai-suggestion-area">
-      <h3>AI创作建议</h3>
-      <div class="suggestion-content">
-        {{ aiSuggestion }}
-      </div>
-      <div class="modification-area">
-        <textarea
-          v-model="modificationRequest"
-          placeholder="输入您的修改意见..."
-          :disabled="isRegenerating"
-        ></textarea>
-        <button
-          @click="requestRegeneration"
-          :disabled="isRegenerating || !modificationRequest.trim()"
-        >
-          {{ isRegenerating ? "生成中..." : "重新生成" }}
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
