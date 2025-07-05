@@ -1,7 +1,6 @@
 package com.bengebackend.service;
 
 import com.bengebackend.entity.AIMsgDevide;
-import com.bengebackend.entity.Slogan;
 import com.bengebackend.entity.SloganRequestEntity;
 
 import java.util.List;
