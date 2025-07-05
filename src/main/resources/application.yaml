@@ -38,3 +38,7 @@ xfyun:
   appid: 170d4e9f
   api-password: "phMuUzKxbKGOoDvJKhzT:tBQeXKfurbPBHzKFAEwv"
   api-url: "https://spark-api-open.xf-yun.com/v2/chat/completions"
+
+ngrok:
+  enabled: true
+  authToken: 2y3CNYjCCvJzBLqvHlsB1asoNjh_6vQVv6hLQ83UKxW58V7Nh

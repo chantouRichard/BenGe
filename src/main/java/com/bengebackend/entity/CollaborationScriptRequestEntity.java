@@ -21,4 +21,6 @@ public class CollaborationScriptRequestEntity {
      */
     private String contextData;
 
+    private Integer roomId;
+
 }

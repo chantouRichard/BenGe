@@ -1,12 +1,19 @@
 package com.bengebackend.controller;
 
+import com.bengebackend.dto.CollaborationScriptDto;
 import com.bengebackend.dto.ScriptDetailDto;
 import com.bengebackend.dto.ScriptFrameworkDto;
 import com.bengebackend.dto.SloganResponseDto;
 import com.bengebackend.entity.*;
 import com.bengebackend.model.Script;
 import com.bengebackend.model.ScriptAnalysis;
+import com.bengebackend.service.RoomService;
 import com.bengebackend.service.ScriptService;
+import com.bengebackend.util.ContextDataProcessor;
+import com.bengebackend.util.SparkApiUtil;
+import com.bengebackend.websocket.message.WebSocketMessage;
+import com.bengebackend.websocket.session.RoomManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
