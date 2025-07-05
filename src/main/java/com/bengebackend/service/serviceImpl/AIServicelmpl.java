@@ -1,19 +1,15 @@
 package com.bengebackend.service.serviceImpl;
 
-import com.bengebackend.config.XfyunConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.bengebackend.entity.AIMsgDevide;
-import com.bengebackend.entity.Slogan;
 import com.bengebackend.entity.SloganRequestEntity;
-import com.bengebackend.entity.StreamResponse;
 import com.bengebackend.service.*;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,7 +27,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -93,7 +88,9 @@ public class AIServicelmpl implements AIService {
                 ...
                         """;
 
+    @SuppressWarnings("unused")
     private final RestTemplate restTemplate;
+    @SuppressWarnings("unused")
     private final ObjectMapper objectMapper;
 
     public AIServicelmpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
@@ -421,10 +418,12 @@ public class AIServicelmpl implements AIService {
                         });
 
                 List<List<String>> nameAndDesc = new ArrayList<>();
+                @SuppressWarnings("unchecked")
                 List<String> temp = (List<String>) json.get("name");
                 nameAndDesc.add(temp);
-                temp = (List<String>) json.get("description");
-                nameAndDesc.add(temp);
+                @SuppressWarnings("unchecked")
+                List<String> tempDesc = (List<String>) json.get("description");
+                nameAndDesc.add(tempDesc);
                 return nameAndDesc;
             } catch (Exception e) {
                 throw new CompletionException("解析API响应失败", e);
@@ -734,6 +733,9 @@ public class AIServicelmpl implements AIService {
                     "user", "user_id",
                     "messages", messages,
                     "stream", true,
+                    "temperature", 0.7,
+                    "top_p", 0.9,
+                    "presence_penalty", 4.0,
                     "max_tokens", 32768));
 
             // 使用HttpURLConnection进行流式处理
@@ -813,20 +815,6 @@ public class AIServicelmpl implements AIService {
     /**
      * 从内容中提取核心创意
      */
-    private String extractCoreIdea(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            return "";
-        }
-
-        // 简单的核心创意提取逻辑，可以根据实际需求优化
-        String[] sentences = content.split("[《》<>【】]");
-        if (sentences.length > 0) {
-            return sentences[0].trim();
-        }
-
-        return content.length() > 50 ? content.substring(0, 50) + "..." : content;
-    }
-
     @Override
     public CompletableFuture<AIMsgDevide> GenFrameworkStream(List<Map<String, String>> msgs,
             Consumer<String> callback) {
