@@ -169,49 +169,6 @@ const initializeOptions = async () => {
     { immediate: true } // 确保初始化时就检查一次
   );
 };
-const generateDirections = async (keywords) => {
-  console.log("开始调用AI整合：", keywords);
-  const apiKey = "sk-166b19aaea874047815bf8c05daf4b6d"; // 替换成你自己的
-  const prompt = `请根据以下关键词整合出6个剧本方向，每个方向需要包含标题（title）和描述（description）。关键词如下：
-
-${JSON.stringify(keywords)}
-
-请用如下格式返回：
-[
-  { "title": "xxx", "description": "..." },
-  ...
-]`;
-
-  const response = await fetch(
-    "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "qwen-plus",
-        messages: [
-          { role: "system", content: "你是一个创意助手，擅长剧本方向设计。" },
-          { role: "user", content: prompt },
-        ],
-      }),
-    }
-  );
-
-  const result = await response.json();
-  console.log("AI返回内容：".result);
-
-  const reply = result.choices?.[0]?.message?.content;
-  try {
-    const parsed = JSON.parse(reply);
-    return parsed;
-  } catch (e) {
-    console.error("AI 回复不是合法 JSON：", reply);
-    return [];
-  }
-};
 
 initializeOptions();
 
