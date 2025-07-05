@@ -545,6 +545,7 @@ const adjustInputHeight = () => {
 
 // 格式化消息内容（支持Markdown）
 const formatMessage = (content) => {
+  if (!content) return '';
   return marked(content);
 };
 
@@ -592,7 +593,15 @@ const sendMessage = async () => {
       
       // 清空本地临时消息（因为后端会返回完整的历史记录）
       localChatHistory.value = [];
-      
+
+      // // 将后端返回的对话历史转换为本地格式 
+      // localChatHistory.value = scriptStore.chatHistory.map((msg) => ({
+      //   sender: msg.sender,
+      //   content: msg.content,
+      //   timestamp: new Date(msg.timestamp),
+      //   isTyping: false // 后端返回的消息不需要isTyping
+      // }));
+      //console.log("666聊天历史长度: " + scriptStore.chatHistory.length);
     }
   } catch (error) {
     console.error("更新剧本内容失败", error);

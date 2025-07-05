@@ -322,7 +322,9 @@ export const usescriptStore = defineStore('script', () => {
             filteredScripts.value[filteredIndex] = updatedScript;
           }
 
-          chatHistory.value = convertScriptHistories(response.script.scriptHistories);
+          chatHistory.value = convertScriptHistories(response.dialogHistory);
+          console.log("response.dialogHistory.length::", response.dialogHistory.length);
+          console.log("response.script.scriptHistories.length::", response.script.scriptHistories);
           return true;
         }
       } catch (error){

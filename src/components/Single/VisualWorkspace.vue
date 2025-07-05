@@ -355,20 +355,13 @@ const showElementDetail = (element) => {
 
 // 获取完整的图片URL
 const getImageUrl = (url) => {
-  console.log('获取图片URL:', url);
   if (!url) return '';
-  // 如果是Base64数据（以 'data:image/' 开头）
-  if (url.startsWith('data:image/')) {
-    return url; // 直接返回Base64字符串
-  }
-  // 如果是完整URL（以http或https开头），直接返回
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  if( url.startsWith('data:image/png;base64,')) {
     return url;
   }
-  
-  // 如果是相对路径，添加基础URL
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  else{
+    return "data:image/png;base64,"+url;
+  }
 };
 
 // 处理图片加载错误
