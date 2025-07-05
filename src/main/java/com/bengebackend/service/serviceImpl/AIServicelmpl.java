@@ -65,12 +65,26 @@ public class AIServicelmpl implements AIService {
     // Slogan生成系统提示词
     private static final String SLOGAN_SYSTEM_PROMPT = """
             你是一名专业的剧本杀创作助手，擅长生成吸引人的标语和核心创意。
-            请根据用户提供的内容生成多个不同风格的标语，每个标语都应该：
-            1. 简洁有力，能够抓住读者注意力
-            2. 体现剧本的核心主题和氛围
-            3. 具有悬疑感和吸引力
-            请以自然的方式分段输出多个标语建议。
-            """;
+            请根据用户提供的内容生成3个不同风格的标语，并遵循以下规则：
+            1、标语要求简洁有力，能够抓住读者注意力，体现剧本的核心主题和氛围，并具有悬疑感和吸引力。
+            2、生成的是标语，不是标题
+            3、生成内容涵盖如下内容：
+                标语（一段话）
+                核心创意（一段话）
+            请遵循如下MarkDown格式输出：
+                # 标语
+                ...
+                # 核心创意
+                ...
+                # 标语
+                ...
+                # 核心创意
+                ...
+                # 标语
+                ...
+                # 核心创意
+                ...
+                        """;
 
     public AIServicelmpl() {
     }
@@ -341,16 +355,17 @@ public class AIServicelmpl implements AIService {
                 System.out.println("未找到分隔符》》》，回答与剧本内容分割失败");
 
             parts = content.split("#", 2);
-            parts = parts[1].split("---", 2);
+            parts = parts[1].split("## 背景\\s*", 2);
+            parts[0] = parts[0].replaceAll("---", "");
             devidedMsg.setTitle(parts[0].replaceAll("\\s+", ""));
             if (parts.length != 2)
-                System.out.println("未找到分隔符---，分割失败");
-            devidedMsg.setStrScript(parts[1]);
+                System.out.println("未找到分隔符## 背景，分割失败");
+            devidedMsg.setStrScript("## 背景\n" + parts[1]);
         } else {
             devidedMsg.setStrScript(content);
+            parts = content.split("## 背景\\s*", 2);
         }
 
-        parts = content.split("## 背景\\s*", 2);
         parts = parts[1].split("## 人物剧本", 2);
         devidedMsg.setBackground(parts[0]);
         if (parts.length != 2)
@@ -425,7 +440,6 @@ public class AIServicelmpl implements AIService {
             String signatureOrigin = "host: " + host + "\n" +
                     "date: " + date + "\n" +
                     "POST " + path + " HTTP/1.1";
-
             // 计算HMAC-SHA256签名
             String signature = HmacSha256(HiDreamAPI_SECRET, signatureOrigin);
 
@@ -653,7 +667,7 @@ public class AIServicelmpl implements AIService {
     }
 
     @Override
-    public CompletableFuture<Void> GenerateSloganStreamAsync(SloganRequestEntity request, Consumer<Slogan> callback) {
+    public CompletableFuture<Void> GenerateSloganStreamAsync(SloganRequestEntity request, Consumer<String> callback) {
         return CompletableFuture.runAsync(() -> {
             try {
                 // 构建请求消息
@@ -665,9 +679,9 @@ public class AIServicelmpl implements AIService {
                 executeStreamRequest(messages, content -> {
                     // 处理内容并生成Slogan对象
                     if (content != null && !content.trim().isEmpty()) {
-                        String coreIdea = extractCoreIdea(content);
-                        Slogan slogan = new Slogan(content.trim(), coreIdea);
-                        callback.accept(slogan);
+                        // String coreIdea = extractCoreIdea(content);
+                        // Slogan slogan = new Slogan(content.trim(), coreIdea);
+                        callback.accept(content);
                     }
                 });
 
@@ -741,39 +755,42 @@ public class AIServicelmpl implements AIService {
      * 处理单行流式响应
      */
     private void processStreamLine(String line, Consumer<String> callback, ObjectMapper mapper) {
-        if (line.startsWith("data:")) {
-            String jsonData = line.substring(5).trim();
+        callback.accept(line);
+        // if (line.startsWith("data:")) {
+        // String jsonData = line.substring(5).trim();
 
-            // 检查是否是结束标记
-            if ("[DONE]".equals(jsonData)) {
-                return;
-            }
+        // // 检查是否是结束标记
+        // if ("[DONE]".equals(jsonData)) {
+        // return;
+        // }
 
-            try {
-                // 解析JSON响应
-                StreamResponse streamResponse = mapper.readValue(jsonData, StreamResponse.class);
+        // try {
+        // // 解析JSON响应
+        // StreamResponse streamResponse = mapper.readValue(jsonData,
+        // StreamResponse.class);
 
-                // 检查错误码
-                if (streamResponse.getCode() != 0) {
-                    System.err.println("API返回错误: " + streamResponse.getMessage());
-                    return;
-                }
+        // // 检查错误码
+        // if (streamResponse.getCode() != 0) {
+        // System.err.println("API返回错误: " + streamResponse.getMessage());
+        // return;
+        // }
 
-                // 提取内容
-                if (streamResponse.getChoices() != null && !streamResponse.getChoices().isEmpty()) {
-                    var choice = streamResponse.getChoices().get(0);
-                    if (choice.getDelta() != null) {
-                        String content = choice.getDelta().getContent();
-                        if (content != null && !content.isEmpty()) {
-                            callback.accept(content);
-                        }
-                    }
-                }
+        // // 提取内容
+        // if (streamResponse.getChoices() != null &&
+        // !streamResponse.getChoices().isEmpty()) {
+        // var choice = streamResponse.getChoices().get(0);
+        // if (choice.getDelta() != null) {
+        // String content = choice.getDelta().getContent();
+        // if (content != null && !content.isEmpty()) {
+        // callback.accept(content);
+        // }
+        // }
+        // }
 
-            } catch (JsonProcessingException e) {
-                System.err.println("解析流式响应JSON时发生错误: " + e.getMessage());
-            }
-        }
+        // } catch (JsonProcessingException e) {
+        // System.err.println("解析流式响应JSON时发生错误: " + e.getMessage());
+        // }
+        // }
     }
 
     /**
@@ -785,7 +802,7 @@ public class AIServicelmpl implements AIService {
         }
 
         // 简单的核心创意提取逻辑，可以根据实际需求优化
-        String[] sentences = content.split("[。！？.!?]");
+        String[] sentences = content.split("[《》<>【】]");
         if (sentences.length > 0) {
             return sentences[0].trim();
         }

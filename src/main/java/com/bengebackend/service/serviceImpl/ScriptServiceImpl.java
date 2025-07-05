@@ -110,24 +110,32 @@ public class ScriptServiceImpl implements ScriptService {
             String scriptContent) {
         // 处理发给AI的消息
         List<Map<String, String>> messages = new ArrayList<>();
-        for (ScriptHistory h : history) {
-            Map<String, String> msg = new HashMap<>();
-            if (h.getResponse() == "" && h.getMessage() != "") {
-                msg.put("role", "user");
-                msg.put("content", h.getMessage());
-            } else {
-                msg.put("role", "assistant");
-                msg.put("content", h.getResponse());
+        if (history == null || history.isEmpty()) {
+            messages.add(new HashMap<String, String>() {
+                {
+                    put("role", "user");
+                    put("content", scriptContent + "\n\n" + request.getMessage());
+                }
+            });
+        } else {
+            for (ScriptHistory h : history) {
+                Map<String, String> msg = new HashMap<>();
+                if (h.getResponse() == "" && h.getMessage() != "") {
+                    msg.put("role", "user");
+                    msg.put("content", h.getMessage());
+                } else {
+                    msg.put("role", "assistant");
+                    msg.put("content", h.getResponse());
+                }
+                messages.add(msg);
             }
-            messages.add(msg);
+            messages.add(new HashMap<String, String>() {
+                {
+                    put("role", "user");
+                    put("content", request.getMessage());
+                }
+            });
         }
-        messages.add(new HashMap<String, String>() {
-            {
-                put("role", "user");
-                put("content", request.getMessage());
-            }
-        });
-
         // AI生成框架
         AIMsgDevide aiMsgTemp = aiService.GenFramework(messages).join();
         String mockResponse = aiMsgTemp.getStrScript();
@@ -217,9 +225,9 @@ public class ScriptServiceImpl implements ScriptService {
 
     @Override
     public String visualizeScriptAsync(Integer scriptId, Integer elementId) {
-        List<VisualElement> ves = getScriptByIdAsync(scriptId).getVisualElements();
-        String Image_base64 = aiService.GenImage(ves.get(elementId).getName() + "：" +
-                ves.get(elementId).getDescription(), null).join();
+        VisualElement selectedVE = visualElementService.getElementById(elementId);
+        String Image_base64 = aiService.GenImage(selectedVE.getName() + "：" +
+                selectedVE.getDescription(), null).join();
         visualElementService.updateElementUrl(elementId, Image_base64);
         return Image_base64;
 

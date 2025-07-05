@@ -47,7 +47,7 @@ public interface AIService {
     /**
      * 生成Slogan流式输出
      */
-    CompletableFuture<Void> GenerateSloganStreamAsync(SloganRequestEntity request, Consumer<Slogan> callback);
+    CompletableFuture<Void> GenerateSloganStreamAsync(SloganRequestEntity request, Consumer<String> callback);
 
     /**
      * AI助手流式聊天

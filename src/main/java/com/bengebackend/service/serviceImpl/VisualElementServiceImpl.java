@@ -13,10 +13,10 @@ import java.util.List;
  */
 @Service
 public class VisualElementServiceImpl implements VisualElementService {
-    
+
     @Autowired
     private VisualElementMapper visualElementMapper;
-    
+
     @Override
     public List<VisualElement> getAllElements(Integer scriptId) {
         return visualElementMapper.selectByScriptId(scriptId);
