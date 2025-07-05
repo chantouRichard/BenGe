@@ -92,7 +92,7 @@ function selectRole(index) {
   socketState.userRole = index;
 
   // 如果该角色已被其他成员选择，则弹出提示
-  if (socketState.roleSelections[roleName]) {
+  if (socketState.roleSelections[roleName] && socketState.roleSelections[roleName] != socketState.username) {
     ElMessage({
       message: `${socketState.roleSelections[roleName]} 已选择该角色！`,
       type: 'warning',
