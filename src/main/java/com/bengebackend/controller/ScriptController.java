@@ -312,14 +312,14 @@ public class ScriptController {
                 roomManager.broadcastToRoom(String.valueOf(roomId), objectMapper.writeValueAsString(msg));
 
                 String title = "房间" + request.getRoomId() + "协作剧本";
-                return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript, request.getRoomId(), "剧本生成成功", true));
+                return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript, "剧本生成成功", true));
             } else {
-                return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, null, "AI生成剧本失败", false));
+                return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, "AI生成剧本失败", false));
             }
         } catch (Exception e) {
             System.err.println("生成协作剧本失败: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, null, "服务器错误: " + e.getMessage(), false));
+            return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, "服务器错误: " + e.getMessage(), false));
         }
     }
 
