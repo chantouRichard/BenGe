@@ -152,6 +152,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)  // 忽略未知字段，保持向后兼容
     public static class EdgeData {
         /** 边 ID */
         private String id;
@@ -167,6 +168,12 @@ public class WebSocketMessage {
 
         /** 目标节点连接点位置 */
         private String targetPosition;
+
+        /** 源节点连接句柄（前端兼容字段） */
+        private String sourceHandle;
+
+        /** 目标节点连接句柄（前端兼容字段） */
+        private String targetHandle;
 
         /** 边类型 */
         private String type;

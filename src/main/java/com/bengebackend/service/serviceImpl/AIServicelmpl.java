@@ -1,5 +1,6 @@
 package com.bengebackend.service.serviceImpl;
 
+import com.bengebackend.config.XfyunConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,9 +12,12 @@ import com.bengebackend.entity.SloganRequestEntity;
 import com.bengebackend.entity.StreamResponse;
 import com.bengebackend.service.*;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -27,6 +31,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -49,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+@Slf4j
 @Service
 public class AIServicelmpl implements AIService {
     private static final String XFAPP_ID = "0772d014";
@@ -86,8 +92,15 @@ public class AIServicelmpl implements AIService {
                 ...
                         """;
 
-    public AIServicelmpl() {
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    public AIServicelmpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
+
+    // ====================== 单人创作和多人创作AI部分分割线 ==================
 
     @Override
     public CompletableFuture<AIMsgDevide> GenFramework(List<Map<String, String>> msgs) {

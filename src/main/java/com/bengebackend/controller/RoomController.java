@@ -1,13 +1,15 @@
 package com.bengebackend.controller;
 
-import com.bengebackend.ai.ChatAiAssistant;
+import com.bengebackend.dto.CollaborationScriptDto;
 import com.bengebackend.dto.RoomCreateDto;
 import com.bengebackend.dto.RoomDto;
+import com.bengebackend.entity.CollaborationScriptRequestEntity;
 import com.bengebackend.entity.room.AICooperateDirection;
 import com.bengebackend.entity.room.applyRoomEntity;
 import com.bengebackend.entity.room.createRoomEntity;
 import com.bengebackend.entity.room.getAllRoomEntity;
 import com.bengebackend.model.Room;
+import com.bengebackend.service.CoopAIService;
 import com.bengebackend.service.RoomService;
 import com.bengebackend.websocket.message.WebSocketMessage;
 import com.bengebackend.websocket.session.RoomManager;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +55,7 @@ public class RoomController {
     private RoomManager roomManager;
 
     @Autowired
-    private ChatAiAssistant chatAiAssistant;
+    private CoopAIService aiService;
 
     public RoomController(RedissonClient redissonClient) {
         this.redissonClient = redissonClient;
@@ -159,10 +162,14 @@ public class RoomController {
         return ResponseEntity.ok(isOwner);
     }
 
+    /**
+     * 广播AI产生的方向
+     */
     @PostMapping("/generate-ai-content")
     public ResponseEntity<?> generateDirection(@RequestBody AICooperateDirection aiCooperateDirection){
         String roomId = aiCooperateDirection.getRoomId();
         RLock lock = redissonClient.getLock("room:" + roomId);
+        log.info("testtest");
 
         boolean locked = false;
         try {
@@ -171,13 +178,10 @@ public class RoomController {
                 return ResponseEntity.status(429).body("正在处理中，请稍候");
             }
 
-            if (Boolean.TRUE.equals(redisTemplate.hasKey("ai_done:" + roomId))) {
-                return ResponseEntity.ok("AI已经生成过内容了");
-            }
-
             // 调用AI接口，返回 List<Map<String, String>>
-            List<Map<String, String>> result = chatAiAssistant.getCoopDirection(aiCooperateDirection.getKeyWords());
+            List<Map<String, String>> result = aiService.getCoopDirection(aiCooperateDirection.getKeyWords());
 
+            log.info("AI结果：" + result);
             // 广播：
             WebSocketMessage msg = new WebSocketMessage();
             msg.setType("vote");
@@ -197,6 +201,94 @@ public class RoomController {
             if (locked && lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
+        }
+    }
+
+    /**
+     * 第二阶段到第三阶段，整合内容生成剧本
+     * @param request
+     * @return
+     */
+    @PostMapping("/collaboration/generate")
+    public ResponseEntity<CollaborationScriptDto> generateCollaborationScript(@RequestBody CollaborationScriptRequestEntity request) {
+        log.info(request.toString());
+
+        try {
+            Integer roomId = request.getRoomId();
+
+            String contextData = request.getContextData();
+
+
+            String generatedScript = aiService.getCompleteScript(contextData);
+//            String generatedScript = "# 这是AI成功返回的测试文本，恭喜你成功了!";
+
+            log.info(generatedScript);
+
+            if (generatedScript != null && !generatedScript.trim().isEmpty()) {
+                // 广播：
+                WebSocketMessage msg = new WebSocketMessage();
+                msg.setType("canvas");
+                msg.setRoomId(String.valueOf(roomId));
+                msg.setContent(generatedScript);
+                roomManager.broadcastToRoom(String.valueOf(roomId), objectMapper.writeValueAsString(msg));
+
+                String title = "房间" + request.getRoomId() + "协作剧本";
+                return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript, "剧本生成成功", true));
+            } else {
+                return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, "AI生成剧本失败", false));
+            }
+        } catch (Exception e) {
+            System.err.println("生成协作剧本失败: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, "服务器错误: " + e.getMessage(), false));
+        }
+    }
+
+    /**
+     * 房主确认进入第三阶段
+     */
+    @PostMapping("/enter-third-stage")
+    public void enterThirdStage(Integer roomId,String data){
+        // 广播：
+        try {
+            WebSocketMessage msg = new WebSocketMessage();
+            msg.setType("enter-third-stage");
+            msg.setRoomId(String.valueOf(roomId));
+            msg.setContent(data);
+            roomManager.broadcastToRoom(String.valueOf(roomId), objectMapper.writeValueAsString(msg));
+        }catch (Exception error){
+            error.printStackTrace();
+        }
+    }
+
+    /**
+     * AI生成结点
+     */
+    @PostMapping("/generate-nodes")
+    public ResponseEntity<Map<String, Object>> generateNodes(@RequestBody Map<String, Object> request) {
+        log.info("原始request:{}", request);
+        try {
+            String userInput = (String) request.get("userInput");
+            String designerType = (String) request.get("designerType");
+            String contextData = (String) request.get("contextData");
+
+            log.info("AI生成请求: 类型={}, 输入={}, 上下文={}", designerType, userInput, contextData);
+
+            List<Map<String, Object>> nodes = aiService.generateNodes(userInput, designerType, null, contextData);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("nodes", nodes);
+            response.put("message", "成功生成" + nodes.size() + "个节点");
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("AI生成失败", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "生成失败: " + e.getMessage());
+            return ResponseEntity.ok(errorResponse);
         }
     }
 }

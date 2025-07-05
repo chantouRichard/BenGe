@@ -27,10 +27,18 @@ logging:
   level:
     com.bengebackend: debug
 
+debug: true
+
 redisson:
   config: |
     singleServerConfig:
       address: "redis://127.0.0.1:6379"
 
-AI:
-  key: sk-166b19aaea874047815bf8c05daf4b6d
+xfyun:
+  appid: 170d4e9f
+  api-password: "phMuUzKxbKGOoDvJKhzT:tBQeXKfurbPBHzKFAEwv"
+  api-url: "https://spark-api-open.xf-yun.com/v2/chat/completions"
+
+ngrok:
+  enabled: true
+  authToken: 2y3CNYjCCvJzBLqvHlsB1asoNjh_6vQVv6hLQ83UKxW58V7Nh
