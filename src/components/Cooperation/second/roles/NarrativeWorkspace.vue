@@ -461,7 +461,7 @@ const handleConnectNode = (connection) => {
       target: connection.target,
       sourceHandle: connection.sourceHandle,
       targetHandle: connection.targetHandle,
-      type: 'custom',
+      type: 'clue-edge',
       data: {
         type: 'clue-relation',
         label: '线索关联'

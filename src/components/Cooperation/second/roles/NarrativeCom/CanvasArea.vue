@@ -259,7 +259,8 @@ const nodeTypes = {
 const edgeTypes = {
   custom: markRaw(CustomEdge),
   relationship: markRaw(CharacterRelationEdge),
-  'character-scene': markRaw(CharacterSceneEdge)
+  'character-scene': markRaw(CharacterSceneEdge),
+  'clue-edge': markRaw(ClueEdges)
 }
 
 // 强制刷新结点
