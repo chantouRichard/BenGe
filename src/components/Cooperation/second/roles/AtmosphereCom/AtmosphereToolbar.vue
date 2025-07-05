@@ -8,21 +8,30 @@
   >
     <!-- 主按钮 -->
     <button class="main-button">
-      <img src="../../../../../assets/second/role3.png" alt="氛围工具" class="icon-main" />
+      <img
+          src="../../../../../assets/second/role4.png"
+          alt="氛围工具"
+          class="icon-main"
+      />
     </button>
 
     <!-- 展开面板 -->
     <transition name="panel-expand">
-      <div v-if="isExpanded" class="tool-panel">
+      <div
+          v-if="isExpanded"
+          class="tool-panel"
+          :class="[panelDirection === 'left' ? 'panel-left' : 'panel-right']"
+          @mousemove="handlePanelMove"
+          :style="panelHoverStyle"
+      >
         <button
           v-for="(btn, i) in buttons"
           :key="btn.action"
           class="tool-button"
           :style="{ '--delay-index': i }"
-          :title="btn.tooltip"
           @click="$emit(btn.action)"
-          @mouseenter="handleButtonHover(btn, true)"
-          @mouseleave="handleButtonHover(btn, false)"
+          @mouseenter="btn.hover = true"
+          @mouseleave="btn.hover = false"
         >
           <img
             :src="btn.icon"
@@ -43,19 +52,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import {ref, computed, watch} from "vue";
 
 // 氛围设计师专用按钮配置
 const buttons = ref([
   {
-    icon: require("@/assets/icons/plus-circle.svg"),
+    icon: require("@/assets/icons/plus-atmosphere.svg"),
     action: "add-node",
     tooltip: "添加氛围节点",
     color: "rgba(135, 206, 235, 0.7)",
     hover: false,
   },
   {
-    icon: require("@/assets/icons/magic-wand.svg"),
+    icon: require("@/assets/icons/atmosphere-modle.svg"),
     action: "atmo-palette",
     tooltip: "氛围模板",
     color: "rgba(255, 182, 193, 0.7)",
@@ -69,7 +78,7 @@ const buttons = ref([
     hover: false,
   },
   {
-    icon: require("@/assets/icons/file-text.svg"),
+    icon: require("@/assets/icons/export.svg"),
     action: "export-atmo",
     tooltip: "导出氛围表",
     color: "rgba(144, 238, 144, 0.7)",
@@ -104,6 +113,17 @@ const isExpanded = ref(false);
 const isDragging = ref(false);
 const position = ref({ x: 40, y: 40 });
 const dragStartPos = ref(null);
+const panelHoverPos = ref({ x: 0, y: 0 });
+
+const panelDirection = ref('right');
+
+const updatePanelDirection = () => {
+  const viewportWidth = window.innerWidth;
+  const ballCenterX = position.value.x + 28;
+  panelDirection.value = ballCenterX > viewportWidth / 2 ? 'left' : 'right';
+};
+
+watch(position, updatePanelDirection, {immediate: true});
 
 // 动态样式
 const toolballStyle = computed(() => ({
@@ -112,23 +132,17 @@ const toolballStyle = computed(() => ({
   "--panel-width": `${buttons.value.length * 56 + 16}px`,
 }));
 
-// 处理按钮悬停
-const handleButtonHover = (btn, isHover) => {
-  btn.hover = isHover;
-  if (isHover) {
-    console.log('悬停在工具:', btn.tooltip);
-  }
-};
+const panelHoverStyle = computed(() => ({
+  backgroundImage: `radial-gradient(200px circle at ${panelHoverPos.value.x}px ${panelHoverPos.value.y}px, rgba(176, 227, 255, 0.35), transparent 80%)`,
+}));
 
-// 发出事件
-defineEmits([
-  'add-node',
-  'atmo-palette',
-  'link-scene',
-  'export-atmo',
-  'ai-generate',
-  'ai-integrate'
-]);
+const handlePanelMove = (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  panelHoverPos.value = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+  };
+};
 
 // 拖拽逻辑
 const startDrag = (e) => {
@@ -136,21 +150,56 @@ const startDrag = (e) => {
   e.stopPropagation();
 
   isDragging.value = true;
-  const clientX = e.clientX || e.touches[0].clientX;
-  const clientY = e.clientY || e.touches[0].clientY;
+
+  // 添加安全检查，避免悬浮球移动到边界时出现报错问题
+  let clientX, clientY;
+  if (e.clientX !== undefined) {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  } else if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = position.value.x;
+    clientY = position.value.y;
+  }
+
   dragStartPos.value = {
     x: clientX - position.value.x,
     y: clientY - position.value.y,
   };
 
   const moveHandler = (moveEvent) => {
-    const clientX = moveEvent.clientX || moveEvent.touches[0].clientX;
-    const clientY = moveEvent.clientY || moveEvent.touches[0].clientY;
+    if (!isDragging.value) return;
+
+    let moveClientX, moveClientY;
+    if (moveEvent.clientX !== undefined) {
+      moveClientX = moveEvent.clientX;
+      moveClientY = moveEvent.clientY;
+    } else if (moveEvent.touches && moveEvent.touches.length > 0) {
+      moveClientX = moveEvent.touches[0].clientX;
+      moveClientY = moveEvent.touches[0].clientY;
+    } else {
+      return;
+    }
+
+    // 计算新位置并限制边界
+    const toolballSize = 56;
+    const newX = Math.max(0,
+        Math.min(moveClientX - dragStartPos.value.x,
+            window.innerWidth - toolballSize));
+    const newY = Math.max(0,
+        Math.min(moveClientY - dragStartPos.value.y,
+            window.innerHeight - toolballSize));
+
     position.value = {
-      x: clientX - dragStartPos.value.x,
-      y: clientY - dragStartPos.value.y,
+      x: newX,
+      y: newY
     };
+
+    updatePanelDirection();
   };
+
 
   const endHandler = () => {
     window.removeEventListener("mousemove", moveHandler);
@@ -166,7 +215,15 @@ const startDrag = (e) => {
   window.addEventListener("touchend", endHandler);
 };
 
-
+// 发出事件
+defineEmits([
+  'add-node',
+  'atmo-palette',
+  'link-scene',
+  'export-atmo',
+  'ai-generate',
+  'ai-integrate'
+]);
 </script>
 
 <style scoped>
@@ -193,7 +250,7 @@ const startDrag = (e) => {
   backdrop-filter: blur(4px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 
               0 0 0 1px rgba(255, 255, 255, 0.1),
-              0 0 20px 2px rgba(135, 206, 235, 0.5);
+              0 0 20px 2px rgba(100, 200, 255, 0.5);
   cursor: pointer;
   transition: all 0.3s ease;
   display: grid;
@@ -203,10 +260,10 @@ const startDrag = (e) => {
 
 .main-button:hover {
   transform: scale(1.05);
+  background: linear-gradient(to top, #dce1ff, #ffffff);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2), 
               0 0 0 1px rgba(255, 255, 255, 0.2),
               0 0 30px 4px rgba(135, 206, 235, 0.7);
-  background-color: rgba(173, 216, 230, 0.9);
 }
 
 /* 图标样式 */
@@ -234,99 +291,91 @@ const startDrag = (e) => {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1),
-              inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   margin-left: 12px;
+  position: absolute;
   align-items: center;
-  overflow: visible; /* 允许 tooltip 显示在面板外 */
+}
+
+/* 面板左、右展开 */
+.tool-panel.panel-right {
+  left: calc(100% + 12px);
+}
+.tool-panel.panel-left {
+  right: calc(100% + 12px);
+  flex-direction: row-reverse;
 }
 
 .tool-button {
   position: relative;
-  width: 40px;
-  height: 40px;
-  margin: 0 4px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-  display: grid;
-  place-items: center;
-  animation: toolButtonSlideIn 0.5s ease calc(var(--delay-index) * 0.1s) both;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  margin: 6px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.35);
+  transition: all 0.3s ease calc(var(--delay-index, 0) * 50ms);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
 .tool-button:hover {
-  transform: scale(1.1) translateY(-2px);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #b0e3ff, #ffffff);
+  border: 1px solid #9faeff;
+  box-shadow: 0 0 6px rgba(176, 227, 255, 0.6),
+  0 0 10px rgba(159, 174, 255, 0.4);
+  transform: scale(1.15);
+}
+
+.tool-button:hover .icon-tool {
+  filter: drop-shadow(0 0 6px rgba(150, 200, 255, 0.6)) saturate(140%);
+  transform: scale(1.1);
 }
 
 .tooltip {
   position: absolute;
-  bottom: -40px;
+  top: 50px;
   left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(0, 0, 0, 0.85);
-  padding: 8px 12px;
-  border-radius: 8px;
+  transform: translate(-50%, 8px);
   white-space: nowrap;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
   opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-  pointer-events: none;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  z-index: 9999;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* 添加小箭头 */
-.tooltip::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 6px solid rgba(0, 0, 0, 0.85);
+  transition: all 0.3s ease;
 }
 
 .tool-button:hover .tooltip {
   opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
+  transform: translate(-50%, 0);
 }
 
 /* 动画效果 */
 .panel-expand-enter-active,
 .panel-expand-leave-active {
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
-.panel-expand-enter-from {
-  opacity: 0;
-  transform: translateX(-20px) scale(0.8);
-}
-
+.panel-expand-enter-from,
 .panel-expand-leave-to {
   opacity: 0;
-  transform: translateX(-20px) scale(0.8);
 }
 
-@keyframes toolButtonSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px) scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
+.panel-expand-enter-from.panel-right,
+.panel-expand-leave-to.panel-right {
+  transform: translateX(-20px);
+}
+
+.panel-expand-enter-from.panel-left,
+.panel-expand-leave-to.panel-left {
+  transform: translateX(20px);
+}
+
+.panel-expand-enter-to,
+.panel-expand-leave-from {
+  opacity: 1;
+  transform: translateX(0);
 }
 </style> 
