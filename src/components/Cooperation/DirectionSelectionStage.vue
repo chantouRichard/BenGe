@@ -107,27 +107,27 @@ const updateMembers = (membersList) => {
 
 const handleDirectionConfirm = (selectedDirections) => {
   // json格式发送到后端并收集所有成员的选择
-  socketState.socket.send(
-    JSON.stringify({
-      type: "submit_directions",
-      roomId: roomId.value,
-      directions: selectedDirections,
-    })
-  );
-  allDirections.value.push(selectedDirections);
+  // socketState.socket.send(
+  //   JSON.stringify({
+  //     type: "submit_directions",
+  //     roomId: roomId.value,
+  //     directions: selectedDirections,
+  //   })
+  // );
+  // allDirections.value.push(selectedDirections);
 
   showVoteStage.value = true;
 };
 
 // 投票
 const handleVoteSubmit = (voteData) => {
-  socketState.socket.send(
-    JSON.stringify({
-      type: "submit_vote",
-      roomId: roomId.value,
-      directions: voteData.directions,
-    })
-  );
+  // socketState.socket.send(
+  //   JSON.stringify({
+  //     type: "submit_vote",
+  //     roomId: roomId.value,
+  //     directions: voteData.directions,
+  //   })
+  // );
 };
 
 const handleRegenerateRequest = (requestData) => {};
@@ -322,6 +322,8 @@ defineExpose({
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+
+  position: relative;
 }
 
 .left-panel .stage-title {

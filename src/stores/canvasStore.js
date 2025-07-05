@@ -12,15 +12,29 @@ export const useCanvasStore = defineStore("story", () => {
     {
       id: generateNodeId(),
       type: "custom",
-      position: { x: 100, y: 100 },
+      position: { x: 200, y: 300 },
       data: {
-        title: "测试场景",
-        timeLabel: "DAY1 09:00",
+        title: "命案现场发现",
+        timeLabel: "DAY1 07:30",
+        characters: "李四",
+        clues: "血迹、打火机",
+        sceneDescription: "废弃仓库内发现男尸，死者为王五",
+        nodeConnections: "与节点7（初步调查）相关",
+        notes: "王五为李四之弟，案件性质复杂",
+      },
+    },
+    {
+      id: generateNodeId(),
+      type: "custom",
+      position: { x: 500, y: 400 },
+      data: {
+        title: "关键目击证词",
+        timeLabel: "DAY1 09:15",
         characters: "张三",
-        clues: "线索A",
-        sceneDescription: "会议室",
-        nodeConnections: "与节点2相关",
-        notes: "注意时间冲突",
+        clues: "陌生车牌",
+        sceneDescription: "张三审问附近居民，得知凌晨有可疑车辆出入",
+        nodeConnections: "与节点1关联（命案现场）",
+        notes: "可能出现时间线冲突，需对比证词时间",
       },
     },
   ]);
@@ -116,7 +130,7 @@ export const useCanvasStore = defineStore("story", () => {
   // 处理人物-场景边编辑确认
   const handleCharacterSceneEdgeEditConfirm = (edgeData) => {
     if (!editingEdgeId.value) {
-      console.warn('没有正在编辑的边ID');
+      console.warn("没有正在编辑的边ID");
       return;
     }
 
@@ -130,7 +144,7 @@ export const useCanvasStore = defineStore("story", () => {
         importance: edgeData.importance,
         description: edgeData.description,
         label: edgeData.label,
-        style: edgeData.style
+        style: edgeData.style,
       };
 
       editingEdgeId.value = null;
@@ -138,7 +152,7 @@ export const useCanvasStore = defineStore("story", () => {
 
       broadcast();
     } else {
-      console.error('未找到要编辑的边:', editingEdgeId.value);
+      console.error("未找到要编辑的边:", editingEdgeId.value);
     }
   };
 
@@ -175,7 +189,7 @@ export const useCanvasStore = defineStore("story", () => {
   const handleNodeClick = (node) => {
     // 添加参数验证，防止 undefined 错误
     if (!node) {
-      console.warn('handleNodeClick: node parameter is undefined');
+      console.warn("handleNodeClick: node parameter is undefined");
       return;
     }
 
@@ -183,7 +197,7 @@ export const useCanvasStore = defineStore("story", () => {
 
     // 验证 actualNode 是否有效
     if (!actualNode || !actualNode.id) {
-      console.warn('handleNodeClick: invalid node data', actualNode);
+      console.warn("handleNodeClick: invalid node data", actualNode);
       return;
     }
 
@@ -200,7 +214,7 @@ export const useCanvasStore = defineStore("story", () => {
       broadcast();
     } else {
       selectedNode.value = { ...actualNode };
-      console.log('设置选中节点:', selectedNode.value);
+      console.log("设置选中节点:", selectedNode.value);
     }
   };
 
@@ -331,11 +345,11 @@ export const useCanvasStore = defineStore("story", () => {
       type: "inference",
       position: { x, y },
       data: {
-        title: '推导结论1',
-      summary: '总结',
-      evidence: '证据',
-      tags: '',
-      note: ''
+        title: "推导结论1",
+        summary: "总结",
+        evidence: "证据",
+        tags: "",
+        note: "",
       },
     };
 
@@ -344,28 +358,27 @@ export const useCanvasStore = defineStore("story", () => {
     broadcast(); // 如果你在同步节点给协作成员，这一行保留
   };
   const handleAddPersonNode = (event) => {
-  const rect = event?.target?.getBoundingClientRect();
-  const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
-  const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
+    const rect = event?.target?.getBoundingClientRect();
+    const x = rect ? event.clientX - rect.left : Math.random() * 300 + 100;
+    const y = rect ? event.clientY - rect.top : Math.random() * 300 + 100;
 
-  const newNode = {
-    id: generateNodeId(),
-    type: "person", // 使用你在 VueFlow 中注册的人物节点组件类型
-    position: { x, y },
-    data: {
-      name: '新人物',
-      bio: '人物背景简介',
-      clues: [],       // 与线索有关的ID或标题
-      tags: ['可疑'],   // 人物特点标签
-      note: ''         // 附加备注
-    },
+    const newNode = {
+      id: generateNodeId(),
+      type: "person", // 使用你在 VueFlow 中注册的人物节点组件类型
+      position: { x, y },
+      data: {
+        name: "新人物",
+        bio: "人物背景简介",
+        clues: [], // 与线索有关的ID或标题
+        tags: ["可疑"], // 人物特点标签
+        note: "", // 附加备注
+      },
+    };
+
+    nodes.value.push(newNode);
+
+    broadcast(); // 如果你在同步节点给其他协作者，这一行保留
   };
-
-  nodes.value.push(newNode);
-
-  broadcast(); // 如果你在同步节点给其他协作者，这一行保留
-};
-
 
   // 结点的删除
   const handleDeleteNode = (nodeId) => {
@@ -384,7 +397,6 @@ export const useCanvasStore = defineStore("story", () => {
       }
       broadcast();
     }
-    
   };
 
   // 处理结点的位置变化
@@ -401,7 +413,17 @@ export const useCanvasStore = defineStore("story", () => {
   // 广播节点和边的信息
   const broadcast = () => {
     if (socketState?.socket?.send) {
-      socketState.socket.send({nodes:nodes.value,edges:edges});
+      socketState.socket.send(
+        JSON.stringify({
+          type: "canvas",
+          nodes: nodes.value,
+          edges: edges,
+        })
+      );
+      console.log("广播的剧情节点信息：", {
+        nodes: nodes.value,
+        edges: edges,
+      });
     }
   };
 

@@ -58,26 +58,6 @@
         {{ hasVoted ? "等待其他成员..." : "确认投票" }}
       </button>
     </div>
-
-    <div v-if="showAISuggestion" class="ai-suggestion-area">
-      <h3>AI创作建议</h3>
-      <div class="suggestion-content">
-        {{ aiSuggestion }}
-      </div>
-      <div class="modification-area">
-        <textarea
-          v-model="modificationRequest"
-          placeholder="输入您的修改意见..."
-          :disabled="isRegenerating"
-        ></textarea>
-        <button
-          @click="requestRegeneration"
-          :disabled="isRegenerating || !modificationRequest.trim()"
-        >
-          {{ isRegenerating ? "生成中..." : "重新生成" }}
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -139,68 +119,35 @@ const allVotesReceived = ref(false);
 
 const topDirections = ref([]);
 
-import { isOwner } from "@/api/room";
+import { AIIntegrateDirection } from "@/api/room";
 // 初始化投票选项
 const initializeOptions = async () => {
   const allKeys = socketState.members.flatMap((member) => member.key || []);
-  const top6Keywords = [...new Set(allKeys)].slice(0, 6);
-
-    await generateDirections(top6Keywords);
-
-    // 如果不是房主，监听 options 的变化
-    watch(
-      () => socketState.options,
-      (newOptions) => {
-        if (newOptions) {
-          topDirections.value = newOptions;
-          AIGenerate.value = false;
-        }
-      },
-      { immediate: true } // 确保初始化时就检查一次
-    );
-};
-const generateDirections = async (keywords) => {
-  console.log("开始调用AI整合：", keywords);
-  const apiKey = "sk-166b19aaea874047815bf8c05daf4b6d"; // 替换成你自己的
-  const prompt = `请根据以下关键词整合出6个剧本方向，每个方向需要包含标题（title）和描述（description）。关键词如下：
-
-${JSON.stringify(keywords)}
-
-请用如下格式返回：
-[
-  { "title": "xxx", "description": "..." },
-  ...
-]`;
-
-  const response = await fetch(
-    "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "qwen-plus",
-        messages: [
-          { role: "system", content: "你是一个创意助手，擅长剧本方向设计。" },
-          { role: "user", content: prompt },
-        ],
-      }),
-    }
-  );
-
-  const result = await response.json();
-  console.log("AI返回内容：".result);
-
-  const reply = result.choices?.[0]?.message?.content;
-  try {
-    const parsed = JSON.parse(reply);
-    return parsed;
-  } catch (e) {
-    console.error("AI 回复不是合法 JSON：", reply);
-    return [];
+  const data = {
+    keyWords:allKeys,
+    roomId:socketState.roomId
   }
+  console.log("所有Keys：", allKeys);
+
+  try {
+    await AIIntegrateDirection(data);
+  } catch (error) {
+    console.log("请求出错：", error);
+  }
+
+  // 如果不是房主，监听 options 的变化
+  watch(
+    () => socketState.options,
+    (newOptions) => {
+      if (newOptions) {
+        console.log("打印socketState：",socketState.options);
+        console.log("打印new：",newOptions);
+        topDirections.value = newOptions;
+        AIGenerate.value = false;
+      }
+    },
+    { immediate: true } // 确保初始化时就检查一次
+  );
 };
 
 initializeOptions();
@@ -331,15 +278,19 @@ watch(
 
 <style scoped>
 .vote-stage {
+
+  top: 100px;
   padding: 20px;
   font-family: "Arial", sans-serif;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
+  height: 80%;
+  width: 90%;
 
   align-items: center;
   justify-content: center;
+
+  position: absolute;
 }
 
 .title {
@@ -378,6 +329,11 @@ watch(
 
   width: 100%;
   padding: 10px;
+  height: 100%;
+  min-height: 360px;
+
+  overflow-y: auto;
+
 }
 
 .vote-option {
@@ -414,7 +370,6 @@ watch(
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: center;
   margin-bottom: 10px;
 
   position: relative;
@@ -425,6 +380,8 @@ watch(
 .direction {
   font-weight: bold;
   font-size: 16px;
+
+  text-align: left;
 }
 
 .vote-count {
@@ -550,14 +507,16 @@ watch(
   position: absolute;
 
   background-color: #fcf9fc;
-  width: 100%;
-  height: 100%;
+  width: 97%;
+  height: 94%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 
   border-radius: 24px;
+
+  z-index: 9000;
 }
 .loading-text {
   font-size: 36px;

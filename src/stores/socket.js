@@ -93,6 +93,7 @@ const socketState = reactive({
     title: "",
     description: "",
   },
+  AICompleteScriptContent:"",
   CompleteScriptContent:"",
 });
 
@@ -192,7 +193,11 @@ async function setupWebSocket() {
       handleCanvas(msg);
     } else if (msg.type === "vote") {
       handleVote(msg);
-    }
+    }  else if(msg.type == "enter-third-stage"){
+    socketState.CompleteScriptContent= msg.content;
+  } else if(msg.type == "enter-second-stage"){
+    socketState.direction = JSON.parse(msg.content);
+  }
   };
 
   socketState.socket.onclose = () => {
@@ -280,23 +285,98 @@ function handleRoleSelection(roleName, username) {
 // 同步画布
 function handleCanvas(msg) {
   console.log("接收到canvas：", msg);
+  if(msg.content){
+    console.log("进入：",socketState.AICompleteScriptContent);
+    socketState.AICompleteScriptContent = msg.content;
+    console.log("OKOK:",socketState.AICompleteScriptContent);
+    return;
+  }
 
   if (msg.type == "canvas") {
+    // 更新叙事设计师的节点
     canvasStore.nodes = msg.nodes || [];
-    canvasStore.edges = msg.edges || [];
+
+    // 合并边：保留其他设计师的边，更新叙事设计师的边
+    const incomingEdges = msg.edges || [];
+    const existingEdges = canvasStore.edges || [];
+
+    // 移除现有的叙事设计师边（type为'custom'且不是线索相关的边）
+    const filteredEdges = existingEdges.filter(edge => {
+      // 保留人物设计师的边（character-scene, relationship）
+      if (edge.type === 'character-scene' || edge.type === 'relationship') {
+        return true;
+      }
+      // 保留线索设计师的边（custom类型但data.type包含clue相关）
+      if (edge.type === 'custom' && edge.data?.type?.includes('clue')) {
+        return true;
+      }
+      // 保留氛围设计师的边
+      if (edge.data?.type === 'atmosphere-scene') {
+        return true;
+      }
+      // 移除叙事设计师的边
+      return false;
+    });
+
+    // 合并边数组
+    canvasStore.edges = [...filteredEdges, ...incomingEdges];
+
   } else if (msg.type == "character") {
+    // 更新人物设计师的节点和边
     characterStore.nodes = msg.characterNodes || [];
     characterStore.edges = msg.characterEdges || [];
+
+    // 同时更新canvasStore中的人物设计师边
+    const incomingCharacterEdges = msg.characterEdges || [];
+    const existingCanvasEdges = canvasStore.edges || [];
+
+    // 移除现有的人物设计师边
+    const filteredCanvasEdges = existingCanvasEdges.filter(edge =>
+      edge.type !== 'character-scene' && edge.type !== 'relationship'
+    );
+
+    // 合并边数组
+    canvasStore.edges = [...filteredCanvasEdges, ...incomingCharacterEdges];
+
   } else if (msg.type == "clue") {
+    // 更新线索设计师的节点
     clueStore.nodes = [
       ...(msg.clueNodes || []),
       ...(msg.inferenceNodes || []),
       ...(msg.personNodes || []),
     ];
-    clueStore.edges = msg.clueEdges || [];
-  } else {
-    atmosphereStore.nodes = msg.atmosphereNodes || [];
-    atmosphereStore.edges = msg.atmosphereEdges || [];
+    // 后端返回的是edges字段，不是clueEdges
+    clueStore.edges = msg.edges || msg.clueEdges || [];
+
+    // 同时更新canvasStore中的线索设计师边
+    const incomingClueEdges = msg.edges || msg.clueEdges || [];
+    const existingCanvasEdges = canvasStore.edges || [];
+
+    // 移除现有的线索设计师边
+    const filteredCanvasEdges = existingCanvasEdges.filter(edge => {
+      // 保留非线索相关的边
+      return !(edge.type === 'clue-edge' || (edge.type === 'custom' && edge.data?.type?.includes('clue')));
+    });
+
+    // 合并边数组
+    canvasStore.edges = [...filteredCanvasEdges, ...incomingClueEdges];
+
+  } else if (msg.type == "atmosphere") {
+    // 氛围节点需要更新到canvasStore，因为atmosphere.js使用computed从canvasStore获取数据
+    const atmosphereNodes = msg.atmosphereNodes || [];
+    const atmosphereEdges = msg.atmosphereEdges || [];
+
+    // 移除现有的氛围节点
+    canvasStore.nodes = canvasStore.nodes.filter(node => node.type !== 'atmosphere');
+
+    // 移除现有的氛围边
+    canvasStore.edges = canvasStore.edges.filter(edge => {
+      return edge.data?.type !== 'atmosphere-scene';
+    });
+
+    // 添加新的氛围节点和边
+    canvasStore.nodes.push(...atmosphereNodes);
+    canvasStore.edges.push(...atmosphereEdges);
   }
 }
 
@@ -335,8 +415,9 @@ function handleVote(msg) {
       member.hasVoted = msg.hasVoted;
     }
   }
-  if(msg.options){
-    socketState.options = msg.options;
+  if(msg.content){
+    socketState.options = JSON.parse(msg.content);
+    console.log("socketState.options:",socketState.options);
   }
 }
 

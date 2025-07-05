@@ -37,7 +37,7 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount } from "vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import MemberList from "./second/MemberList.vue";
 import SearchPanel from "./second/SearchPanel.vue";
 import TaskCard from "./second/TaskCard.vue";
@@ -52,7 +52,6 @@ import RoleSelector from "./second/RoleSelector.vue";
 
 function handleRoleSelect(index) {
   userRole.value = index;
-  stage.value = 1;
 }
 
 // 侧边栏成员信息
@@ -137,6 +136,7 @@ function updateMembers(membersList) {
 import { watch } from "vue";
 import { userLoadingStore } from "@/stores/userLoadingStore";
 const loadingStore = userLoadingStore();
+
 // 监听 CompleteScriptContent 的变化
 watch(
   () => socketState.CompleteScriptContent,
@@ -154,6 +154,23 @@ watch(
     }
   }
 );
+
+// 判断成员是否全部选择了
+const requiredRoles = ["剧情设计师", "人物设计师", "线索设计师", "氛围设计师"];
+
+const allMembersChosen = computed(() => {
+  return requiredRoles.every((role) => {
+    const selections = socketState.roleSelections[role];
+    return selections && selections.length > 0;
+  });
+});
+
+watch(allMembersChosen, (newVal) => {
+  if (newVal) {
+    stage.value = 1;
+  }
+});
+
 </script>
 
 <style scoped>
