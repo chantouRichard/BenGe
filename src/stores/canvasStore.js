@@ -413,7 +413,17 @@ export const useCanvasStore = defineStore("story", () => {
   // 广播节点和边的信息
   const broadcast = () => {
     if (socketState?.socket?.send) {
-      socketState.socket.send({ nodes: nodes.value, edges: edges });
+      socketState.socket.send(
+        JSON.stringify({
+          type: "canvas",
+          nodes: nodes.value,
+          edges: edges,
+        })
+      );
+      console.log("广播的剧情节点信息：", {
+        nodes: nodes.value,
+        edges: edges,
+      });
     }
   };
 

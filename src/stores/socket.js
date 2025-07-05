@@ -305,9 +305,22 @@ function handleCanvas(msg) {
       ...(msg.personNodes || []),
     ];
     clueStore.edges = msg.clueEdges || [];
-  } else {
-    atmosphereStore.nodes = msg.atmosphereNodes || [];
-    atmosphereStore.edges = msg.atmosphereEdges || [];
+  } else if (msg.type == "atmosphere") {
+    // 氛围节点需要更新到canvasStore，因为atmosphere.js使用computed从canvasStore获取数据
+    const atmosphereNodes = msg.atmosphereNodes || [];
+    const atmosphereEdges = msg.atmosphereEdges || [];
+
+    // 移除现有的氛围节点和边
+    canvasStore.nodes = canvasStore.nodes.filter(node => node.type !== 'atmosphere');
+    canvasStore.edges = canvasStore.edges.filter(edge => {
+      const sourceNode = canvasStore.nodes.find(n => n.id === edge.source);
+      const targetNode = canvasStore.nodes.find(n => n.id === edge.target);
+      return sourceNode?.type !== 'atmosphere' && targetNode?.type !== 'atmosphere';
+    });
+
+    // 添加新的氛围节点和边
+    canvasStore.nodes.push(...atmosphereNodes);
+    canvasStore.edges.push(...atmosphereEdges);
   }
 }
 
