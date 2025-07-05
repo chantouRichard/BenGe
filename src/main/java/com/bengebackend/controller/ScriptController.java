@@ -10,6 +10,10 @@ import com.bengebackend.model.ScriptAnalysis;
 import com.bengebackend.service.RoomService;
 import com.bengebackend.service.ScriptService;
 import com.bengebackend.util.ContextDataProcessor;
+import com.bengebackend.util.SparkApiUtil;
+import com.bengebackend.websocket.message.WebSocketMessage;
+import com.bengebackend.websocket.session.RoomManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 /**
  * 剧本控制器
@@ -38,12 +43,20 @@ public class ScriptController {
     @Autowired
     private ContextDataProcessor contextDataProcessor;
 
+    @Autowired
+    private RoomManager roomManager;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
      * 生成剧本方向标语
      */
 
     @Autowired
     private QwenChatModel qwenChatModel;
+    @Autowired
+    private SparkApiUtil sparkApiUtil;
 
     @PostMapping("/directions")
     public ResponseEntity<Object> generateSlogan(@RequestBody SloganRequestEntity request) {
@@ -272,34 +285,32 @@ public class ScriptController {
     @PostMapping("/collaboration/generate")
     public ResponseEntity<CollaborationScriptDto> generateCollaborationScript(@RequestBody CollaborationScriptRequestEntity request) {
         log.info(request.toString());
-//        if (request.getRoomId() == null || request.getRoomId() <= 0) {
-//            return ResponseEntity.badRequest().body(new CollaborationScriptDto(null, null, null, "房间ID无效", false));
-//        }
-//
-//        if (request.getContextData() == null || request.getContextData().trim().isEmpty()) {
-//            return ResponseEntity.badRequest().body(new CollaborationScriptDto(null, null, null, "上下文数据不能为空", false));
-//        }
 
         try {
-//            // 检查用户是否为房主（可选的权限控制）
-//            if (!roomService.isOwner(request.getRoomId())) {
-//                return ResponseEntity.status(403).body(new CollaborationScriptDto(null, null, null, "只有房主可以生成剧本", false));
-//            }
 
             // 使用现有的ContextDataProcessor处理协作数据
             String contextSummary = contextDataProcessor.generateContextSummary(request.getContextData(), "collaboration");
+            Integer roomId = request.getRoomId();
 
             // 构建AI提示词
             String prompt = buildCollaborationPrompt(contextSummary, request.getRoomId());
 
             log.info(prompt);
 
-            // 使用现有的qwenChatModel生成剧本
-            String generatedScript = qwenChatModel.chat(prompt);
+//            String generatedScript = qwenChatModel.chat(prompt);
+//            String generatedScript = sparkApiUtil.chat(prompt);
+            String generatedScript = "# 这是AI成功返回的测试文本，恭喜你成功了!";
 
             log.info(generatedScript);
 
             if (generatedScript != null && !generatedScript.trim().isEmpty()) {
+                // 广播：
+                WebSocketMessage msg = new WebSocketMessage();
+                msg.setType("canvas");
+                msg.setRoomId(String.valueOf(roomId));
+                msg.setContent(generatedScript);
+                roomManager.broadcastToRoom(String.valueOf(roomId), objectMapper.writeValueAsString(msg));
+
                 String title = "房间" + request.getRoomId() + "协作剧本";
                 return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript, request.getRoomId(), "剧本生成成功", true));
             } else {
@@ -309,6 +320,23 @@ public class ScriptController {
             System.err.println("生成协作剧本失败: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, null, "服务器错误: " + e.getMessage(), false));
+        }
+    }
+
+    /**
+     * 房主确认进入第三阶段
+     */
+    @PostMapping("/enter-third-stage")
+    public void enterThirdStage(Integer roomId,String data){
+        // 广播：
+        try {
+            WebSocketMessage msg = new WebSocketMessage();
+            msg.setType("enter-third-stage");
+            msg.setRoomId(String.valueOf(roomId));
+            msg.setContent(data);
+            roomManager.broadcastToRoom(String.valueOf(roomId), objectMapper.writeValueAsString(msg));
+        }catch (Exception error){
+            error.printStackTrace();
         }
     }
 

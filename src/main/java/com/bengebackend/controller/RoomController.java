@@ -163,6 +163,7 @@ public class RoomController {
     public ResponseEntity<?> generateDirection(@RequestBody AICooperateDirection aiCooperateDirection){
         String roomId = aiCooperateDirection.getRoomId();
         RLock lock = redissonClient.getLock("room:" + roomId);
+        log.info("testtest");
 
         boolean locked = false;
         try {

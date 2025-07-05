@@ -28,7 +28,7 @@ public class ChatAiAssistantImpl implements ChatAiAssistant {
     private final ObjectMapper objectMapper;
 
     @Value("${AI.key}")
-    private static String API_KEY;
+    private String API_KEY;
 
     public ChatAiAssistantImpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
