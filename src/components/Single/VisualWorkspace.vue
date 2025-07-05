@@ -355,8 +355,12 @@ const showElementDetail = (element) => {
 
 // 获取完整的图片URL
 const getImageUrl = (url) => {
+  console.log('获取图片URL:', url);
   if (!url) return '';
-  
+  // 如果是Base64数据（以 'data:image/' 开头）
+  if (url.startsWith('data:image/')) {
+    return url; // 直接返回Base64字符串
+  }
   // 如果是完整URL（以http或https开头），直接返回
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
