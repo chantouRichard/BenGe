@@ -271,26 +271,15 @@ public class ScriptController {
 
     @PostMapping("/collaboration/generate")
     public ResponseEntity<CollaborationScriptDto> generateCollaborationScript(@RequestBody CollaborationScriptRequestEntity request) {
-        log.info(request.toString());
-//        if (request.getRoomId() == null || request.getRoomId() <= 0) {
-//            return ResponseEntity.badRequest().body(new CollaborationScriptDto(null, null, null, "房间ID无效", false));
-//        }
-//
-//        if (request.getContextData() == null || request.getContextData().trim().isEmpty()) {
-//            return ResponseEntity.badRequest().body(new CollaborationScriptDto(null, null, null, "上下文数据不能为空", false));
-//        }
+        log.info("收到协作剧本生成请求: {}", request.toString());
 
         try {
-//            // 检查用户是否为房主（可选的权限控制）
-//            if (!roomService.isOwner(request.getRoomId())) {
-//                return ResponseEntity.status(403).body(new CollaborationScriptDto(null, null, null, "只有房主可以生成剧本", false));
-//            }
 
             // 使用现有的ContextDataProcessor处理协作数据
             String contextSummary = contextDataProcessor.generateContextSummary(request.getContextData(), "collaboration");
 
             // 构建AI提示词
-            String prompt = buildCollaborationPrompt(contextSummary, request.getRoomId());
+            String prompt = buildCollaborationPrompt(contextSummary);
 
             log.info(prompt);
 
@@ -300,41 +289,35 @@ public class ScriptController {
             log.info(generatedScript);
 
             if (generatedScript != null && !generatedScript.trim().isEmpty()) {
-                String title = "房间" + request.getRoomId() + "协作剧本";
-                return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript, request.getRoomId(), "剧本生成成功", true));
+                String title = "协作剧本";
+                return ResponseEntity.ok(new CollaborationScriptDto(title, generatedScript,"剧本生成成功", true));
             } else {
-                return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, null, "AI生成剧本失败", false));
+                return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, "AI生成剧本失败", false));
             }
         } catch (Exception e) {
             System.err.println("生成协作剧本失败: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null, null, "服务器错误: " + e.getMessage(), false));
+            return ResponseEntity.status(500).body(new CollaborationScriptDto(null, null,  "服务器错误: " + e.getMessage(), false));
         }
     }
 
     /**
      * 构建协作剧本生成的AI提示词
      */
-    private String buildCollaborationPrompt(String contextSummary, Integer roomId) {
+    private String buildCollaborationPrompt(String contextSummary) {
         StringBuilder prompt = new StringBuilder();
 
         // 系统角色定义 - 参考现有System_MSG的严格格式要求
         prompt.append("你是一名逻辑严谨且追求内容完整的剧本杀作家，专门负责将团队协作设计的内容整合为完整剧本。必须严格遵循以下规则：\n\n");
 
-        // 规则1：严格的输出格式（参考现有System_MSG）
-        prompt.append("规则1. 请严格按指定MarkDown格式输出以下字段，七部分内容缺一不可！不要包含额外文本！:\n");
-        prompt.append("    AI回复（一句话）\n");
+        prompt.append("规则1. 请严格按指定MarkDown格式输出以下字段，五部分内容缺一不可！不要包含额外文本！:\n");
         prompt.append("    标题\n");
         prompt.append("    背景（一段话）\n");
         prompt.append("    人物剧本（数组）\n");
         prompt.append("    线索（数组）\n");
         prompt.append("    真相\n");
-        prompt.append("    组织者手册\n\n");
 
         prompt.append("输出需符合如下结构：\n");
-        prompt.append("    AI回复：\n");
-        prompt.append("    ...（这部分是给用户的礼貌性回答，体现协作成果的整合）\n");
-        prompt.append("    》》》\n");
         prompt.append("    # ...（这部分是标题）\n");
         prompt.append("    ---\n");
         prompt.append("    ## 背景\n");
@@ -354,9 +337,6 @@ public class ScriptController {
         prompt.append("    ...\n");
         prompt.append("    ---\n");
         prompt.append("    ## 真相\n");
-        prompt.append("    ...\n");
-        prompt.append("    ---\n");
-        prompt.append("    ## 组织者手册\n");
         prompt.append("    ...\n");
         prompt.append("    ---\n");
         prompt.append("    （到此结束，不要再输出文本）\n\n");
@@ -390,8 +370,6 @@ public class ScriptController {
 
         // 特别注意事项
         prompt.append("## 特别注意：\n");
-        prompt.append("- 这是团队协作的成果，请在AI回复中体现对团队合作的认可\n");
-        prompt.append("- 确保每个设计师的贡献都在最终剧本中有所体现\n");
         prompt.append("- 利用协作过程中产生的创意火花，让剧本更加精彩\n");
         prompt.append("- 保持剧本的逻辑性和可玩性，确保团队的努力转化为优质作品\n\n");
 

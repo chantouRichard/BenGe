@@ -20,7 +20,7 @@ public class AiConfig {
     QwenChatModel qwenModel(){
         return QwenChatModel.builder()
                 .apiKey(apiKey)
-                .modelName("qwen-turbo")
+                .modelName("qwen-max")
                 .build();
     }
 
