@@ -653,7 +653,7 @@ const processClueNodeData = (nodeData) => {
     detail: processed.description || '',
     logic: processed.hiddenInfo || '',
     tags: processed.type || '',
-    note: processed.notes || ''
+    notes: processed.notes || ''
   }
 }
 
