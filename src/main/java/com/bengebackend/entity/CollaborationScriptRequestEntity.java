@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CollaborationScriptRequestEntity {
 
-    private Integer roomId;
     /**
      * 协作设计的上下文数据（JSON字符串）
      */
