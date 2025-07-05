@@ -8,6 +8,7 @@ import com.bengebackend.entity.room.applyRoomEntity;
 import com.bengebackend.entity.room.createRoomEntity;
 import com.bengebackend.entity.room.getAllRoomEntity;
 import com.bengebackend.model.Room;
+import com.bengebackend.service.AIService;
 import com.bengebackend.service.RoomService;
 import com.bengebackend.websocket.message.WebSocketMessage;
 import com.bengebackend.websocket.session.RoomManager;
@@ -52,7 +53,7 @@ public class RoomController {
     private RoomManager roomManager;
 
     @Autowired
-    private ChatAiAssistant chatAiAssistant;
+    private AIService aiService;
 
     public RoomController(RedissonClient redissonClient) {
         this.redissonClient = redissonClient;
@@ -171,13 +172,14 @@ public class RoomController {
                 return ResponseEntity.status(429).body("正在处理中，请稍候");
             }
 
-            if (Boolean.TRUE.equals(redisTemplate.hasKey("ai_done:" + roomId))) {
-                return ResponseEntity.ok("AI已经生成过内容了");
-            }
+//            if (Boolean.TRUE.equals(redisTemplate.hasKey("ai_done:" + roomId))) {
+//                return ResponseEntity.ok("AI已经生成过内容了");
+//            }
 
             // 调用AI接口，返回 List<Map<String, String>>
-            List<Map<String, String>> result = chatAiAssistant.getCoopDirection(aiCooperateDirection.getKeyWords());
+            List<Map<String, String>> result = aiService.getCoopDirection(aiCooperateDirection.getKeyWords());
 
+            log.info("AI结果：" + result);
             // 广播：
             WebSocketMessage msg = new WebSocketMessage();
             msg.setType("vote");

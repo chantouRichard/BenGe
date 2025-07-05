@@ -1,5 +1,6 @@
 package com.bengebackend.service.serviceImpl;
 
+import com.bengebackend.config.XfyunConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,9 +12,12 @@ import com.bengebackend.entity.SloganRequestEntity;
 import com.bengebackend.entity.StreamResponse;
 import com.bengebackend.service.*;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -27,6 +31,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -49,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+@Slf4j
 @Service
 public class AIServicelmpl implements AIService {
     private static final String XFAPP_ID = "0772d014";
@@ -72,8 +78,98 @@ public class AIServicelmpl implements AIService {
             请以自然的方式分段输出多个标语建议。
             """;
 
-    public AIServicelmpl() {
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final XfyunConfig xfyunConfig;
+
+    public AIServicelmpl(RestTemplate restTemplate, ObjectMapper objectMapper, XfyunConfig xfyunConfig) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.xfyunConfig = xfyunConfig;
     }
+
+    private static String hmacSha256(String data, String secret) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        mac.init(keySpec);
+        byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(hash);
+    }
+
+    private static String getGMTDate() {
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+        DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
+        return now.format(formatter);
+    }
+
+    @Override
+    public List<Map<String, String>> getCoopDirection(List<String> keywords) {
+        String prompt = String.format("""
+                请根据以下关键词整合出6个剧本方向，每个方向需要包含标题（title）和描述（description）。关键词如下：
+
+                %s
+
+                请用如下格式返回：
+                [
+                  { "title": "xxx", "description": "..." },
+                  ...
+                ]
+                """, objectMapper.valueToTree(keywords).toPrettyString());
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", "x1");
+        requestBody.put("max_tokens", 2048);
+        requestBody.put("stream", false);
+        requestBody.put("temperature", 0.7);
+        requestBody.put("messages", List.of(
+                Map.of("role", "system", "content", "你是一名专业的剧本创作助手，擅长生成剧本方向设计"),
+                Map.of("role", "user", "content", prompt)
+        ));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + xfyunConfig.getApiPassword());
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    xfyunConfig.getApiUrl(),
+                    HttpMethod.POST,
+                    request,
+                    Map.class
+            );
+
+            Map<?, ?> body = response.getBody();
+            if (body == null || !body.containsKey("choices")) {
+                log.error("AI 响应无效：{}", body);
+                return List.of();
+            }
+
+            Map<?, ?> choice = (Map<?, ?>) ((List<?>) body.get("choices")).get(0);
+            Map<?, ?> message = (Map<?, ?>) choice.get("message");
+            String reply = (String) message.get("content");
+
+            log.info("AI 原始回复内容：\n{}", reply);
+
+            // 清理 markdown 格式
+            String cleanedReply = reply
+                    .replaceAll("^```json\\s*", "")
+                    .replaceAll("^```\\s*", "")
+                    .replaceAll("```\\s*$", "")
+                    .trim();
+
+            log.info("AI 清洗后的内容：\n{}", cleanedReply);
+
+            return objectMapper.readValue(cleanedReply, new TypeReference<List<Map<String, String>>>() {});
+        } catch (Exception e) {
+            log.error("调用讯飞星火 X1 接口失败", e);
+            return List.of();
+        }
+    }
+
+
+    // ====================== 单人创作和多人创作AI部分分割线 ==================
 
     @Override
     public CompletableFuture<AIMsgDevide> GenFramework(List<Map<String, String>> msgs) {

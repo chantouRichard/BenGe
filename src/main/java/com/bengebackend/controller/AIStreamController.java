@@ -95,10 +95,10 @@ public class AIStreamController {
         executor.execute(() -> {
             try {
                 @SuppressWarnings("unchecked")
-                List<Map<String, String>> messages = (List<Map<String, String>>) request.get("messages");
+                List<Map<String, String>> messages = (List<Map<String, String>>) request.get("message");
 
                 if (messages == null) {
-                    emitter.completeWithError(new IllegalArgumentException("messages参数不能为空"));
+                    emitter.completeWithError(new IllegalArgumentException("message参数不能为空"));
                     return;
                 }
 

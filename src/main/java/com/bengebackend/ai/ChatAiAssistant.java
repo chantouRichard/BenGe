@@ -15,6 +15,4 @@ public interface ChatAiAssistant {
      * @return AI回复
      */
     String chat(String message);
-
-    List<Map<String, String>> getCoopDirection(List<String> keywords);
 }
