@@ -125,7 +125,7 @@ public class ScriptServiceImpl implements ScriptService {
                     msg.put("content", h.getMessage());
                 } else {
                     msg.put("role", "assistant");
-                    msg.put("content", h.getResponse());
+                    msg.put("content", scriptContent);
                 }
                 messages.add(msg);
             }
@@ -158,7 +158,7 @@ public class ScriptServiceImpl implements ScriptService {
         ScriptHistory aiHistory = new ScriptHistory();
         aiHistory.setScriptId(request.getScriptId());
         aiHistory.setMessage("");
-        aiHistory.setResponse(mockResponse);
+        aiHistory.setResponse(aiMsgTemp.getMsgForUser());
         aiHistory.setCreatedAt(LocalDateTime.now());
         scriptHistoryService.addHistory(aiHistory);
 

@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -257,7 +258,7 @@ public class AIServicelmpl implements AIService {
 
             // 当创建任务完成后处理结果
             return taskFuture.thenCompose(taskId -> {
-                System.out.println("创建任务成功，任务ID: " + taskId);
+                System.out.println("创建图片生成任务成功，任务ID: " + taskId);
                 return GetImageURLAsync(taskId)
                         .thenCompose(url -> {
                             if (url != null) {
@@ -266,7 +267,7 @@ public class AIServicelmpl implements AIService {
                             return null;
                         });
             }).exceptionally(e -> {
-                System.err.println("创建任务失败: " + e.getMessage());
+                System.err.println("创建图片生成任务失败: " + e.getMessage());
                 e.printStackTrace();
                 return null;
             });
@@ -360,15 +361,18 @@ public class AIServicelmpl implements AIService {
 
     public void DevideScriptContent(AIMsgDevide devidedMsg, String content, boolean setReplyAndTitle) {
         String[] parts;
+        // System.out.println("\n开始分割剧本内容:\n" + content + "\n\n");
         if (setReplyAndTitle) {
             parts = content.split("》》》", 2);
             if (parts.length == 2)
                 devidedMsg.setMsgForUser(parts[0]);
-            else
+            else {
                 System.out.println("未找到分隔符》》》，回答与剧本内容分割失败");
+                devidedMsg.setMsgForUser("已按您的要求修改剧本");
+            }
 
             parts = content.split("#", 2);
-            parts = parts[1].split("## 背景\\s*", 2);
+            parts = parts[1].split("背景\\s*", 2);
             parts[0] = parts[0].replaceAll("---", "");
             devidedMsg.setTitle(parts[0].replaceAll("\\s+", ""));
             if (parts.length != 2)
@@ -446,8 +450,11 @@ public class AIServicelmpl implements AIService {
             String host = uri.getHost();
             String path = uri.getPath();
 
-            // 生成RFC1123格式的时间戳
-            String date = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(ZoneId.of("GMT")));
+            DateTimeFormatter CUSTOM_RFC_1123 = DateTimeFormatter.ofPattern(
+                    "EEE, dd MMM yyyy HH:mm:ss 'GMT'",
+                    Locale.US).withZone(ZoneId.of("GMT"));
+
+            String date = CUSTOM_RFC_1123.format(ZonedDateTime.now());
 
             // 拼接签名字符串
             String signatureOrigin = "host: " + host + "\n" +
@@ -518,8 +525,8 @@ public class AIServicelmpl implements AIService {
                 .build();
         return CompletableFuture.supplyAsync(() -> {
             try {
+                System.out.println("开始轮询图片生成状态：");
                 while (true) {
-                    System.out.println(new Date());
                     JSONObject queryResponse = GetImageTaskStateAsync(httpClient, taskId).get(50, TimeUnit.SECONDS);
 
                     // 检查响应是否包含header
@@ -535,8 +542,6 @@ public class AIServicelmpl implements AIService {
                         String taskStatus = header.getString("task_status");
 
                         if ("3".equals(taskStatus)) {
-                            System.out.println("任务完成时间: " + new Date());
-
                             // 检查是否包含payload.result字段
                             if (!queryResponse.has("payload")) {
                                 System.err.println("无效的API响应，缺少payload字段: " + queryResponse);
@@ -555,8 +560,8 @@ public class AIServicelmpl implements AIService {
                             fText = new String(decoded, StandardCharsets.UTF_8);
                             return (new JSONArray(fText)).getJSONObject(0).getString("image_wm");
                         } else {
-                            System.out.println("查询结果 当前状态: " + taskStatus);
-                            Thread.sleep(3000); // 2秒后再次查询
+                            System.out.print(taskStatus);
+                            Thread.sleep(3000); // 3秒后再次查询
                         }
                     } else {
                         String errorMsg = header.optString("message", "未知错误");
@@ -632,7 +637,6 @@ public class AIServicelmpl implements AIService {
                 return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                         .thenApply(response -> {
                             String responseBody = response.body();
-                            System.out.println("API响应: " + responseBody);
 
                             if (response.statusCode() != 200) {
                                 throw new RuntimeException("HTTP请求失败: " + response.statusCode() + " " + responseBody);
@@ -935,9 +939,9 @@ public class AIServicelmpl implements AIService {
                     你是剧本杀创作的一员，你的任务是完整描述剧本中已有的线索，要求如下：
                     	1、请以如下模板输出
                             	## 线索
-                                -C> ...
-                    		    -C> ...
-                    		    -C> ...
+                                - C> ...
+                    		    - C> ...
+                    		    - C> ...
 
                         2、除了”## 线索“这部分内容使用MarkDown格式，剩余部分请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
 
@@ -994,16 +998,16 @@ public class AIServicelmpl implements AIService {
             		...
             		---
                 ## 人物剧本:
-            		-CHR ...（角色1名称）
+            		- CHR ...（角色1名称）
             		...（关于角色1的相关内容）
-            		-CHR ...（角色2名称）
+            		- CHR ...（角色2名称）
             		...（关于角色2的相关内容）
             		...（其它角色的格式以此类推）
             		---
                 ## 线索
-            		-C> ...
-            		-C> ...
-            		-C> ...
+            		- C> ...
+            		- C> ...
+            		- C> ...
             		...
             		---
                 ## 真相
@@ -1018,7 +1022,7 @@ public class AIServicelmpl implements AIService {
 
                 规则3. 当用户要求细化某部分时：
                     - 保持原有内容的基础上更新指定部分
-                    - 未修改的部分需保留原有内容
+                    - 仍然需要输出用户没要求修改的内容
                     - 输出内容必须满足规则1
 
                 规则4. 请按以下内容深化剧本内容：
@@ -1033,12 +1037,12 @@ public class AIServicelmpl implements AIService {
                         信息差（角色间掌握的信息不尽相同）
                         与其他角色的关系（可以是表面也可以有不为人知的一面）
                         不能出现“其余角色略”的字样
-                        每个人物的剧本必须以-CHR 开头（遵循规则1）
+                        每个人物的剧本必须以- CHR 开头（遵循规则1）
                     （3）线索：
                         关键性线索必须有明确的指向
                         每条线索需要有足够多的细节
                         线索数量不能太少
-                        每条线索必须以-C> 开头（遵循规则1）
+                        每条线索必须以- C> 开头（遵循规则1）
                     （4）真相：
                         必须包含凶手作案过程
                         详细描述每个细节
@@ -1258,16 +1262,16 @@ public class AIServicelmpl implements AIService {
             1935年秋，苏州城郊「福临客栈」因暴雨歇业。掌柜李世昌深夜遇害于账房，胸口插着断裂的铜制怀表指针，屋内老式座钟停摆于凌晨2:15。六名住客被困客栈，暴雨冲断山路前，需厘清命案真相。
 
             人物剧本:
-            -CHR 赵文远（男，账房先生）价值观：信奉“钱财身外物，性命最要紧”。背景：因挪用公款被李世昌威胁，携家眷投宿客栈。案发前与掌柜争吵，要求结算工钱。时间线：19:00与掌柜对账→21:30回房→22:00听见钟声→未离开房间。信息差：不知掌柜曾私下克扣其他伙计工钱。
-            -CHR 苏红袖（女，客栈厨师）价值观：“情义比银钱重，恨比爱长久”。背景：暗恋李世昌之女李婉儿，因身份悬殊未表白。案发前夜为李婉儿送醒酒汤。时间线：20:00熬药→21:50倒药渣→22:10回灶台取烛台。信息差：知晓掌柜私藏鸦片于灶房梁上。
-            -CHR 李婉儿（女，掌柜之女）价值观：“宁可撕破脸，不可吃亏”。背景：因父亲逼婚富商之子，赌气带丫鬟投靠客栈。案发时正与丫鬟缝补嫁衣。时间线：20:30骂跑说亲媒人→22:00绣花→22:15听见瓷器碎裂声。信息差：发现父亲账本记录自己嫁妆被挪用。
-            -CHR 陈阿四（男，客栈杂役）价值观：“活着比什么都强”。背景：聋哑人，被掌柜收留。案发前擦拭大堂铜钟，目睹掌柜与黑衣人争执。时间线：19:30擦钟→21:00喂狗→22:00躺柴房。信息差：看见苏红袖深夜进入后院竹林。
-            -CHR 王警长（男，巡警队长）价值观：“规矩比人重要”。背景：伪装成住客调查客栈走私案。案发后第一时间封锁现场。时间线：20:45登记住客→22:05听到钟声→22:10破门而入。信息差：携带记录客栈走私名单的密信。
-            -CHR 刘麻子（男，落魄货郎）
+            - CHR 赵文远（男，账房先生）价值观：信奉“钱财身外物，性命最要紧”。背景：因挪用公款被李世昌威胁，携家眷投宿客栈。案发前与掌柜争吵，要求结算工钱。时间线：19:00与掌柜对账→21:30回房→22:00听见钟声→未离开房间。信息差：不知掌柜曾私下克扣其他伙计工钱。
+            - CHR 苏红袖（女，客栈厨师）价值观：“情义比银钱重，恨比爱长久”。背景：暗恋李世昌之女李婉儿，因身份悬殊未表白。案发前夜为李婉儿送醒酒汤。时间线：20:00熬药→21:50倒药渣→22:10回灶台取烛台。信息差：知晓掌柜私藏鸦片于灶房梁上。
+            - CHR 李婉儿（女，掌柜之女）价值观：“宁可撕破脸，不可吃亏”。背景：因父亲逼婚富商之子，赌气带丫鬟投靠客栈。案发时正与丫鬟缝补嫁衣。时间线：20:30骂跑说亲媒人→22:00绣花→22:15听见瓷器碎裂声。信息差：发现父亲账本记录自己嫁妆被挪用。
+            - CHR 陈阿四（男，客栈杂役）价值观：“活着比什么都强”。背景：聋哑人，被掌柜收留。案发前擦拭大堂铜钟，目睹掌柜与黑衣人争执。时间线：19:30擦钟→21:00喂狗→22:00躺柴房。信息差：看见苏红袖深夜进入后院竹林。
+            - CHR 王警长（男，巡警队长）价值观：“规矩比人重要”。背景：伪装成住客调查客栈走私案。案发后第一时间封锁现场。时间线：20:45登记住客→22:05听到钟声→22:10破门而入。信息差：携带记录客栈走私名单的密信。
+            - CHR 刘麻子（男，落魄货郎）
             价值观：“墙头草两边倒”。背景：欠赌债躲进客栈。案发时偷喝柜台酒，见掌柜尸体后藏起铜钥匙。时间线：21:00撬柜台→21:50醉酒→22:05呕吐在院中。信息差：捡到半张烧焦的婚约文书。
 
             线索
-            -C> 【铜钟指针】：断裂处有新鲜血迹与指纹，内侧刻“福临”字样（指向凶器来源）。-C> 【账本残页】：夹在《论语》中，记录“苏红袖借支五块”“李婉儿嫁妆短少十块”（暗示经济矛盾）。-C> 【灶房烟灰】：含罂粟壳碎片，与李世昌指甲缝残留物一致（指向毒品交易）。-C> 【绣花针盒】：李婉儿房间掉落，针尖沾蓝墨水（与婚约文书字迹同色）。-C> 【密信残角】：王警长口袋露出“李世昌勾结盐商”字样（暗示其死亡牵连更大阴谋）。-C> 【竹叶露水】：后院竹林采集，检测出麻沸散成分（与苏红袖药锅药材吻合）。
+            - C> 【铜钟指针】：断裂处有新鲜血迹与指纹，内侧刻“福临”字样（指向凶器来源）。- C> 【账本残页】：夹在《论语》中，记录“苏红袖借支五块”“李婉儿嫁妆短少十块”（暗示经济矛盾）。- C> 【灶房烟灰】：含罂粟壳碎片，与李世昌指甲缝残留物一致（指向毒品交易）。- C> 【绣花针盒】：李婉儿房间掉落，针尖沾蓝墨水（与婚约文书字迹同色）。- C> 【密信残角】：王警长口袋露出“李世昌勾结盐商”字样（暗示其死亡牵连更大阴谋）。- C> 【竹叶露水】：后院竹林采集，检测出麻沸散成分（与苏红袖药锅药材吻合）。
 
             真相
             凶手：苏红袖。作案过程：苏红袖因爱生恨，利用灶房鸦片与麻沸散制作毒药，假借送汤下毒。
