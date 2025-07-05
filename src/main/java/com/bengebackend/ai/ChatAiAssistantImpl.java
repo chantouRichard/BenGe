@@ -17,7 +17,7 @@ public class ChatAiAssistantImpl implements ChatAiAssistant {
     @Autowired
     private QwenChatModel qwenChatModel;
 
-    @Value("${AI.key}")
+    @Value("123123123123123")
     private String API_KEY;
 
     private static final String SYSTEM_MESSAGE = """
