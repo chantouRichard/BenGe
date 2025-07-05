@@ -53,9 +53,4 @@ public interface AIService {
      * AI助手流式聊天
      */
     CompletableFuture<Void> ChatStreamAsync(List<Map<String, String>> messages, Consumer<String> callback);
-
-    /**
-     * 获取协作阶段的方向生成Zz
-     */
-    List<Map<String, String>> getCoopDirection(List<String> keywords);
 }

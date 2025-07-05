@@ -80,94 +80,11 @@ public class AIServicelmpl implements AIService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final XfyunConfig xfyunConfig;
 
-    public AIServicelmpl(RestTemplate restTemplate, ObjectMapper objectMapper, XfyunConfig xfyunConfig) {
+    public AIServicelmpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        this.xfyunConfig = xfyunConfig;
     }
-
-    private static String hmacSha256(String data, String secret) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        mac.init(keySpec);
-        byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(hash);
-    }
-
-    private static String getGMTDate() {
-        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-        DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
-        return now.format(formatter);
-    }
-
-    @Override
-    public List<Map<String, String>> getCoopDirection(List<String> keywords) {
-        String prompt = String.format("""
-                请根据以下关键词整合出6个剧本方向，每个方向需要包含标题（title）和描述（description）。关键词如下：
-
-                %s
-
-                请用如下格式返回：
-                [
-                  { "title": "xxx", "description": "..." },
-                  ...
-                ]
-                """, objectMapper.valueToTree(keywords).toPrettyString());
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "x1");
-        requestBody.put("max_tokens", 2048);
-        requestBody.put("stream", false);
-        requestBody.put("temperature", 0.7);
-        requestBody.put("messages", List.of(
-                Map.of("role", "system", "content", "你是一名专业的剧本创作助手，擅长生成剧本方向设计"),
-                Map.of("role", "user", "content", prompt)
-        ));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Bearer " + xfyunConfig.getApiPassword());
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
-        try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    xfyunConfig.getApiUrl(),
-                    HttpMethod.POST,
-                    request,
-                    Map.class
-            );
-
-            Map<?, ?> body = response.getBody();
-            if (body == null || !body.containsKey("choices")) {
-                log.error("AI 响应无效：{}", body);
-                return List.of();
-            }
-
-            Map<?, ?> choice = (Map<?, ?>) ((List<?>) body.get("choices")).get(0);
-            Map<?, ?> message = (Map<?, ?>) choice.get("message");
-            String reply = (String) message.get("content");
-
-            log.info("AI 原始回复内容：\n{}", reply);
-
-            // 清理 markdown 格式
-            String cleanedReply = reply
-                    .replaceAll("^```json\\s*", "")
-                    .replaceAll("^```\\s*", "")
-                    .replaceAll("```\\s*$", "")
-                    .trim();
-
-            log.info("AI 清洗后的内容：\n{}", cleanedReply);
-
-            return objectMapper.readValue(cleanedReply, new TypeReference<List<Map<String, String>>>() {});
-        } catch (Exception e) {
-            log.error("调用讯飞星火 X1 接口失败", e);
-            return List.of();
-        }
-    }
-
 
     // ====================== 单人创作和多人创作AI部分分割线 ==================
 
