@@ -338,61 +338,62 @@ watch(
 
 .vote-option {
   padding: 15px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #eaf6ff; /* 浅蓝背景 */
+  border-radius: 12px;
+  border: 2px solid #b3dfff; /* 淡蓝边框 */
+  box-shadow: 0 2px 8px rgba(0, 170, 255, 0.15); /* 浅蓝阴影 */
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   position: relative;
-  border: 2px solid transparent;
-  overflow: hidden;
   width: 200px;
   height: 160px;
-
   overflow-y: auto;
 }
-
 .vote-option:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 6px 14px rgba(0, 170, 255, 0.25);
 }
+
 
 .vote-option.selected {
   border-color: #409eff;
-  background-color: rgba(64, 158, 255, 0.05);
+  background: linear-gradient(135deg, #eaf6ff 0%, #d2ebff 100%);
 }
 
+
 .vote-option.leading {
-  border-left: 4px solid #67c23a;
+  border-left: 4px solid #397FF3;
 }
 
 .option-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  margin-bottom: 10px;
-
+  padding-bottom: 30px; /* 留出足够空间给票数显示 */
   position: relative;
-
   overflow-y: auto;
 }
+
 
 .direction {
   font-weight: bold;
   font-size: 16px;
-
-  text-align: left;
+  color: #2b5c88; /* 深蓝色，提升对比度 */
 }
+
 
 .vote-count {
   position: absolute;
-  top: 0;
-  right: 0;
-  background-color: #f0f0f0;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-size: 14px;
+  bottom: 8px;
+  right: 8px;
+  background-color: #d1ecff;
+  color: #2b5c88;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0, 150, 255, 0.1);
 }
+
+
 
 .voters {
   display: flex;
@@ -412,12 +413,14 @@ watch(
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #67c23a;
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
   color: white;
-  padding: 2px 8px;
+  padding: 4px 10px;
   font-size: 12px;
+  font-weight: bold;
   border-bottom-left-radius: 5px;
 }
+
 
 .action-buttons {
   text-align: center;
@@ -426,7 +429,7 @@ watch(
 
 .confirm-btn {
   padding: 12px 30px;
-  background-color: #67c23a;
+  background-color: #67C23A;
   color: white;
   border: none;
   border-radius: 4px;
@@ -532,4 +535,28 @@ watch(
 .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
   opacity: 0;
 }
+
+/* 优化所有滚动条样式 */
+.vote-options::-webkit-scrollbar,
+.vote-option::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vote-options::-webkit-scrollbar-track,
+.vote-option::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vote-options::-webkit-scrollbar-thumb,
+.vote-option::-webkit-scrollbar-thumb {
+  background: rgba(64, 158, 255, 0.4);
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.vote-options::-webkit-scrollbar-thumb:hover,
+.vote-option::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 158, 255, 0.6);
+}
+
 </style>
