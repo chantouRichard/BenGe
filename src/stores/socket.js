@@ -124,6 +124,8 @@ async function setupWebSocket() {
     console.error("未找到 token，无法建立 WebSocket 连接");
     return;
   }
+  // 穿透版本
+  // socketState.socket = new WebSocket("ws://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws");
 
   socketState.socket = new WebSocket(
     "ws://localhost:7122/ws"

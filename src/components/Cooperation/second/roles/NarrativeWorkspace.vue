@@ -37,7 +37,7 @@
       @ai-integrate="handleAiIntegrate"
     />
 
-      <AiIntegrate v-if="ShowAiIntegrate && !loadingStore.loading3" :AIContent="AIContent.value" @close="ShowAiIntegrate = false" @select="$emit('select')"/>
+      <AiIntegrate v-if="ShowAiIntegrate && !loadingStore.loading3" :AIcontent="AIContent" @close="ShowAiIntegrate = false" @select="$emit('select')"/>
 
     <!-- 主画布 -->
     <CanvasArea
@@ -264,6 +264,7 @@ import { userLoadingStore } from "@/stores/userLoadingStore";
 const loadingStore = userLoadingStore();
 
 const ShowAiIntegrate = ref(false);
+const showPalette = ref(false);
 
 // 传入参数
 import { defineProps } from 'vue'
@@ -505,7 +506,7 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
     // 使用统一的上下文收集工具，收集完整的上下文数据
     const contextData = collectContextData()
 
-    const result = await request.post('/ai/generate-nodes', {
+    const result = await request.post('/room/generate-nodes', {
       userInput: userInput,
       designerType: currentDesignerType.value,
       contextData: JSON.stringify(contextData)
@@ -768,8 +769,8 @@ watch(
   (newData) => {
     if (newData) {
       ShowAiIntegrate.value = true;
-      console.log("newData:", newData);
       AIContent.value = newData;
+      console.log("newAi:", AIContent.value);
     }
   },
   { deep: true }

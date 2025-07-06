@@ -79,12 +79,12 @@ export function generateElementImage(scriptId, elementId) {
 
 // 第二阶段交给AI整合（房主才能调用）
 export function generateCooperateFramework(data) {
-  return request.post("script/collaboration/generate", data);
+  return request.post("room/collaboration/generate", data);
 }
 
 // 确认进入第三阶段
 export function enterThirdStage(roomId, data) {
-  return request.post("script/enter-third-stage", null, {
+  return request.post("room/enter-third-stage", null, {
     params: {
       roomId,
       data,
