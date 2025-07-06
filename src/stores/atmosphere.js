@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, ref, computed } from 'vue'
 import { useCanvasStore } from './canvasStore'
+import { debounce } from "lodash";
 
 export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 

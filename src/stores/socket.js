@@ -41,7 +41,7 @@ const socketState = reactive({
         "事件之间的关系也要梳理清楚，保证故事流畅又紧凑。",
         "当你确定节点，别忘了告诉角色设计师和线索架构师，让他们准备配合哦！",
         "需要灵感？找协作助理AI聊聊，给你意想不到的剧情闪光点！",
-        "加油，让我们一起把这场悬疑故事推向高潮！"
+        "加油，让我们一起把这场悬疑故事推向高潮！",
       ],
     },
     {
@@ -55,7 +55,7 @@ const socketState = reactive({
         "构建角色关系网，谁是朋友，谁是敌人？让人物之间产生火花！",
         "随时和线索架构师沟通，确保人物动机和线索逻辑一致。",
         "记得用标签和注释帮团队快速理解每个角色。",
-        "角色鲜活了，故事才精彩！"
+        "角色鲜活了，故事才精彩！",
       ],
     },
     {
@@ -69,7 +69,7 @@ const socketState = reactive({
         "绑定线索与事件、角色，保证逻辑清晰，别让推理跑偏！",
         "常和剧情设计师和角色设计师交流，确认线索和故事同步推进。",
         "利用冲突检测AI，找出可能的逻辑漏洞。",
-        "把握好线索节奏，玩家才能越推越带劲！"
+        "把握好线索节奏，玩家才能越推越带劲！",
       ],
     },
     {
@@ -83,20 +83,19 @@ const socketState = reactive({
         "利用AI帮忙快速生成视觉素材或背景描述。",
         "时刻关注剧情节奏，调整氛围色调，打造悬疑、紧张或神秘的感觉。",
         "跟剧情设计师保持沟通，确保氛围与故事情绪一致。",
-        "场景有了氛围，故事才有“灵魂”！"
+        "场景有了氛围，故事才有“灵魂”！",
       ],
     },
   ],
   // 第一阶段存储的方向
-  options:[],
+  options: [],
   direction: {
     title: "",
     description: "",
   },
-  AICompleteScriptContent:"",
-  CompleteScriptContent:"",
+  AICompleteScriptContent: "",
+  CompleteScriptContent: "",
 });
-
 
 // 在这里初始化 store，确保只初始化一次
 async function ensureStores() {
@@ -126,20 +125,27 @@ async function setupWebSocket() {
     return;
   }
 
-  socketState.socket = new WebSocket("ws://localhost:7122/ws");
+  socketState.socket = new WebSocket(
+    "ws://localhost:7122/ws"
+  );
 
   socketState.socket.onopen = () => {
-    console.log("WebSocket 连接已建立");
-
-    socketState.socket.send(
-      JSON.stringify({
-        type: "auth",
-        token,
-        roomId: socketState.roomId,
-        avatar: socketState.avatar,
-      })
-    );
-    socketState.isConnected = true;
+    if (socketState.socket.readyState === WebSocket.OPEN) {
+      socketState.socket.send(
+        JSON.stringify({
+          type: "auth",
+          token,
+          roomId: socketState.roomId,
+          avatar: socketState.avatar,
+        })
+      );
+      socketState.isConnected = true;
+    } else {
+      console.warn(
+        "WebSocket 还未准备好，当前状态:",
+        socketState.socket.readyState
+      );
+    }
   };
 
   socketState.socket.onmessage = (event) => {
@@ -193,11 +199,11 @@ async function setupWebSocket() {
       handleCanvas(msg);
     } else if (msg.type === "vote") {
       handleVote(msg);
-    }  else if(msg.type == "enter-third-stage"){
-    socketState.CompleteScriptContent= msg.content;
-  } else if(msg.type == "enter-second-stage"){
-    socketState.direction = JSON.parse(msg.content);
-  }
+    } else if (msg.type == "enter-third-stage") {
+      socketState.CompleteScriptContent = msg.content;
+    } else if (msg.type == "enter-second-stage") {
+      socketState.direction = JSON.parse(msg.content);
+    }
   };
 
   socketState.socket.onclose = () => {
@@ -285,10 +291,10 @@ function handleRoleSelection(roleName, username) {
 // 同步画布
 function handleCanvas(msg) {
   console.log("接收到canvas：", msg);
-  if(msg.content){
-    console.log("进入：",socketState.AICompleteScriptContent);
+  if (msg.content) {
+    console.log("进入：", socketState.AICompleteScriptContent);
     socketState.AICompleteScriptContent = msg.content;
-    console.log("OKOK:",socketState.AICompleteScriptContent);
+    console.log("OKOK:", socketState.AICompleteScriptContent);
     return;
   }
 
@@ -346,9 +352,9 @@ function handleVote(msg) {
       member.hasVoted = msg.hasVoted;
     }
   }
-  if(msg.content){
+  if (msg.content) {
     socketState.options = JSON.parse(msg.content);
-    console.log("socketState.options:",socketState.options);
+    console.log("socketState.options:", socketState.options);
   }
 }
 

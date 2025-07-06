@@ -200,7 +200,7 @@ onMounted(async () => {
 
     // 初始化 WebSocket Provider - 使用动态房间ID
     provider = new WebsocketProvider(
-      "ws://localhost:1234",
+      "wss://further-incoming-mega-divorce.trycloudflare.com",
       `room-${roomId.value}`,
       ydoc
     );
