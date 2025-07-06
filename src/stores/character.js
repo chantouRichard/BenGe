@@ -26,7 +26,13 @@ export const useCharacterStore = defineStore("characterStore", () => {
         items: "一支父亲留下的钢笔，法学院毕业证书",
         notes: "主要推理角色，善于发现细节线索",
         relationships: [
-          { name: "李四", relation: "前同事，曾在一起接手一桩命案" },
+          {
+            type: "前同事",
+            description: "曾在一起接手一桩命案",
+            targetId: "李四",
+            strength: 5,
+            status: "active"
+          },
         ],
       },
     },
@@ -45,9 +51,21 @@ export const useCharacterStore = defineStore("characterStore", () => {
         items: "警徽、旧案件笔记本",
         notes: "对案件有执念，可能带入主观判断",
         relationships: [
-          { name: "张三", relation: "前同事" },
-          { name: "王五", relation: "兄弟，死于三年前未破悬案" },
-        ],
+          {
+            type: "前同事",
+            description: "曾在一起接手一桩命案",
+            targetId: "张三",
+            strength: 5,
+            status: "active"
+          },
+          {
+            type: "兄弟",
+            description: "死于三年前未破悬案",
+            targetId: "王五",
+            strength: 8,
+            status: "deceased"
+          }
+        ]
       },
     },
   ]);

@@ -71,50 +71,26 @@ export const useClueStore = defineStore("clueStore", () => {
     showEdgeSelector.value = true;
   };
 
-  // 用户在关系选择器中，确认创建角色关系
-  const handleEdgeConfirm = (relationData) => {
+  // 用户在关系选择器中，确认创建线索关系
+  const handleEdgeConfirm = (edgeType, edgeLabel) => {
     if (selectedNodesForEdge.value.length === 2) {
       const [sourceNode, targetNode] = selectedNodesForEdge.value;
 
-      // 创建角色关系边
+      // 创建线索关系边
       const newEdge = reactive({
-        id: `relationship-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
+        id: `clue-edge-${sourceNode.id}-${targetNode.id}-${Date.now()}`,
         source: sourceNode.id,
         target: targetNode.id,
         sourceHandle: "right-source",
         targetHandle: "left",
-        type: "relationship",
+        type: "clue-edge",
         data: reactive({
-          type: relationData.type,
-          description: relationData.description,
-          strength: relationData.strength,
-          status: relationData.status,
-          label: relationData.type || "关系",
+          type: edgeType,
+          label: edgeLabel || edgeType,
         }),
       });
 
       edges.push(newEdge);
-
-      // 同时在角色节点中记录关系
-      const sourceNodeIndex = nodes.value.findIndex(
-        (n) => n.id === sourceNode.id
-      );
-      const targetNodeIndex = nodes.value.findIndex(
-        (n) => n.id === targetNode.id
-      );
-
-      if (sourceNodeIndex !== -1) {
-        if (!nodes.value[sourceNodeIndex].data.relationships) {
-          nodes.value[sourceNodeIndex].data.relationships = [];
-        }
-        nodes.value[sourceNodeIndex].data.relationships.push({
-          targetId: targetNode.id,
-          type: relationData.type,
-          description: relationData.description,
-          strength: relationData.strength,
-          status: relationData.status,
-        });
-      }
       broadcast();
     }
 
@@ -124,39 +100,14 @@ export const useClueStore = defineStore("clueStore", () => {
   };
 
   // 用户在关系选择器中修改关系，确认
-  const handleEdgeEditConfirm = (relationData) => {
+  const handleEdgeEditConfirm = (edgeType, edgeLabel) => {
     if (!editingEdgeId.value) return;
 
     const edge = edges.find((e) => e.id === editingEdgeId.value);
     if (edge) {
-      // 更新关系边数据
-      edge.data.type = relationData.type;
-      edge.data.description = relationData.description;
-      edge.data.strength = relationData.strength;
-      edge.data.status = relationData.status;
-      edge.data.label = relationData.type || "关系";
-
-      // 同时更新角色节点中的关系记录
-      const sourceNodeIndex = nodes.value.findIndex(
-        (n) => n.id === edge.source
-      );
-      if (
-        sourceNodeIndex !== -1 &&
-        nodes.value[sourceNodeIndex].data.relationships
-      ) {
-        const relationIndex = nodes.value[
-          sourceNodeIndex
-        ].data.relationships.findIndex((r) => r.targetId === edge.target);
-        if (relationIndex !== -1) {
-          nodes.value[sourceNodeIndex].data.relationships[relationIndex] = {
-            targetId: edge.target,
-            type: relationData.type,
-            description: relationData.description,
-            strength: relationData.strength,
-            status: relationData.status,
-          };
-        }
-      }
+      // 更新线索边数据
+      edge.data.type = edgeType;
+      edge.data.label = edgeLabel || edgeType;
 
       editingEdgeId.value = null;
       showEdgeSelector.value = false;

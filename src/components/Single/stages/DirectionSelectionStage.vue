@@ -324,8 +324,8 @@ const adjustInputHeight = () => {
 const isStreaming = ref(false);
 const streamingMessage = ref(null);
 const streamingText = ref('');
-const streamingInterval = ref(null);
-const fullResponseText = ref('');
+const streamingInterval = ref(null); //ai的固定文本流(显示的文本)
+const fullResponseText = ref('');//aid的固定文本流（不显示）
 const pendingSlogans = ref([]);
 
 
@@ -352,23 +352,70 @@ const sendMessage = async () => {
       isTyping: true,
       timestamp: new Date()
     });
-    
-    // 获取API响应
-    const response = await getScriptDirections(userInput, props.scriptId);
-    
-    // 移除正在输入的提示
-    chatHistory.value.pop();
-    
-    if (response && response.data && response.data.slogans) {
-      // 清空现有方向
-      scriptStore.clearDirections();
-      
-      // 存储待显示的slogans，并确保每个slogan有唯一ID
-      pendingSlogans.value = response.data.slogans.map((slogan, index) => ({
-        ...slogan,
-        id: index + 1 // 确保ID从1开始并且唯一
-      }));
-      
+
+    chatHistory.value.pop();    // 移除正在输入的提示
+    scriptStore.clearDirections();// 清空现有方向
+
+    const response = await fetch('http://localhost:7122/api/ai/slogan/stream', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+      },
+      body: JSON.stringify({
+        prompt: userInput,
+        scriptId: props.scriptId,
+      }),
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let slogans = [];
+
+    let fullContent = ''; // 用于累积流式返回的完整内容
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true }); // 流式解码
+      const lines = chunk.split('\n').filter(line => line.trim() !== ''); // 按行分割并过滤空行
+
+      for (let line of lines) {
+        if (!line.startsWith('data:')) continue; // 只处理 `data:` 开头的行
+        else line = line.slice(5).trim();
+        try {
+          if(line.startsWith('data:')) {
+            line = line.slice(5).trim(); // 去掉 "data:" 并去除空白
+          }
+          if (line === '[DONE]') continue; // 忽略结束标记
+
+          const data = JSON.parse(line);
+
+          // 检查是否有 `choices[0].delta.content`（类似 OpenAI 流式响应）
+          if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+            fullContent += data.choices[0].delta.content; // 累积内容
+
+            // 如果后端是逐字返回，可以按需拆分句子（如按换行符）
+            const newLines = fullContent.split('# 标语').filter(l => l.trim());
+
+            // 更新 slogans 列表
+            slogans = newLines.map((text, index) => ({
+              content: text,
+              id: index + 1, // 生成唯一 ID
+            }));
+
+            // 实时更新 UI（假设 pendingSlogans 是 Vue 的 ref）
+            pendingSlogans.value = [...slogans];
+          }
+        } catch (error) {
+          console.error('解析失败:', error, '原始数据:', line);
+        }
+      }
+    }
+    console.log("fullcontent:::",fullContent);
+    console.log('最终 slogans:', slogans);    
+
       // 设置完整的AI回复文本
       fullResponseText.value = '我已为您生成了几个剧本方向，请在左侧选择一个您喜欢的方向继续创作。您可以将鼠标悬停在卡片上查看核心创意。';
       
@@ -383,8 +430,7 @@ const sendMessage = async () => {
       
       // 开始流式输出
       startStreaming();
-    }
-  } catch (error) {
+    }catch (error) {
     console.error('Error getting script directions:', error);
     chatHistory.value.push({
       sender: 'ai',

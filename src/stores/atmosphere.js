@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, ref, computed } from 'vue'
 import { useCanvasStore } from './canvasStore'
+import { socketState } from './socket'
 import { debounce } from "lodash";
 
 export const useAtmosphereStore = defineStore('atmosphereStore', () => {
@@ -108,7 +109,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
 
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
   }
 
   // 点击结点，进入结点的信息编辑界面或者是在创建边
@@ -178,7 +179,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     console.log(`氛围节点 "${atmosphereNode.data.title}" 关联到场景节点 "${sceneNode.data.title}"`)
 
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
   }
 
   // 修改结点信息的保存
@@ -222,7 +223,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     console.log("索引：", index);
 
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
     return index;
   };
 
@@ -244,7 +245,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       }
     }
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
   }
 
   // 处理结点的位置变化
@@ -259,7 +260,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       }
 
       // 广播更新
-      canvasStore.broadcast && canvasStore.broadcast()
+      broadcast()
     }
   }
 
@@ -269,7 +270,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     console.log('[DEBUG] 新增边：', newEdge)
 
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
   }
 
   // 边确认
@@ -292,7 +293,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     showEdgeSelector.value = false
 
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
   }
 
   // 边取消
@@ -321,7 +322,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     showEdgeSelector.value = false
 
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
   }
 
   // 删除边
@@ -339,8 +340,25 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     showEdgeSelector.value = false
 
     // 广播更新
-    canvasStore.broadcast && canvasStore.broadcast()
+    broadcast()
   }
+
+  // 广播节点和边的信息
+  const broadcast = () => {
+    if (socketState?.socket?.send) {
+      socketState.socket.send(
+        JSON.stringify({
+          type: "atmosphere",
+          atmosphereNodes: nodes.value,
+          atmosphereEdges: edges.value,
+        })
+      );
+      console.log("广播的氛围节点信息：", {
+        atmosphereNodes: nodes.value,
+        atmosphereEdges: edges.value,
+      });
+    }
+  };
 
   return {
     // 数据
@@ -370,6 +388,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     handleDetailSave,
     handleAddNode,
     handleDeleteNode,
-    handlePositionChange
+    handlePositionChange,
+    broadcast
   }
 })
