@@ -1,8 +1,15 @@
 <template>
   <div class="direction-select">
     <div class="title">
-      <h1 style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Script Direction Selection</h1>
-      
+      <h1
+        style="
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+            Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue',
+            sans-serif;
+        "
+      >
+        Script Direction Selection
+      </h1>
     </div>
 
     <div class="selection-container">
@@ -44,40 +51,48 @@
           @dragenter.prevent
         >
           <div
-      v-for="(item, index) in unselectedDirections"
-      :key="'unselected-' + index"
-      class="direction-card"
-      draggable="true"
-      @dragstart="startDrag($event, item, 'unselected')"
-      :title="item"
-      :style="getCardStyle(index)"
-    >
-      <span class="card-content">{{ item }}</span>
-      <span class="remove-btn" @click="deleteDirection(index)">×</span>
-    </div>
+            v-for="(item, index) in unselectedDirections"
+            :key="'unselected-' + index"
+            class="direction-card"
+            draggable="true"
+            @dragstart="startDrag($event, item, 'unselected')"
+            :title="item"
+            :style="getCardStyle(index)"
+          >
+            <span class="card-content">{{ item }}</span>
+            <span class="remove-btn" @click="deleteDirection(index)">×</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div style="display: flex;align-items: center;justify-content: space-between;">
-    <div class="add-direction">
-      <input
-        v-model="newDirection"
-        type="text"
-        placeholder="输入新的方向主题"
-        @keyup.enter="addNewDirection"
-        style="width: 300px;height: 36px;border-radius: 18px;"
-      />
-      <button @click="addNewDirection" class="confirm-btn" style="width: 84px;">添加</button>
-    </div>
-
-    <button
-      class="confirm-btn"
-      :disabled="selectedDirections.length === 0"
-      @click="confirmSelection"
+    <div
+      style="display: flex; align-items: center; justify-content: space-between"
     >
-      确认选择
-    </button>
+      <div class="add-direction">
+        <input
+          v-model="newDirection"
+          type="text"
+          placeholder="输入新的方向主题"
+          @keyup.enter="addNewDirection"
+          style="width: 300px; height: 36px; border-radius: 18px"
+        />
+        <button
+          @click="addNewDirection"
+          class="confirm-btn"
+          style="width: 84px"
+        >
+          添加
+        </button>
+      </div>
+
+      <button
+        class="confirm-btn"
+        :disabled="selectedDirections.length === 0"
+        @click="confirmSelection"
+      >
+        确认选择
+      </button>
     </div>
   </div>
 </template>
@@ -96,15 +111,15 @@ const allMembersChosen = computed(
 );
 watch(allMembersChosen, (newVal) => {
   if (newVal) {
-    emit("confirm", selectedDirections.value)
+    emit("confirm", selectedDirections.value);
   }
-})
+});
 
-const isOwnerResult = ref(false)
+const isOwnerResult = ref(false);
 
 onMounted(async () => {
-  isOwnerResult.value = !await isOwner(socketState.roomId)
-})
+  isOwnerResult.value = !(await isOwner(socketState.roomId));
+});
 
 const selectedDirections = ref([]);
 const unselectedDirections = ref([
@@ -179,6 +194,10 @@ function onDrop(event, targetArea) {
 function removeDirection(index) {
   const [removed] = selectedDirections.value.splice(index, 1);
   unselectedDirections.value.push(removed);
+
+  socketState.socket.send(
+    JSON.stringify({ type: "vote", key: selectedDirections.value })
+  );
 }
 
 // 从“可选”区域删除
@@ -217,17 +236,17 @@ function confirmSelection() {
 // 缓存颜色，确保每个卡片只计算一次颜色
 const cardStyles = computed(() => {
   return unselectedDirections.value.map(() => {
-    const isBlack = Math.random() > 0.5  // 随机决定是否为黑色背景
+    const isBlack = Math.random() > 0.5; // 随机决定是否为黑色背景
     return {
-      backgroundColor: isBlack ? '#000' : '#fff',
-      color: isBlack ? '#fff' : '#000'
-    }
-  })
-})
+      backgroundColor: isBlack ? "#000" : "#fff",
+      color: isBlack ? "#fff" : "#000",
+    };
+  });
+});
 
 // 根据index返回每个卡片的颜色
 function getCardStyle(index) {
-  return cardStyles.value[index]
+  return cardStyles.value[index];
 }
 </script>
 
@@ -273,7 +292,7 @@ function getCardStyle(index) {
   width: 90%;
 }
 
-.target-area{
+.target-area {
   width: 48%; /* 固定宽度 */
   height: 100%;
   border: 3px solid #ccc;
@@ -297,7 +316,7 @@ function getCardStyle(index) {
 }
 
 .target-area {
-  border-color: #64D0A5;
+  border-color: #64d0a5;
   background-color: rgba(103, 194, 58, 0.05);
 }
 
@@ -316,15 +335,14 @@ h3 {
 .card-container {
   display: flex;
   justify-content: flex-start;
-  flex-wrap: wrap;        /* 允许换行 */
+  flex-wrap: wrap; /* 允许换行 */
   gap: 16px;
-  overflow-y: auto;       /* 纵向滚动 */
-  overflow-x: hidden;     /* 禁止横向滚动 */
+  overflow-y: auto; /* 纵向滚动 */
+  overflow-x: hidden; /* 禁止横向滚动 */
 
   margin-top: 20px;
   min-height: 49px;
 }
-
 
 .direction-card {
   display: flex; /* 保持你卡片内容水平排列 */
@@ -336,7 +354,7 @@ h3 {
   cursor: move;
   position: relative;
   transition: all 0.3s;
-  
+
   /* 控制宽度，不固定，也不占满一整行 */
   flex: 0 1 auto; /* 不放大，可以缩小，自适应宽度 */
   max-width: 200px; /* 或你希望的最大宽度 */
@@ -415,7 +433,7 @@ h3 {
   width: 120px;
   height: 36px;
   padding: 12px;
-  background-color: #337DF2;
+  background-color: #337df2;
   color: white;
   border: none;
   border-radius: 18px;
@@ -434,17 +452,17 @@ h3 {
 }
 
 .confirm-btn:disabled {
-  background-color: #77767A;
+  background-color: #77767a;
   cursor: not-allowed;
 }
 
-.owner-btn{
+.owner-btn {
   position: relative;
   right: -200px;
   display: block;
   width: 96px;
   padding: 12px;
-  background-color: #337DF2;
+  background-color: #337df2;
   color: white;
   border: none;
   border-radius: 24px;
@@ -454,9 +472,8 @@ h3 {
   flex-shrink: 0;
 }
 
-
 .owner-btn:disabled {
-  background-color: #77767A;
+  background-color: #77767a;
   cursor: not-allowed;
 }
 </style>

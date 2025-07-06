@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { socketState } from "./socket";
+import { debounce } from "lodash";
 
 export const useCanvasStore = defineStore("story", () => {
   // 生成结点的ID
@@ -411,7 +412,7 @@ export const useCanvasStore = defineStore("story", () => {
   };
 
   // 广播节点和边的信息
-  const broadcast = () => {
+  const broadcast = debounce(() => {
     if (socketState?.socket?.send) {
       socketState.socket.send(
         JSON.stringify({
@@ -425,7 +426,7 @@ export const useCanvasStore = defineStore("story", () => {
         edges: edges,
       });
     }
-  };
+  },300);
 
   return {
     nodes,

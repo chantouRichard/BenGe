@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { socketState } from "./socket";
+import { debounce } from "lodash";
 
 export const useClueStore = defineStore("clueStore", () => {
   // 生成结点的ID
@@ -300,29 +301,22 @@ export const useClueStore = defineStore("clueStore", () => {
     broadcast();
   };
   // 广播节点和边的信息
-  const broadcast = () => {
-    // 分类节点
+  const broadcast = debounce(() => {
     const clueNodes = nodes.value.filter((n) => n.type === "clue");
     const inferenceNodes = nodes.value.filter((n) => n.type === "inference");
     const personNodes = nodes.value.filter((n) => n.type === "person");
 
-    console.log("clue:", clueNodes);
-    console.log("inference:", inferenceNodes);
-    console.log("personNodes:", personNodes);
-    // 构造消息体
     const message = {
-      type: "clue", // 或者你可以改成 "clueSync"、"canvasUpdate"，看你的协议设计
+      type: "clue",
       clueNodes,
       inferenceNodes,
       personNodes,
       clueEdges: edges,
     };
 
-    // 发送广播消息
     socketState.socket.send(JSON.stringify(message));
-
     console.log("广播的节点信息：", message);
-  };
+  }, 300); // 300ms 内重复调用只执行一次
 
   return {
     nodes,

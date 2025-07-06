@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { reactive, ref, computed } from 'vue'
 import { useCanvasStore } from './canvasStore'
 import { socketState } from './socket'
+import { debounce } from "lodash";
 
 export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 

@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { socketState } from "./socket";
+import { debounce } from "lodash";
 
 export const useCharacterStore = defineStore("characterStore", () => {
   // 生成结点的ID
@@ -438,7 +439,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
     broadcast();
   };
   // 广播节点和边的信息
-  const broadcast = () => {
+  const broadcast = debounce(() => {
     socketState.socket.send(
       JSON.stringify({
         type: "character",
@@ -450,7 +451,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
       nodes: nodes.value,
       edges: edges,
     });
-  };
+  },300);
 
   return {
     nodes,
