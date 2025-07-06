@@ -1,6 +1,7 @@
 package com.bengebackend.controller;
 
 import com.bengebackend.entity.SloganRequestEntity;
+import com.bengebackend.entity.Slogan;
 import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.model.ScriptHistory;
 import com.bengebackend.service.AIService;
@@ -80,6 +81,23 @@ public class AIStreamController {
         });
 
         return emitter;
+    }
+
+    /**
+     * 非流式Slogan生成接口 - 返回三个Slogan对象的数组
+     */
+    @PostMapping("/slogan/generate")
+    public ResponseEntity<List<Slogan>> generateSlogan(@RequestBody SloganRequestEntity request) {
+        try {
+            // 调用AI服务生成Slogan
+            CompletableFuture<List<Slogan>> future = aiService.GenerateSloganAsync(request);
+            List<Slogan> slogans = future.get();
+
+            return ResponseEntity.ok(slogans);
+        } catch (Exception e) {
+            log.error("生成Slogan失败", e);
+            return ResponseEntity.status(500).body(new ArrayList<>());
+        }
     }
 
     /**

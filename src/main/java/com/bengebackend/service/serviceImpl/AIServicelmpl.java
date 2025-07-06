@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.entity.SloganRequestEntity;
+import com.bengebackend.entity.Slogan;
 import com.bengebackend.service.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -706,6 +707,89 @@ public class AIServicelmpl implements AIService {
                 e.printStackTrace();
             }
         });
+    }
+
+    @Override
+    public CompletableFuture<List<Slogan>> GenerateSloganAsync(SloganRequestEntity request) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // 构建请求消息
+                List<Map<String, String>> messages = new ArrayList<>();
+                messages.add(Map.of("role", "system", "content", SLOGAN_SYSTEM_PROMPT));
+                messages.add(Map.of("role", "user", "content", request.getPrompt()));
+
+                // 执行非流式请求
+                CompletableFuture<String> future = GetAPIOutputAsync(messages, "x1");
+                String response = future.get();
+
+                // 解析响应内容为Slogan对象数组
+                return parseSloganResponse(response);
+
+            } catch (Exception e) {
+                System.err.println("生成Slogan时发生错误: " + e.getMessage());
+                e.printStackTrace();
+                return new ArrayList<>();
+            }
+        });
+    }
+
+    /**
+     * 解析AI响应内容为Slogan对象列表
+     */
+    private List<Slogan> parseSloganResponse(String response) {
+        List<Slogan> slogans = new ArrayList<>();
+
+        if (response == null || response.trim().isEmpty()) {
+            return slogans;
+        }
+
+        // 按行分割响应内容
+        String[] lines = response.split("\n");
+        String currentSlogan = "";
+        String currentCoreIdea = "";
+        boolean isSlogan = false;
+        boolean isCoreIdea = false;
+
+        for (String line : lines) {
+            line = line.trim();
+
+            if (line.startsWith("# 标语")) {
+                // 如果之前有完整的标语和核心创意，保存它
+                if (!currentSlogan.isEmpty() && !currentCoreIdea.isEmpty()) {
+                    slogans.add(new Slogan(currentSlogan, currentCoreIdea));
+                }
+                // 重置状态
+                currentSlogan = "";
+                currentCoreIdea = "";
+                isSlogan = true;
+                isCoreIdea = false;
+            } else if (line.startsWith("# 核心创意")) {
+                isSlogan = false;
+                isCoreIdea = true;
+            } else if (!line.isEmpty() && !line.startsWith("#")) {
+                // 收集内容
+                if (isSlogan) {
+                    currentSlogan = line;
+                } else if (isCoreIdea) {
+                    currentCoreIdea = line;
+                }
+            }
+        }
+
+        // 保存最后一个标语
+        if (!currentSlogan.isEmpty() && !currentCoreIdea.isEmpty()) {
+            slogans.add(new Slogan(currentSlogan, currentCoreIdea));
+        }
+
+        // 如果解析失败或数量不足，返回默认的3个标语
+        if (slogans.size() < 3) {
+            while (slogans.size() < 3) {
+                slogans.add(new Slogan("精彩剧本等你来体验", "沉浸式角色扮演，解锁真相"));
+            }
+        }
+
+        // 只返回前3个标语
+        return slogans.subList(0, Math.min(3, slogans.size()));
     }
 
     @Override
