@@ -344,7 +344,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
   }
 
   // 广播节点和边的信息
-  const broadcast = () => {
+  const broadcast = debounce(() => {
     if (socketState?.socket?.send) {
       socketState.socket.send(
         JSON.stringify({
@@ -358,7 +358,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
         atmosphereEdges: edges.value,
       });
     }
-  };
+  },300);
 
   return {
     // 数据

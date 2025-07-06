@@ -124,32 +124,30 @@ import { AIIntegrateDirection } from "@/api/room";
 const initializeOptions = async () => {
   const allKeys = socketState.members.flatMap((member) => member.key || []);
   const data = {
-    keyWords:allKeys,
-    roomId:socketState.roomId
-  }
+    keyWords: allKeys,
+    roomId: socketState.roomId,
+  };
   console.log("所有Keys：", allKeys);
+  console.log("变化前：", socketState.options);
 
   try {
     await AIIntegrateDirection(data);
   } catch (error) {
     console.log("请求出错：", error);
   }
-
-  // 如果不是房主，监听 options 的变化
-  watch(
-    () => socketState.options,
-    (newOptions) => {
-      if (newOptions) {
-        console.log("打印socketState：",socketState.options);
-        console.log("打印new：",newOptions);
-        topDirections.value = newOptions;
-        AIGenerate.value = false;
-      }
-    },
-    { immediate: true } // 确保初始化时就检查一次
-  );
 };
-
+// 如果不是房主，监听 options 的变化
+watch(
+  () => socketState.options,
+  (newOptions) => {
+    if (newOptions) {
+      console.log("变化后：", socketState.options);
+      topDirections.value = newOptions;
+      AIGenerate.value = false;
+    }
+  },
+  { immediate: false } // 确保初始化时就检查一次
+);
 initializeOptions();
 
 // 计算属性
@@ -194,20 +192,6 @@ const confirmVote = () => {
   );
 };
 
-// 处理收到的投票更新
-const handleVoteUpdate = (data) => {
-  // 更新投票数据
-  voteOptions.value = data.options;
-  allVotesReceived.value = data.allVoted;
-
-  // 如果所有人都投票了，显示AI建议
-  if (allVotesReceived.value) {
-    showAISuggestion.value = true;
-    // 这里应该从后端获取AI建议
-    aiSuggestion.value = "这是基于投票结果生成的AI创作建议...";
-  }
-};
-
 import { userLoadingStore } from "@/stores/userLoadingStore";
 
 const loadingStore = userLoadingStore();
@@ -219,9 +203,6 @@ const allMembersVoted = computed(
 );
 watch(allMembersVoted, (newVal) => {
   if (newVal) {
-    // showAISuggestion.value = true;
-    // 这里应该从后端获取AI建议
-    // aiSuggestion.value = "这是基于投票结果生成的AI创作建议...";
     socketState.direction = sortedOptions.value[0].direction;
     console.log("最终方向：", sortedOptions.value);
 
@@ -235,20 +216,6 @@ watch(allMembersVoted, (newVal) => {
     }, 10000);
   }
 });
-
-// 请求重新生成AI建议
-const requestRegeneration = () => {
-  if (isRegenerating.value) return;
-
-  isRegenerating.value = true;
-  // 发送重新生成请求到后端
-  emit("regenerateSuggestion", {
-    roomId: props.roomId,
-    modification: modificationRequest.value,
-  });
-
-  // 此处websocket监听更新
-};
 
 // 监听成员变化
 watch(
@@ -278,7 +245,6 @@ watch(
 
 <style scoped>
 .vote-stage {
-
   top: 100px;
   padding: 20px;
   font-family: "Arial", sans-serif;
@@ -333,7 +299,6 @@ watch(
   min-height: 360px;
 
   overflow-y: auto;
-
 }
 
 .vote-option {
