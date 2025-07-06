@@ -545,6 +545,7 @@ const adjustInputHeight = () => {
 
 // 格式化消息内容（支持Markdown）
 const formatMessage = (content) => {
+  if (!content) return '';
   return marked(content);
 };
 
@@ -592,7 +593,6 @@ const sendMessage = async () => {
       
       // 清空本地临时消息（因为后端会返回完整的历史记录）
       localChatHistory.value = [];
-      
     }
   } catch (error) {
     console.error("更新剧本内容失败", error);

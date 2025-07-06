@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { computed, defineProps } from 'vue'
+import { computed, defineProps, toRef } from 'vue'
 import { BaseEdge, EdgeLabelRenderer, getBezierPath } from '@vue-flow/core'
 
 const props = defineProps({
@@ -64,11 +64,16 @@ const props = defineProps({
   targetY: Number,
   sourcePosition: String,
   targetPosition: String,
+  sourceHandle: String,
+  targetHandle: String,
   data: {
     type: Object,
     default: () => ({})
   }
 })
+
+// 使用toRef创建响应式引用
+const data = toRef(props, 'data')
 
 // 计算边路径
 const edgePath = computed(() => {
@@ -83,7 +88,7 @@ const edgePath = computed(() => {
 })
 
 // 关系数据
-const relationData = computed(() => props.data || {})
+const relationData = computed(() => data.value || {})
 
 // 关系标签
 const relationshipLabel = computed(() => {

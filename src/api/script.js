@@ -30,7 +30,7 @@ export function sendMessageToAI(message, scriptId) {
 
 // 获取剧本方向选项
 export function getScriptDirections(prompt, scriptId) {
-  return request.post("script/directions", {
+  return request.post("/ai/slogan/stream", {
     prompt: prompt,
     scriptId: scriptId,
   });
