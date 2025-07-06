@@ -4,7 +4,7 @@ import axios from 'axios';
 const request = axios.create({
   // 使用相对路径，让Vue代理处理
   baseURL: '/api',
-  timeout: 10000 * 18, // 请求超时时间
+  timeout: 10000 * 24, // 请求超时时间
   headers: {
     'Content-Type': 'application/json'
   }
