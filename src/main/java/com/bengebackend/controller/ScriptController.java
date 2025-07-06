@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 /**
  * 剧本控制器
  */
@@ -31,43 +30,43 @@ public class ScriptController {
     /**
      * 生成剧本方向标语
      */
-//    @PostMapping("/directions")
-//    public ResponseEntity<Object> generateSlogan(@RequestBody SloganRequestEntity request) {
-//
-//        String response = qwenChatModel.chat("""
-//                请根据以下关键词生成完整的剧本杀广告,
-//                严格按照以下格式生成内容：
-//                剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
-//                每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
-//                关键词包括以下几点：
-//                """ + request.getPrompt());
-//        if (response == null || response.isEmpty()) {
-//            return ResponseEntity.badRequest().body("生成剧本方向标语失败");
-//        }
-//        // 解析生成的内容
-//        String[] parts = response.split("\\n");
-//        if (parts.length < 3) {
-//            return ResponseEntity.badRequest().body("生成的内容格式不正确");
-//        }
-//        String background = parts[0].replace("剧本背景: ", "").trim();
-//        String playerGoal = parts[1].replace("玩家目标: ", "").trim();
-//        String coreIdea = parts[2].replace("核心创意: ", "").trim();
-//        // 创建返回对象
-//        SloganResponseDto sloganResponse = new SloganResponseDto();
-//        sloganResponse.setSlogans(List.of(
-//                new Slogan("剧本背景", background),
-//                new Slogan("玩家目标", playerGoal),
-//                new Slogan("核心创意", coreIdea)));
-//        return ResponseEntity.ok(sloganResponse);
-//    }
+    // @PostMapping("/directions")
+    // public ResponseEntity<Object> generateSlogan(@RequestBody SloganRequestEntity
+    // request) {
+    //
+    // String response = qwenChatModel.chat("""
+    // 请根据以下关键词生成完整的剧本杀广告,
+    // 严格按照以下格式生成内容：
+    // 剧本背景: ...\\n玩家目标: ...\\n核心创意: ...\\n
+    // 每次生成的内容必须独特，可以通过改变背景设定、角色类型、目标描述或核心创意的表达方式来实现.
+    // 关键词包括以下几点：
+    // """ + request.getPrompt());
+    // if (response == null || response.isEmpty()) {
+    // return ResponseEntity.badRequest().body("生成剧本方向标语失败");
+    // }
+    // // 解析生成的内容
+    // String[] parts = response.split("\\n");
+    // if (parts.length < 3) {
+    // return ResponseEntity.badRequest().body("生成的内容格式不正确");
+    // }
+    // String background = parts[0].replace("剧本背景: ", "").trim();
+    // String playerGoal = parts[1].replace("玩家目标: ", "").trim();
+    // String coreIdea = parts[2].replace("核心创意: ", "").trim();
+    // // 创建返回对象
+    // SloganResponseDto sloganResponse = new SloganResponseDto();
+    // sloganResponse.setSlogans(List.of(
+    // new Slogan("剧本背景", background),
+    // new Slogan("玩家目标", playerGoal),
+    // new Slogan("核心创意", coreIdea)));
+    // return ResponseEntity.ok(sloganResponse);
+    // }
 
     /**
      * 流式生成剧本方向标语
      */
     @PutMapping("/directions/stream")
     public ResponseEntity<String> streamGenerateSlogan(@RequestBody Object request) {
-
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok("请调用AIStreamController中的流式接口");
     }
 
     /**
@@ -75,8 +74,7 @@ public class ScriptController {
      */
     @PutMapping("/directions/stream-complete")
     public ResponseEntity<Object> streamCompleteGenerateSlogan(@RequestBody Object request) {
-
-        return ResponseEntity.ok().body("");
+        return ResponseEntity.ok().body("请调用AIStreamController中的流式接口");
     }
 
     /**
@@ -85,7 +83,7 @@ public class ScriptController {
     @PostMapping("/chat/stream")
     public ResponseEntity<String> chatStream(@RequestBody Object request) {
 
-        return ResponseEntity.ok("AI服务暂未实现");
+        return ResponseEntity.ok("请调用AIStreamController中的流式接口");
     }
 
     /**
@@ -130,7 +128,7 @@ public class ScriptController {
     }
 
     /**
-     * 第二阶段对话 - 生成剧本框架
+     * 第二阶段 - 生成剧本框架
      */
     @PostMapping("/reply2nd")
     public ResponseEntity<ScriptFrameworkDto> handleUserMessage2nd(@RequestBody ScriptReplyRequestEntity request) {
@@ -153,7 +151,7 @@ public class ScriptController {
     }
 
     /**
-     * 第二阶段对话 - 流式生成
+     * 第二阶段对话 - 流式生成(注意：此接口已废弃，实际流式处理在AIStreamController中实现)
      */
     @PutMapping("/reply2nd/stream")
     public ResponseEntity<String> streamHandleUserMessage2nd(@RequestBody ScriptReplyRequestEntity request) {
@@ -205,7 +203,7 @@ public class ScriptController {
     }
 
     /**
-     * 更新剧本 - 从第一阶段进入第二阶段
+     * 更新剧本 - 第一阶段转入第二阶段
      */
     @PutMapping("/update")
     public ResponseEntity<ScriptDetailDto> updateScript(@RequestBody ScriptUpdateRequestEntity request) {

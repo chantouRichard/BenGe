@@ -45,6 +45,15 @@ public class AIMsgDevide {
     }
 
     public void setStrScript(String StrScript) {
+        // StrScript = StrScript.replaceAll("\n", "<br>");// 替换换行符为Markdown格式的换行
+        StrScript = StrScript.replaceAll("\\s*---\\s*", "\n\n---\n\n");// 替换分隔符为Markdown格式的分割线
+        StrScript = StrScript.replaceAll("- C>", "<li>C>");// 替换线索开头为Markdown格式的列表项
+        StrScript = StrScript.replaceAll("- CHR", "<li>CHR");// 替换角色开头为Markdown格式的列表项
+        StrScript = StrScript.replaceAll("##\\s*背景\\s*", "## 背景  \n\n");// 替换背景为Markdown格式的二级标题
+        StrScript = StrScript.replaceAll("##\\s*线索\\s*", "## 线索  \n\n");// 替换线索为Markdown格式的二级标题
+        StrScript = StrScript.replaceAll("##\\s*人物剧本\\s*", "## 人物剧本  \n\n");// 替换人物剧本为Markdown格式的二级标题
+        StrScript = StrScript.replaceAll("##\\s*真相\\s*", "## 真相  \n\n");// 替换真相为Markdown格式的二级标题
+        StrScript = StrScript.replaceAll("##\\s*组织者手册\\s*", "## 组织者手册  \n\n");// 替换组织者手册为Markdown格式的二级标题
         this.StrScript = StrScript;
     }
 
@@ -53,6 +62,7 @@ public class AIMsgDevide {
     }
 
     public void setTitle(String Title) {
+        Title = Title.replaceAll("#", "");
         this.Title = Title;
     }
 

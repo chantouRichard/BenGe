@@ -33,9 +33,9 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/swagger-resources/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/webjars/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/ai/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/ai/**")).permitAll() // test
                         .requestMatchers(new AntPathRequestMatcher("/api/room/**")).permitAll()
-                            // 其他全部认证
+                        // 其他全部认证
                         .anyRequest().authenticated())
                 // 添加 JWT 过滤器，放在基本认证之前
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

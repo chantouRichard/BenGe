@@ -41,9 +41,9 @@ public class AIStreamController {
     private ScriptService scriptService;
 
     private final ExecutorService executor = new ThreadPoolExecutor(
-            2,                      // corePoolSize
-            10,                     // maximumPoolSize
-            60L,                    // keepAliveTime
+            2, // corePoolSize
+            10, // maximumPoolSize
+            60L, // keepAliveTime
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(100), // 有界队列，最多缓存100个任务
             Executors.defaultThreadFactory(),
