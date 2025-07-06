@@ -2,6 +2,7 @@ package com.bengebackend.service;
 
 import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.entity.SloganRequestEntity;
+import com.bengebackend.entity.Slogan;
 
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,11 @@ public interface AIService {
      * 生成Slogan流式输出
      */
     CompletableFuture<Void> GenerateSloganStreamAsync(SloganRequestEntity request, Consumer<String> callback);
+
+    /**
+     * 生成Slogan非流式输出，返回三个Slogan对象的数组
+     */
+    CompletableFuture<List<Slogan>> GenerateSloganAsync(SloganRequestEntity request);
 
     /**
      * AI助手流式聊天
