@@ -20,7 +20,4 @@ public class CollaborationScriptRequestEntity {
      * 协作设计的上下文数据（JSON字符串）
      */
     private String contextData;
-
-    private Integer roomId;
-
 }
