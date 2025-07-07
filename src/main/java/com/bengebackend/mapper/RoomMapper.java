@@ -24,11 +24,7 @@ public interface RoomMapper {
 
     int removeRoomMember(@Param("roomId") int roomId, @Param("userId") int userId);
 
-    int getRealMemberCount(@Param("roomId") int roomId);
 
-    int syncRoomMemberCount(@Param("roomId") int roomId);
-
-    List<Integer> getAllRoomIds();
 
     Room getUserCurrentRoom(@Param("userId") int userId);
 
