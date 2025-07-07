@@ -128,7 +128,7 @@ async function setupWebSocket() {
   // socketState.socket = new WebSocket("ws://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws");
 
   socketState.socket = new WebSocket(
-    "wss://just-croatia-misc-intake.trycloudflare.com/ws"
+    "ws://localhost:7122/ws"
   );
 
   let pingInterval = null;
@@ -391,23 +391,9 @@ function handleCanvas(msg) {
     // 合并边数组
     canvasStore.edges = [...filteredCanvasEdges, ...incomingClueEdges];
   } else if (msg.type == "atmosphere") {
-    // 氛围节点需要更新到canvasStore，因为atmosphere.js使用computed从canvasStore获取数据
-    const atmosphereNodes = msg.atmosphereNodes || [];
-    const atmosphereEdges = msg.atmosphereEdges || [];
-
-    // 移除现有的氛围节点
-    canvasStore.nodes = canvasStore.nodes.filter(
-      (node) => node.type !== "atmosphere"
-    );
-
-    // 移除现有的氛围边
-    canvasStore.edges = canvasStore.edges.filter((edge) => {
-      return edge.data?.type !== "atmosphere-scene";
-    });
-
-    // 添加新的氛围节点和边
-    canvasStore.nodes.push(...atmosphereNodes);
-    canvasStore.edges.push(...atmosphereEdges);
+    // 更新氛围设计师的节点和边
+    atmosphereStore.nodes = msg.atmosphereNodes || [];
+    atmosphereStore.edges = msg.atmosphereEdges || [];
   }
 }
 

@@ -1,35 +1,150 @@
 import { defineStore } from 'pinia'
-import { reactive, ref, computed } from 'vue'
-import { useCanvasStore } from './canvasStore'
+import { reactive, ref } from 'vue'
 import { socketState } from './socket'
 import { debounce } from "lodash";
 
 export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
-  // 引入画布store以共享数据
-  const canvasStore = useCanvasStore()
-
   // 生成结点的ID
   const generateNodeId = () => 'atmo-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
-  // 使用computed属性从canvasStore获取氛围节点
-  const nodes = computed(() => {
-    return canvasStore.nodes.filter(node => node.type === 'atmosphere')
-  })
+  // 独立的氛围节点数据
+  const nodes = ref([
+    {
+      id: "atmo-node-1",
+      type: "atmosphere",
+      position: { x: 200, y: 600 },
+      data: {
+        title: "雾夜镜湖",
+        timeLabel: "DAY1 夜晚",
+        mood: "迷离、紧张",
+        lighting: "低能见度自然光",
+        music: "低频环境噪音 + 远处水声",
+        weather: "湖边突然起雾，能见度不足3米，疑似有人趁机出入现场。",
+        notes: ""
+      }
+    },
+    {
+      id: "atmo-node-2",
+      type: "atmosphere",
+      position: { x: 500, y: 630 },
+      data: {
+        title: "心理室咔哒声",
+        timeLabel: "DAY2 上午",
+        mood: "压抑、不安",
+        lighting: "昏暗灯光",
+        music: "催眠装置的机械节拍声",
+        weather: "催眠治疗过程中不断重复的咔哒声让人产生幻觉。",
+        notes: ""
+      }
+    },
+    {
+      id: "atmo-node-3",
+      type: "atmosphere",
+      position: { x: 800, y: 600 },
+      data: {
+        title: "湖中倒影",
+        timeLabel: "DAY2 傍晚",
+        mood: "诡异、压抑",
+        lighting: "水面反光，阳光破碎",
+        music: "无声静谧",
+        weather: "湖面出现与死者长相相似的倒影，引起惊恐。",
+        notes: ""
+      }
+    },
+    {
+      id: "atmo-node-4",
+      type: "atmosphere",
+      position: { x: 1100, y: 660 },
+      data: {
+        title: "黑猫惊影",
+        timeLabel: "DAY3 凌晨",
+        mood: "惊悚、诡异",
+        lighting: "手电照明中突现黑影",
+        music: "突发猫叫 + 镜头抖动",
+        weather: "柳念之称案发夜看到黑猫窜入镜湖小路，引发集体恐慌。",
+        notes: ""
+      }
+    },
+    {
+      id: "atmo-node-5",
+      type: "atmosphere",
+      position: { x: 1350, y: 610 },
+      data: {
+        title: "时钟停摆",
+        timeLabel: "DAY2 晚上 02:47",
+        mood: "凝固、超现实",
+        lighting: "时钟盘反射窗外月光",
+        music: "秒针卡顿声+静音",
+        weather: "案发小屋时钟指针永远停留在凌晨 2:47。",
+        notes: ""
+      }
+    }
+  ]);
 
-  // 使用computed属性从canvasStore获取氛围相关边
-  const edges = computed(() => {
-    return canvasStore.edges.filter(edge => {
-      // 获取与氛围节点相关的边
-      const sourceNode = canvasStore.nodes.find(n => n.id === edge.source)
-      const targetNode = canvasStore.nodes.find(n => n.id === edge.target)
-      return sourceNode?.type === 'atmosphere' || targetNode?.type === 'atmosphere'
-    })
-  })
-
-  // 所有节点和边的引用（用于画布显示）
-  const allNodes = computed(() => canvasStore.nodes)
-  const allEdges = computed(() => canvasStore.edges)
+  // 独立的氛围边数据
+  const edges = reactive([
+    {
+      id: "atmo-link-atmo-node-1-plot-node-1",
+      source: "atmo-node-1",
+      target: "plot-node-1",
+      type: "atmosphere-influence",
+      data: {
+        type: "atmosphere-influence",
+        label: "氛围影响",
+        style: "dashed",
+        color: "#ff6b6b"
+      }
+    },
+    {
+      id: "atmo-link-atmo-node-2-plot-node-4",
+      source: "atmo-node-2",
+      target: "plot-node-4",
+      type: "atmosphere-influence",
+      data: {
+        type: "atmosphere-influence",
+        label: "氛围影响",
+        style: "dashed",
+        color: "#ff6b6b"
+      }
+    },
+    {
+      id: "atmo-link-atmo-node-3-plot-node-3",
+      source: "atmo-node-3",
+      target: "plot-node-3",
+      type: "atmosphere-influence",
+      data: {
+        type: "atmosphere-influence",
+        label: "氛围影响",
+        style: "dashed",
+        color: "#ff6b6b"
+      }
+    },
+    {
+      id: "atmo-link-atmo-node-4-plot-node-6",
+      source: "atmo-node-4",
+      target: "plot-node-6",
+      type: "atmosphere-influence",
+      data: {
+        type: "atmosphere-influence",
+        label: "氛围影响",
+        style: "dashed",
+        color: "#ff6b6b"
+      }
+    },
+    {
+      id: "atmo-link-atmo-node-5-plot-node-5",
+      source: "atmo-node-5",
+      target: "plot-node-5",
+      type: "atmosphere-influence",
+      data: {
+        type: "atmosphere-influence",
+        label: "氛围影响",
+        style: "dashed",
+        color: "#ff6b6b"
+      }
+    }
+  ]);
 
   // 当前选择结点
   const selectedNode = ref(null);
@@ -105,8 +220,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       }
     }
 
-    canvasStore.nodes.push(newNode)
-
+    nodes.value.push(newNode)
 
     // 广播更新
     broadcast()
@@ -165,7 +279,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       id: `atmo-link-${atmosphereNode.id}-${sceneNode.id}-${Date.now()}`,
       source: atmosphereNode.id,
       target: sceneNode.id,
-      type: 'custom', // 使用现有的 custom 边类型
+      type: 'atmosphere-influence',
       data: {
         type: 'atmosphere-influence',
         label: `氛围影响`,
@@ -174,7 +288,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       }
     }
 
-    canvasStore.edges.push(newEdge)
+    edges.push(newEdge)
     console.log('[DEBUG] 创建氛围关联:', newEdge)
     console.log(`氛围节点 "${atmosphereNode.data.title}" 关联到场景节点 "${sceneNode.data.title}"`)
 
@@ -195,18 +309,18 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
     // 如果当前有选中节点，才尝试查找并更新
     if (selectedNode.value) {
-      index = canvasStore.nodes.findIndex(n => n.id === updatedData.id);
+      index = nodes.value.findIndex(n => n.id === updatedData.id);
 
       if (index !== -1) {
-        canvasStore.nodes[index].data = {
-          ...canvasStore.nodes[index].data,
+        nodes.value[index].data = {
+          ...nodes.value[index].data,
           ...updatedData.data,
         };
 
         // ✅ 强制触发响应式更新
-        canvasStore.nodes[index] = { ...canvasStore.nodes[index] };
+        nodes.value[index] = { ...nodes.value[index] };
 
-        console.log('更新后的氛围节点数据：', canvasStore.nodes[index]);
+        console.log('更新后的氛围节点数据：', nodes.value[index]);
       } else {
         console.warn('未找到对应的节点 ID:', updatedData.id);
         return -1;
@@ -219,7 +333,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     // 最后收起面板
     selectedNode.value = null;
 
-    console.log("[DEBUG] 当前节点列表：", JSON.stringify(canvasStore.nodes, null, 2));
+    console.log("[DEBUG] 当前节点列表：", JSON.stringify(nodes.value, null, 2));
     console.log("索引：", index);
 
     // 广播更新
@@ -229,18 +343,18 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 结点的删除
   const handleDeleteNode = (nodeId) => {
-    const index = canvasStore.nodes.findIndex(n => n.id === nodeId)
+    const index = nodes.value.findIndex(n => n.id === nodeId)
     if (index !== -1) {
-      canvasStore.nodes.splice(index, 1)
+      nodes.value.splice(index, 1)
 
       if (selectedNode.value?.id === nodeId) {
         selectedNode.value = null
       }
 
       // 删除相关的边
-      for (let i = canvasStore.edges.length - 1; i >= 0; i--) {
-        if (canvasStore.edges[i].source === nodeId || canvasStore.edges[i].target === nodeId) {
-          canvasStore.edges.splice(i, 1)
+      for (let i = edges.length - 1; i >= 0; i--) {
+        if (edges[i].source === nodeId || edges[i].target === nodeId) {
+          edges.splice(i, 1)
         }
       }
     }
@@ -252,12 +366,15 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
   const handlePositionChange = (payload) => {
     if (!payload?.id || !payload?.position) return
 
-    const index = canvasStore.nodes.findIndex(n => n.id === payload.id)
+    const index = nodes.value.findIndex(n => n.id === payload.id)
     if (index !== -1) {
-      canvasStore.nodes[index].position = {
+      nodes.value[index].position = {
         x: payload.position.x,
         y: payload.position.y
       }
+      
+      // ✅ 强制触发响应式更新
+      nodes.value[index] = { ...nodes.value[index] }
 
       // 广播更新
       broadcast()
@@ -266,7 +383,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 边连接完成事件
   const handleConnectNode = (newEdge) => {
-    canvasStore.edges.push(newEdge)
+    edges.push(newEdge)
     console.log('[DEBUG] 新增边：', newEdge)
 
     // 广播更新
@@ -276,14 +393,14 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
   // 边确认
   const handleEdgeConfirm = (edgeData) => {
     if (selectedNodesForEdge.value.length === 2) {
-      const newEdge = {
+      const newEdge = reactive({
         id: `edge-${selectedNodesForEdge.value[0].id}-${selectedNodesForEdge.value[1].id}-${Date.now()}`,
         source: selectedNodesForEdge.value[0].id,
         target: selectedNodesForEdge.value[1].id,
-        type: 'custom',
-        data: edgeData
-      }
-      canvasStore.edges.push(newEdge)
+        type: 'atmosphere-influence',
+        data: reactive(edgeData)
+      })
+      edges.push(newEdge)
       console.log('[DEBUG] 新增边：', newEdge)
     }
 
@@ -307,13 +424,13 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
   // 边编辑确认
   const handleEdgeEditConfirm = (edgeData) => {
     if (editingEdgeId.value) {
-      const edgeIndex = canvasStore.edges.findIndex(e => e.id === editingEdgeId.value)
+      const edgeIndex = edges.findIndex(e => e.id === editingEdgeId.value)
       if (edgeIndex !== -1) {
-        canvasStore.edges[edgeIndex].data = {
-          ...canvasStore.edges[edgeIndex].data,
+        edges[edgeIndex].data = {
+          ...edges[edgeIndex].data,
           ...edgeData
         }
-        console.log('[DEBUG] 更新边：', canvasStore.edges[edgeIndex])
+        console.log('[DEBUG] 更新边：', edges[edgeIndex])
       }
     }
 
@@ -328,9 +445,9 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
   // 删除边
   const handleDeleteEdge = () => {
     if (editingEdgeId.value) {
-      const edgeIndex = canvasStore.edges.findIndex(e => e.id === editingEdgeId.value)
+      const edgeIndex = edges.findIndex(e => e.id === editingEdgeId.value)
       if (edgeIndex !== -1) {
-        canvasStore.edges.splice(edgeIndex, 1)
+        edges.splice(edgeIndex, 1)
         console.log('[DEBUG] 删除边：', editingEdgeId.value)
       }
     }
@@ -350,12 +467,12 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
         JSON.stringify({
           type: "atmosphere",
           atmosphereNodes: nodes.value,
-          atmosphereEdges: edges.value,
+          atmosphereEdges: edges,
         })
       );
       console.log("广播的氛围节点信息：", {
         atmosphereNodes: nodes.value,
-        atmosphereEdges: edges.value,
+        atmosphereEdges: edges,
       });
     }
   },300);
@@ -364,8 +481,6 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     // 数据
     nodes,
     edges,
-    allNodes,
-    allEdges,
     selectedNode,
     editingEdgeId,
     isCreatingEdge,

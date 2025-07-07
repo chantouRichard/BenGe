@@ -82,6 +82,7 @@ const collectAllNodes = () => {
   const canvasStore = useCanvasStore()
   const characterStore = useCharacterStore()
   const clueStore = useClueStore()
+  const atmosphereStore = useAtmosphereStore()
   
   const nodesByType = {
     scene: [],
@@ -92,7 +93,7 @@ const collectAllNodes = () => {
     atmosphere: []
   }
   
-  // 收集画布节点（场景、氛围等）
+  // 收集画布节点（场景节点）
   if (canvasStore.nodes) {
     canvasStore.nodes.forEach(node => {
       const nodeData = {
@@ -104,18 +105,10 @@ const collectAllNodes = () => {
         data: { ...node.data }
       }
       
-      switch(node.type) {
-        case NODE_TYPES.SCENE:
-          nodesByType.scene.push(nodeData)
-          break
-        case NODE_TYPES.ATMOSPHERE:
-          nodesByType.atmosphere.push(nodeData)
-          break
-        default:
-          // 其他类型也添加到对应分类
-          if (nodesByType[node.type]) {
-            nodesByType[node.type].push(nodeData)
-          }
+      if (node.type === NODE_TYPES.SCENE) {
+        nodesByType.scene.push(nodeData)
+      } else if (nodesByType[node.type]) {
+        nodesByType[node.type].push(nodeData)
       }
     })
   }
@@ -163,6 +156,20 @@ const collectAllNodes = () => {
     })
   }
   
+  // 收集氛围节点
+  if (atmosphereStore.nodes) {
+    atmosphereStore.nodes.forEach(node => {
+      nodesByType.atmosphere.push({
+        id: node.id,
+        type: node.type,
+        position: node.position,
+        title: node.data?.title || '未命名氛围',
+        summary: getNodeSummary(node),
+        data: { ...node.data }
+      })
+    })
+  }
+  
   return nodesByType
 }
 
@@ -174,6 +181,7 @@ const collectAllEdges = () => {
   const canvasStore = useCanvasStore()
   const characterStore = useCharacterStore()
   const clueStore = useClueStore()
+  const atmosphereStore = useAtmosphereStore()
   
   const edgesByType = {
     scene: [],
@@ -182,15 +190,28 @@ const collectAllEdges = () => {
     atmosphere: []
   }
   
-  // 收集画布边
+  // 收集画布边（场景边）
   if (canvasStore.edges) {
     canvasStore.edges.forEach(edge => {
-      // 根据连接的节点类型判断边的分类
-      const sourceNode = canvasStore.nodes?.find(n => n.id === edge.source)
-      const targetNode = canvasStore.nodes?.find(n => n.id === edge.target)
-
+      const edgeData = {
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        type: edge.type,
+        relationship: edge.data?.relationship || edge.data?.label || '连接',
+        description: edge.data?.description || '',
+        data: { ...edge.data }
+      }
+      
+      edgesByType.scene.push(edgeData)
+    })
+  }
+  
+  // 收集角色关系边
+  if (characterStore.edges) {
+    characterStore.edges.forEach(edge => {
       // 为角色-场景关系生成更清晰的relationship描述
-      let relationship = edge.data?.relationship || edge.data?.label || '连接'
+      let relationship = edge.data?.relationship || edge.data?.label || '关系'
       if (edge.type === 'character-scene' && edge.data?.participationType) {
         const typeMap = {
           'protagonist': '主角参与',
@@ -204,34 +225,13 @@ const collectAllEdges = () => {
         }
         relationship = typeMap[edge.data.participationType] || '参与'
       }
-
-      const edgeData = {
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        type: edge.type,
-        relationship: relationship,
-        description: edge.data?.description || '',
-        data: { ...edge.data }
-      }
-
-      if (sourceNode?.type === NODE_TYPES.ATMOSPHERE || targetNode?.type === NODE_TYPES.ATMOSPHERE) {
-        edgesByType.atmosphere.push(edgeData)
-      } else {
-        edgesByType.scene.push(edgeData)
-      }
-    })
-  }
-  
-  // 收集角色关系边
-  if (characterStore.edges) {
-    characterStore.edges.forEach(edge => {
+      
       edgesByType.character.push({
         id: edge.id,
         source: edge.source,
         target: edge.target,
         type: edge.type,
-        relationship: edge.data?.relationship || '关系',
+        relationship: relationship,
         description: edge.data?.description || '',
         strength: edge.data?.strength || '',
         data: { ...edge.data }
@@ -248,6 +248,21 @@ const collectAllEdges = () => {
         target: edge.target,
         type: edge.type,
         relationship: edge.data?.relationship || edge.data?.label || '关联',
+        description: edge.data?.description || '',
+        data: { ...edge.data }
+      })
+    })
+  }
+  
+  // 收集氛围边
+  if (atmosphereStore.edges) {
+    atmosphereStore.edges.forEach(edge => {
+      edgesByType.atmosphere.push({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        type: edge.type,
+        relationship: edge.data?.relationship || edge.data?.label || '氛围影响',
         description: edge.data?.description || '',
         data: { ...edge.data }
       })
