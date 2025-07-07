@@ -30,5 +30,5 @@ public interface RoomMapper {
 
     List<RoomDto> getUserOwnedRooms(@Param("userId") int userId);
 
-    boolean checkIfOwner(@Param("roomId") Integer roomId, @Param("userId") Integer userId);
+    Boolean checkIfOwner(@Param("roomId") Integer roomId, @Param("userId") Integer userId);
 }

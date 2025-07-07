@@ -232,7 +232,6 @@ public class ScriptController {
 
     /**
      * 获取当前用户ID
-     * 参考C#实现: User.FindFirst(ClaimTypes.NameIdentifier)?.Value
      */
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
