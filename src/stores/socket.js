@@ -128,7 +128,7 @@ async function setupWebSocket() {
   // socketState.socket = new WebSocket("ws://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws");
 
   socketState.socket = new WebSocket(
-    "wss://just-croatia-misc-intake.trycloudflare.com/ws"
+    "wss://municipal-donors-expert-class.trycloudflare.com/ws"
   );
 
   let pingInterval = null;
