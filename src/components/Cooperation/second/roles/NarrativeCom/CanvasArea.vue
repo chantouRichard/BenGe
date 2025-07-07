@@ -130,6 +130,8 @@
 
 <script setup>
 import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { CanvasExporter } from '@/utils/exportUtils'
+import { UltimateVueFlowExporter } from '@/utils/ultimateVueFlowExporter'
 import { defineProps, defineEmits, defineExpose, markRaw } from 'vue'
 import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
@@ -143,9 +145,13 @@ import AtmosphereNode from '../AtmosphereCom/AtmosphereNode.vue'
 import CharacterSceneEdge from '../CharacterCom/CharacterSceneEdge.vue'
 
 import html2canvas from 'html2canvas';
+import { ref, computed } from 'vue'
+
 const vueFlowRef = ref(null);
+
+// 导出画板为PNG（原有功能）
 function exportCanvas() {
-  const el = document.querySelector('.vue-flow'); // 这个比 viewport 更安全
+  const el = document.querySelector('.vue-flow');
   if (!el) {
     console.warn('画布容器未找到');
     return;
@@ -154,7 +160,7 @@ function exportCanvas() {
   html2canvas(el, {
     useCORS: true,
     scale: 2,
-    backgroundColor: null, // 可透明背景
+    backgroundColor: null,
     logging: true,
   }).then(canvas => {
     const imgData = canvas.toDataURL('image/png');
@@ -165,6 +171,94 @@ function exportCanvas() {
   }).catch(err => {
     console.error('截图失败：', err);
   });
+}
+
+// 导出画板为指定格式（新增功能）
+function exportCanvasAs(format) {
+  console.log(`导出格式: ${format}`);
+
+  // 获取完整的画板数据
+  const canvasData = {
+    nodes: props.nodes,
+    edges: props.edges,
+    exportTime: new Date().toISOString(),
+    viewport: {
+      x: 0,
+      y: 0,
+      zoom: 1
+    }
+  };
+
+  const filename = `canvas-${Date.now()}`;
+
+  switch (format) {
+    case 'png':
+      // 使用终极导出工具
+      UltimateVueFlowExporter.exportAsPNG(filename);
+      break;
+    case 'jpg':
+      // 使用终极导出工具
+      UltimateVueFlowExporter.exportAsJPG(filename);
+      break;
+    case 'json':
+      CanvasExporter.exportAsJSON(canvasData, filename);
+      break;
+    case 'pdf':
+      // PDF 导出也使用改进的逻辑
+      exportAsPDF(canvasData, filename);
+      break;
+    case 'markdown':
+      CanvasExporter.exportAsMarkdown(canvasData, filename);
+      break;
+    default:
+      console.warn('不支持的导出格式:', format);
+  }
+}
+
+// 改进的 PDF 导出
+async function exportAsPDF(canvasData, filename) {
+  try {
+    // 使用终极导出工具获取高质量的画板截图
+    const imageResult = await UltimateVueFlowExporter.exportVueFlowWithBackground('png', 'temp');
+    
+    if (imageResult.success) {
+      // 使用获取到的图片数据创建 PDF
+      const { jsPDF } = await import('jspdf');
+      
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // 添加画板图片
+      const imgWidth = 280;
+      const imgHeight = 200;
+      pdf.addImage(imageResult.data, 'PNG', 10, 10, imgWidth, imgHeight);
+      
+      // 添加数据页面
+      pdf.addPage();
+      pdf.setFontSize(16);
+      pdf.text('画板数据统计', 10, 20);
+      
+      // 统计节点数量
+      const nodeStats = CanvasExporter.getNodeStatistics(canvasData);
+      let yPos = 40;
+      
+      pdf.setFontSize(12);
+      for (const [type, count] of Object.entries(nodeStats)) {
+        pdf.text(`${type}: ${count}个`, 10, yPos);
+        yPos += 10;
+      }
+      
+      // 保存PDF
+      pdf.save(`${filename}.pdf`);
+    } else {
+      console.error('PDF导出失败：无法获取画板截图');
+    }
+  } catch (error) {
+    console.error('PDF导出失败:', error);
+  }
 }
 
 
@@ -197,7 +291,6 @@ const props = defineProps({
 // }, { deep: true })
 
 const emit = defineEmits(['node-select', "edge-select" , 'delete-node' , 'node-position-change', "connect-node"])
-import { ref, computed } from 'vue'
 
 const zoom = ref(1)
 const backgroundX = ref(0)
@@ -282,7 +375,8 @@ const forceUpdateEdge = (id, newData) => {
 defineExpose({
   forceUpdateNode,
   forceUpdateEdge,
-  exportCanvas
+  exportCanvas,
+  exportCanvasAs
 })
 
 // 边连接完成事件（拖动新边）

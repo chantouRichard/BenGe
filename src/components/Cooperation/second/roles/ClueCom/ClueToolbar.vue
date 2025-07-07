@@ -90,8 +90,8 @@ const buttons = ref([
   },
   {
     icon: require("@/assets/icons/export.svg"),
-    action: "export-clues",
-    tooltip: "导出线索表",
+    action: "export-canvas",
+    tooltip: "导出画板",
     color: "rgba(100, 220, 180, 0.7)",
     hover: false,
   },
@@ -232,7 +232,7 @@ defineEmits([
   'add-relationship',
   'add-person',
   'clue-template',
-  'export-clues',
+  'export-canvas',
   'ai-generate',
   'ai-integrate'
 ]);
