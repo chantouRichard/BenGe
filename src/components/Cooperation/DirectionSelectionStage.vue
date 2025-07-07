@@ -6,6 +6,9 @@
       <div class="left-panel">
         <div class="left-panel-header">
           <div style="font-size: 24px; font-weight: bold;margin-left: 50px;">BenGe.Vision</div>
+          <button class="next-btn" @click="$emit('updateStage', 1)">
+            下一阶段
+          </button>
         </div>
         <DirectionSelect
           v-if="!showVoteStage"

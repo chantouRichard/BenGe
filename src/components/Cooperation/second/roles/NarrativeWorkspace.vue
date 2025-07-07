@@ -373,16 +373,16 @@ const handleDeleteNode = (id) => {
 
 const handleNodeClick = (data) => {
   // 根据用户角色直接分发到对应的store
-  if (socketState.userRole === 0) {
+  if (data.node.type === "custom") {
     // 叙事设计师
     canvasStore.handleNodeClick(data);
-  } else if (socketState.userRole === 1) {
+  } else if (data.node.type === "character") {
     // 角色设计师
     characterStore.handleNodeClick(data);
-  } else if (socketState.userRole === 2) {
+  } else if (data.node.type === "clue") {
     // 线索设计师
     clueStore.handleNodeClick(data);
-  } else if (socketState.userRole === 3) {
+  } else if (data.node.type === "atmosphere") {
     // 氛围设计师
     atmosphereStore.handleNodeClick(data);
   }

@@ -128,8 +128,10 @@ async function setupWebSocket() {
   // socketState.socket = new WebSocket("ws://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws");
 
   socketState.socket = new WebSocket(
-    "ws://localhost:7122/ws"
+    "wss://just-croatia-misc-intake.trycloudflare.com/ws"
   );
+
+  let pingInterval = null;
 
   socketState.socket.onopen = () => {
     if (socketState.socket.readyState === WebSocket.OPEN) {
@@ -148,6 +150,17 @@ async function setupWebSocket() {
         socketState.socket.readyState
       );
     }
+
+    // 启动心跳机制（每 20 秒发一个 ping）
+    pingInterval = setInterval(() => {
+      if (
+        socketState.socket &&
+        socketState.socket.readyState === WebSocket.OPEN
+      ) {
+        socketState.socket.send(JSON.stringify({ type: "ping" }));
+        // 可选：console.log("发送 ping 心跳");
+      }
+    }, 20000);
   };
 
   socketState.socket.onmessage = (event) => {
@@ -211,11 +224,19 @@ async function setupWebSocket() {
   socketState.socket.onclose = () => {
     console.log("WebSocket 连接已关闭");
     socketState.isConnected = false;
+    if (pingInterval) clearInterval(pingInterval);
+
+    // 自动尝试重连
+    setTimeout(() => {
+      console.log("尝试重连 WebSocket...");
+      setupWebSocket();
+    }, 5000); // 可配置：5 秒后重连
   };
 
   socketState.socket.onerror = (err) => {
     console.error("WebSocket 连接错误:", err);
     socketState.isConnected = false;
+    if (pingInterval) clearInterval(pingInterval);
   };
 }
 
@@ -309,17 +330,17 @@ function handleCanvas(msg) {
     const existingEdges = canvasStore.edges || [];
 
     // 移除现有的叙事设计师边（type为'custom'且不是线索相关的边）
-    const filteredEdges = existingEdges.filter(edge => {
+    const filteredEdges = existingEdges.filter((edge) => {
       // 保留人物设计师的边（character-scene, relationship）
-      if (edge.type === 'character-scene' || edge.type === 'relationship') {
+      if (edge.type === "character-scene" || edge.type === "relationship") {
         return true;
       }
       // 保留线索设计师的边（custom类型但data.type包含clue相关）
-      if (edge.type === 'custom' && edge.data?.type?.includes('clue')) {
+      if (edge.type === "custom" && edge.data?.type?.includes("clue")) {
         return true;
       }
       // 保留氛围设计师的边
-      if (edge.data?.type === 'atmosphere-scene') {
+      if (edge.data?.type === "atmosphere-scene") {
         return true;
       }
       // 移除叙事设计师的边
@@ -328,7 +349,6 @@ function handleCanvas(msg) {
 
     // 合并边数组
     canvasStore.edges = [...filteredEdges, ...incomingEdges];
-
   } else if (msg.type == "character") {
     // 更新人物设计师的节点和边
     characterStore.nodes = msg.characterNodes || [];
@@ -339,13 +359,12 @@ function handleCanvas(msg) {
     const existingCanvasEdges = canvasStore.edges || [];
 
     // 移除现有的人物设计师边
-    const filteredCanvasEdges = existingCanvasEdges.filter(edge =>
-      edge.type !== 'character-scene' && edge.type !== 'relationship'
+    const filteredCanvasEdges = existingCanvasEdges.filter(
+      (edge) => edge.type !== "character-scene" && edge.type !== "relationship"
     );
 
     // 合并边数组
     canvasStore.edges = [...filteredCanvasEdges, ...incomingCharacterEdges];
-
   } else if (msg.type == "clue") {
     // 更新线索设计师的节点
     clueStore.nodes = [
@@ -361,25 +380,29 @@ function handleCanvas(msg) {
     const existingCanvasEdges = canvasStore.edges || [];
 
     // 移除现有的线索设计师边
-    const filteredCanvasEdges = existingCanvasEdges.filter(edge => {
+    const filteredCanvasEdges = existingCanvasEdges.filter((edge) => {
       // 保留非线索相关的边
-      return !(edge.type === 'clue-edge' || (edge.type === 'custom' && edge.data?.type?.includes('clue')));
+      return !(
+        edge.type === "clue-edge" ||
+        (edge.type === "custom" && edge.data?.type?.includes("clue"))
+      );
     });
 
     // 合并边数组
     canvasStore.edges = [...filteredCanvasEdges, ...incomingClueEdges];
-
   } else if (msg.type == "atmosphere") {
     // 氛围节点需要更新到canvasStore，因为atmosphere.js使用computed从canvasStore获取数据
     const atmosphereNodes = msg.atmosphereNodes || [];
     const atmosphereEdges = msg.atmosphereEdges || [];
 
     // 移除现有的氛围节点
-    canvasStore.nodes = canvasStore.nodes.filter(node => node.type !== 'atmosphere');
+    canvasStore.nodes = canvasStore.nodes.filter(
+      (node) => node.type !== "atmosphere"
+    );
 
     // 移除现有的氛围边
-    canvasStore.edges = canvasStore.edges.filter(edge => {
-      return edge.data?.type !== 'atmosphere-scene';
+    canvasStore.edges = canvasStore.edges.filter((edge) => {
+      return edge.data?.type !== "atmosphere-scene";
     });
 
     // 添加新的氛围节点和边
