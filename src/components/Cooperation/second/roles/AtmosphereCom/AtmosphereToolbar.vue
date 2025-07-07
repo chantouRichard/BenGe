@@ -81,8 +81,8 @@ const buttons = ref([
   },
   {
     icon: require("@/assets/icons/export.svg"),
-    action: "export-atmo",
-    tooltip: "导出氛围表",
+    action: "export-canvas",
+    tooltip: "导出画板",
     color: "rgba(144, 238, 144, 0.7)",
     hover: false,
   },
@@ -241,7 +241,7 @@ defineEmits([
   'add-node',
   'atmo-palette',
   'link-scene',
-  'export-atmo',
+  'export-canvas',
   'ai-generate',
   'ai-integrate'
 ]);

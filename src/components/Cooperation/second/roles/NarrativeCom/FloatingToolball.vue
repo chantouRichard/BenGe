@@ -73,16 +73,9 @@ const buttons = ref([
   },
   {
     icon: require("@/assets/icons/export.svg"),
-    action: "export-md",
-    tooltip: "导出Markdown",
+    action: "export-canvas",
+    tooltip: "导出画布",
     color: "rgba(255, 140, 200, 0.7)",
-    hover: false,
-  },
-  {
-    icon: require("@/assets/icons/export-PDF.svg"),
-    action: "export-pdf",
-    tooltip: "导出PDF",
-    color: "rgba(100, 220, 180, 0.7)",
     hover: false,
   },
   {
@@ -234,8 +227,7 @@ const startDrag = (e) => {
 defineEmits([
   "add-node",
   "add-edge",
-  "export-md",
-  "export-pdf",
+  "export-canvas",
   "ai-generate",
   "ai-integrate",
 ]);

@@ -5,7 +5,7 @@
         v-if="socketState.userRole == 0"
         @add-node="canvasStore.handleAddNode"
         @add-edge="canvasStore.handleCreateEdgeClick"
-        @export="handleExport"
+        @export-canvas="handleExportAs"
         @ai-generate="handleAiGenerate"
         @ai-integrate="handleAiIntegrate"
     />
@@ -13,7 +13,7 @@
         v-if="socketState.userRole == 1"
         @add-character="characterStore.handleAddNode"
         @add-relationship="characterStore.handleCreateEdgeClick"
-        @export-characters="handleExport"
+        @export-canvas="handleExportAs"
         @ai-generate="handleCharacterAiGenerate"
         @ai-integrate="handleAiIntegrate"
     />
@@ -23,7 +23,7 @@
         @add-inference="clueStore.handleAddInferenceNode"
         @add-person="clueStore.handleAddPersonNode"
         @add-relationship="clueStore.handleCreateEdgeClick"
-        @export-clues="handleExport"
+        @export-canvas="handleExportAs"
         @ai-generate="handleClueAiGenerate"
         @ai-integrate="handleAiIntegrate"
     />
@@ -32,7 +32,7 @@
         @add-node="atmosphereStore.handleAddNode"
         @atmo-palette="handleAtmospherePalette"
         @link-scene="handleLinkScene"
-        @export-atmo="handleExport"
+        @export-canvas="handleExportAs"
         @ai-generate="handleAtmosphereAiGenerate"
         @ai-integrate="handleAiIntegrate"
     />
@@ -309,6 +309,59 @@ const handleExport = () => {
   } else {
     console.warn('canvasRef or export method not found');
   }
+};
+
+// 导出为指定格式（显示选择菜单）
+const handleExportAs = () => {
+  // 创建格式选择弹窗
+  const formats = [
+    { key: 'png', label: 'PNG图片', desc: '高清画板截图' },
+    { key: 'jpg', label: 'JPG图片', desc: '压缩画板截图' },
+    { key: 'json', label: 'JSON数据', desc: '结构化数据文件' },
+    { key: 'pdf', label: 'PDF文档', desc: '包含图片和数据的文档' },
+    { key: 'markdown', label: 'Markdown文档', desc: '文本格式的内容清单' }
+  ];
+
+  // 使用Element Plus的消息选择器
+  import('element-plus').then(({ ElMessageBox }) => {
+    const formatOptions = formats.map(f => 
+      `<label style="display: block; margin: 8px 0; cursor: pointer;">
+        <input type="radio" name="exportFormat" value="${f.key}" style="margin-right: 8px;">
+        <strong>${f.label}</strong> - ${f.desc}
+      </label>`
+    ).join('');
+
+    ElMessageBox.confirm(
+      `<div style="text-align: left;">
+        <p style="margin-bottom: 16px;">选择导出格式:</p>
+        ${formatOptions}
+      </div>`,
+      '导出画板',
+      {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '导出',
+        cancelButtonText: '取消',
+        beforeClose: (action, instance, done) => {
+          if (action === 'confirm') {
+            const selectedFormat = document.querySelector('input[name="exportFormat"]:checked')?.value;
+            if (selectedFormat) {
+              if (canvasRef.value && canvasRef.value?.exportCanvasAs) {
+                canvasRef.value?.exportCanvasAs(selectedFormat);
+              }
+              done();
+            } else {
+              ElMessage.warning('请选择导出格式');
+              return false;
+            }
+          } else {
+            done();
+          }
+        }
+      }
+    ).catch(() => {
+      // 用户取消
+    });
+  });
 };
 
 // 直接使用 store 中的数据驱动画布

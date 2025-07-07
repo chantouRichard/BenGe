@@ -53,7 +53,7 @@
       </div>
     </div>
 
-    <div class="action-buttons">
+    <div class="action-buttons" v-show="!AIGenerate">
       <button class="confirm-btn" :disabled="!canConfirm" @click="confirmVote">
         {{ hasVoted ? "等待其他成员..." : "确认投票" }}
       </button>

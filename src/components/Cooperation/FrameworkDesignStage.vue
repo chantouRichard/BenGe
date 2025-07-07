@@ -1,13 +1,12 @@
 <template>
   <div class="container">
-    <portal-target name="node-detail-drawer" multiple />
-    <div class="header">
-      <div class="logo">BenGe Vision</div>
-      <div class="right-menu">
-        <div class="menu-item">我的剧本</div>
-        <div class="menu-item">帮助</div>
-        <img src="../../assets/login.png" alt="avatar" class="avatar" />
-      </div>
+    <div class="portal-container">
+      <portal-target name="node-detail-drawer" multiple />
+      <portal-target name="personal-detail-drawer" multiple />
+      <portal-target name="atmosphere-detail-panel" multiple />
+      <portal-target name="character-detail-panel" multiple />
+      <portal-target name="clue-detail-panel" multiple />
+      <portal-target name="inference-detail-panel" multiple />
     </div>
     <div v-if="stage == 0" class="main-area">
       <RoleSelector
@@ -137,6 +136,7 @@ function updateMembers(membersList) {
 
 import { watch } from "vue";
 import { userLoadingStore } from "@/stores/userLoadingStore";
+import {PortalTarget} from "portal-vue";
 const loadingStore = userLoadingStore();
 
 // 监听 CompleteScriptContent 的变化
@@ -177,7 +177,12 @@ watch(allMembersChosen, (newVal) => {
 
 <style scoped>
 /* 折叠面板 */
-
+.portal-container {
+  position: relative;
+  width: 0;
+  height: 0;
+  z-index: 3000; /* 确保足够高 */
+}
 /* 外部容器（包含按钮 + 面板） */
 /* 侧边栏容器（整体一起滑动） */
 .side-panel-container {
@@ -252,33 +257,6 @@ watch(allMembersChosen, (newVal) => {
   background-size: cover;
   background-repeat: no-repeat;
   overflow: hidden;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  height: 60px;
-  padding: 0 60px;
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.right-menu {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-  gap: 30px;
-}
-
-.menu-item {
-  cursor: pointer;
-  font-size: 16px;
-  color: #333;
 }
 
 .avatar {
