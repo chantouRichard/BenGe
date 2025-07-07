@@ -2,7 +2,13 @@
   <div class="choose-area">
     <div class="choose-header">
       <h1 class="select-role-title">请选择你的角色</h1>
-      <button class="button" style="margin-left: auto" @click="confirmSelection">
+      <button
+          class="button"
+          style="margin-left: auto"
+          @click="confirmSelection"
+
+      ><!--:disabled="!allRolesSelected"
+          :title="!allRolesSelected ? '请等待所有成员选择角色' : ''"-->
         选择完毕
       </button>
     </div>
@@ -60,7 +66,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue';
+import {ref, defineProps, defineEmits, computed, watch} from 'vue';
 import { socketState } from '@/stores/socket';
 import { ElMessage } from 'element-plus';
 
@@ -123,7 +129,32 @@ function emitRoleSelection(roleName) {
     username: socketState.currentUsername,
   });
 }
+/*
+const allPlayersSelected = computed(() => {
+  // 获取已选择的角色数量
+  const selectedCount = Object.values(socketState.roleSelections).filter(role => role !== "").length;
 
+  // 获取房间中的玩家总数（来自成员列表）
+  const totalPlayers = socketState.members.length;
+
+  // 确保有玩家存在
+  if (totalPlayers === 0) return false;
+
+  return selectedCount >= totalPlayers;
+});
+
+// 监听角色选择变化（用于调试）
+watch(() => socketState.roleSelections, (newSelections) => {
+  console.log("角色选择变化:", newSelections);
+  console.log("所有玩家是否已选择:", allPlayersSelected.value);
+}, { deep: true });
+
+// 监听成员变化（用于调试）
+watch(() => socketState.members, (newMembers) => {
+  console.log("成员变化:", newMembers.length);
+  console.log("所有玩家是否已选择:", allPlayersSelected.value);
+});
+*/
 // 确认角色选择
 function confirmSelection() {
   emit('confirm', selectedRole.value);
@@ -133,12 +164,39 @@ function confirmSelection() {
 
 <style scoped>
 .button {
-  background-color: white;
+  padding: 12px 30px;
+  background-color: #67c23a;
+  color: white;
   border: none;
-  padding: 8px 16px;
   border-radius: 4px;
+  font-size: 16px;
   cursor: pointer;
-  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+button[disabled] {
+  position: relative;
+}
+
+button[disabled]:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 100;
+  font-size: 14px;
 }
 
 .choose-area {

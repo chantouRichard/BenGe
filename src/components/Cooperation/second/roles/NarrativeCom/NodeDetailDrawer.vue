@@ -1,111 +1,114 @@
 <template>
-  <transition name="slide-fade">
-    <div 
-      v-if="visible"
-      class="detail-drawer"
-      @click.self="handleClose"
-    >
-      <div class="drawer-content">
-        <!-- 头部 -->
-        <div class="drawer-header">
-          <h3>{{ formData.title || '节点详情' }}</h3>
-          <n-button 
-            circle
-            size="small"
-            @click="handleClose"
+  <portal to="node-detail-drawer">
+    <transition name="slide-fade">
+      <div
+        v-if="visible"
+        class="detail-drawer"
+        @click.self="handleClose"
+      >
+        <div class="drawer-content">
+          <!-- 头部 -->
+          <div class="drawer-header">
+            <h3>{{ formData.title || '节点详情' }}</h3>
+            <n-button
+              circle
+              size="small"
+              @click="handleClose"
+            >
+              <n-icon><close-icon /></n-icon>
+            </n-button>
+          </div>
+
+          <!-- 表单主体 -->
+          <n-form
+            ref="formRef"
+            :model="formData"
+            label-placement="top"
           >
-            <n-icon><close-icon /></n-icon>
-          </n-button>
-        </div>
+            <!-- 节点标题 -->
+            <n-form-item label="节点标题" path="title">
+              <n-input
+                v-model:value="formData.title"
+                placeholder="输入节点标题"
+              />
+            </n-form-item>
 
-        <!-- 表单主体 -->
-        <n-form
-          ref="formRef"
-          :model="formData"
-          label-placement="top"
-        >
-          <!-- 节点标题 -->
-          <n-form-item label="节点标题" path="title">
-            <n-input
-              v-model:value="formData.title"
-              placeholder="输入节点标题"
-            />
-          </n-form-item>
+            <!-- 节点时间 -->
+            <n-form-item label="节点时间" path="timeLabel">
+              <n-input
+                v-model:value="formData.timeLabel"
+                placeholder="例：DAY1 09:00"
+              />
+            </n-form-item>
 
-          <!-- 节点时间 -->
-          <n-form-item label="节点时间" path="timeLabel">
-            <n-input
-              v-model:value="formData.timeLabel"
-              placeholder="例：DAY1 09:00"
-            />
-          </n-form-item>
+            <!-- 涉及人物 -->
+            <n-form-item label="涉及人物" path="characters">
+              <n-input
+                v-model:value="formData.characters"
+                placeholder="输入涉及的人物"
+              />
+            </n-form-item>
 
-          <!-- 涉及人物 -->
-          <n-form-item label="涉及人物" path="characters">
-            <n-input
-              v-model:value="formData.characters"
-              placeholder="输入涉及的人物"
-            />
-          </n-form-item>
+            <!-- 涉及线索 -->
+            <n-form-item label="涉及线索" path="clues">
+              <n-input
+                v-model:value="formData.clues"
+                placeholder="输入涉及的线索"
+              />
+            </n-form-item>
 
-          <!-- 涉及线索 -->
-          <n-form-item label="涉及线索" path="clues">
-            <n-input
-              v-model:value="formData.clues"
-              placeholder="输入涉及的线索"
-            />
-          </n-form-item>
+            <!-- 场景描述 -->
+            <n-form-item label="场景描述" path="sceneDescription">
+              <n-input
+                v-model:value="formData.sceneDescription"
+                type="textarea"
+                placeholder="输入场景的大致描述..."
+                :autosize="{ minRows: 3 }"
+              />
+            </n-form-item>
 
-          <!-- 场景描述 -->
-          <n-form-item label="场景描述" path="sceneDescription">
-            <n-input
-              v-model:value="formData.sceneDescription"
-              type="textarea"
-              placeholder="输入场景的大致描述..."
-              :autosize="{ minRows: 3 }"
-            />
-          </n-form-item>
+            <!-- 其他节点联系 -->
+            <n-form-item label="其他节点联系" path="nodeConnections">
+              <n-input
+                v-model:value="formData.nodeConnections"
+                type="textarea"
+                placeholder="输入与其他节点的联系说明..."
+                :autosize="{ minRows: 3 }"
+              />
+            </n-form-item>
 
-          <!-- 其他节点联系 -->
-          <n-form-item label="其他节点联系" path="nodeConnections">
-            <n-input
-              v-model:value="formData.nodeConnections"
-              type="textarea"
-              placeholder="输入与其他节点的联系说明..."
-              :autosize="{ minRows: 3 }"
-            />
-          </n-form-item>
+            <!-- 后续注意点 -->
+            <n-form-item label="后续注意点" path="notes">
+              <n-input
+                v-model:value="formData.notes"
+                type="textarea"
+                placeholder="输入后续需要注意的事项..."
+                :autosize="{ minRows: 3 }"
+              />
+            </n-form-item>
+          </n-form>
 
-          <!-- 后续注意点 -->
-          <n-form-item label="后续注意点" path="notes">
-            <n-input
-              v-model:value="formData.notes"
-              type="textarea"
-              placeholder="输入后续需要注意的事项..."
-              :autosize="{ minRows: 3 }"
-            />
-          </n-form-item>
-        </n-form>
-
-        <!-- 操作按钮 -->
-        <div class="drawer-footer">
-          <n-button @click="handleClose">取消</n-button>
-          <n-button 
-            type="primary"
-            @click="handleSave"
-          >
-            保存
-          </n-button>
+          <!-- 操作按钮 -->
+          <div class="drawer-footer">
+            <n-button @click="handleClose">取消</n-button>
+            <n-button
+              type="primary"
+              @click="handleSave"
+            >
+              保存
+            </n-button>
+          </div>
         </div>
       </div>
-    </div>
-  </transition>
+    </transition>
+  </portal>
 </template>
 
 <script setup>
 import { ref, watch , defineEmits, defineProps } from 'vue';
 import { NForm, NFormItem, NInput, NButton, NIcon } from 'naive-ui';
 import { Close as CloseIcon } from '@vicons/ionicons5';
+import {Portal} from "portal-vue";
 
 const props = defineProps({
   visible: {
