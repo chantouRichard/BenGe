@@ -1,107 +1,107 @@
 <template>
   <div class="canvas-container">
     <VueFlow ref="vueFlowRef"
-      class="vue-flow"
-      :style="{
+             class="vue-flow"
+             :style="{
     backgroundSize: computedBackgroundSize,
     backgroundPosition: `${backgroundX}px ${backgroundY}px`
   }"
-      :nodes="props.nodes"
-      :edges="props.edges"
-      :node-types="nodeTypes"
-      :edge-types="edgeTypes"
-      :connectable="true"
-      :snap-to-grid="true"
-      :snap-grid="[15, 15]"
-      :fit-view="true"
-      @node-click="handleNodeClick"
-      @edge-click="handleEdgeClick"
-      @node-drag="handleNodeDrag"
-      @node-drag-stop="handleNodeDragStop"
-      @connect="handleConnect"
-      @edge-update="handleEdgeUpdate"
-      @move="handleMove"
-    
+             :nodes="props.nodes"
+             :edges="props.edges"
+             :node-types="nodeTypes"
+             :edge-types="edgeTypes"
+             :connectable="true"
+             :snap-to-grid="true"
+             :snap-grid="[15, 15]"
+             :fit-view="true"
+             @node-click="handleNodeClick"
+             @edge-click="handleEdgeClick"
+             @node-drag="handleNodeDrag"
+             @node-drag-stop="handleNodeDragStop"
+             @connect="handleConnect"
+             @edge-update="handleEdgeUpdate"
+             @move="handleMove"
+
     >
-    <!-- <Background 
-      variant="lines" 
-      gap="20" 
-      size="0.6" 
-      patternColor="#6e28e6" 
-      bgColor="#fafafa" 
-      width="100" 
-      height="100" 
-    /> -->
+      <!-- <Background
+        variant="lines"
+        gap="20"
+        size="0.6"
+        patternColor="#6e28e6"
+        bgColor="#fafafa"
+        width="100"
+        height="100"
+      /> -->
       <!-- 自定义结点 -->
       <template #node-custom="{ id, type, data, position }">
         <CustomNode
-          :key="id"
-          :id="id"
-          :type="type"
-          :data="data"
-          :position="position"
-          @delete="handleDeleteNode"
+            :key="id"
+            :id="id"
+            :type="type"
+            :data="data"
+            :position="position"
+            @delete="handleDeleteNode"
         />
       </template>
 
       <!-- 角色卡片节点 -->
       <template #node-character="{ id, type, data, position }">
         <CharacterCard
-          :key="id"
-          :id="id"
-          :type="type"
-          :data="data"
-          :position="position"
-          @delete="handleDeleteNode"
+            :key="id"
+            :id="id"
+            :type="type"
+            :data="data"
+            :position="position"
+            @delete="handleDeleteNode"
         />
       </template>
 
       <!-- 氛围节点 -->
       <template #node-atmosphere="{ id, type, data, position, selected }">
         <AtmosphereNode
-          :key="id"
-          :id="id"
-          :type="type"
-          :data="data"
-          :position="position"
-          :selected="selected"
-          @delete="handleDeleteNode"
+            :key="id"
+            :id="id"
+            :type="type"
+            :data="data"
+            :position="position"
+            :selected="selected"
+            @delete="handleDeleteNode"
         />
       </template>
 
       <!-- 线索节点 -->
       <template #node-clue="{ id, type, data, position }">
         <ClueNode
-          :key="id"
-          :id="id"
-          :type="type"
-          :data="data"
-          :position="position"
-          @delete="handleDeleteNode"
+            :key="id"
+            :id="id"
+            :type="type"
+            :data="data"
+            :position="position"
+            @delete="handleDeleteNode"
         />
       </template>
 
       <!-- 结论节点 -->
       <template #node-inference="{ id, type, data, position }">
         <InferenceNode
-          :key="id"
-          :id="id"
-          :type="type"
-          :data="data"
-          :position="position"
-          @delete="handleDeleteNode"
+            :key="id"
+            :id="id"
+            :type="type"
+            :data="data"
+            :position="position"
+            @delete="handleDeleteNode"
         />
       </template>
 
       <!-- 事件相关人物节点 -->
       <template #node-person="{ id, type, data, position }">
         <PersonNode
-          :key="id"
-          :id="id"
-          :type="type"
-          :data="data"
-          :position="position"
-          @delete="handleDeleteNode"
+            :key="id"
+            :id="id"
+            :type="type"
+            :data="data"
+            :position="position"
+            @delete="handleDeleteNode"
         />
       </template>
 
@@ -130,7 +130,7 @@
 
 <script setup>
 import { VueFlow, useVueFlow } from '@vue-flow/core'
-import { defineProps, defineEmits, defineExpose, markRaw } from 'vue'
+import {defineProps, defineEmits, defineExpose, markRaw, watch, onMounted} from 'vue'
 import CustomNode from './CustomNode.vue'
 import CustomEdge from './CustomEdge.vue'
 import CharacterCard from '../CharacterCom/CharacterCard.vue'
@@ -141,9 +141,23 @@ import InferenceNode from '../ClueCom/InferenceNode.vue'
 import PersonNode from '../ClueCom/PersonNode.vue'
 import AtmosphereNode from '../AtmosphereCom/AtmosphereNode.vue'
 import CharacterSceneEdge from '../CharacterCom/CharacterSceneEdge.vue'
-
+import { useSearchStore } from '@/stores/searchStore'
 import html2canvas from 'html2canvas';
-const vueFlowRef = ref(null);
+
+const vueFlowRef = ref(null)
+const searchStore = useSearchStore()
+
+const { getNodes, viewport, dimensions, setViewport, fitView } = useVueFlow()
+
+// 定义vueFlowApi
+const vueFlowApi = computed(() => ({
+  getNodes: () => getNodes.value, // 直接返回节点数组
+  viewport: () => viewport.value,
+  dimensions: () => dimensions.value,
+  setViewport,
+  fitView
+}))
+
 function exportCanvas() {
   const el = document.querySelector('.vue-flow'); // 这个比 viewport 更安全
   if (!el) {
@@ -167,7 +181,18 @@ function exportCanvas() {
   });
 }
 
+onMounted(() => {
+  searchStore.setVueFlowApi(vueFlowApi.value)
+  console.log('VueFlow API set with nodes:', getNodes.value)
+});
 
+// 监听聚焦节点变化
+watch(() => searchStore.focusedNodeId, async (newId) => {
+  if (newId) {
+    await searchStore.focusNode(newId);
+    searchStore.setFocusedNodeId(null);
+  }
+});
 
 const props = defineProps({
   nodes: {
@@ -282,7 +307,8 @@ const forceUpdateEdge = (id, newData) => {
 defineExpose({
   forceUpdateNode,
   forceUpdateEdge,
-  exportCanvas
+  exportCanvas,
+  vueFlowApi:vueFlowApi.value,
 })
 
 // 边连接完成事件（拖动新边）
