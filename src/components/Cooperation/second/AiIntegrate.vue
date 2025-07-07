@@ -1,6 +1,6 @@
 <template>
   <teleport to="body">
-    <div class="AiIntegrate-overlay" @click="handleOverlayClick">
+    <div class="AiIntegrate-overlay">
       <div
         v-if="showAI"
         class="AiIntegrate-panel"
@@ -71,8 +71,6 @@ onMounted(() => {
   AiIntegrate();
 });
 
-
-
 const handleOverlayClick = () => {
   emit("close");
 };
@@ -82,7 +80,7 @@ const emitContent = async () => {
   socketState.CompleteScriptContent = editorContent.value;
   console.log("点击确认：", socketState.CompleteScriptContent);
 
-  await enterThirdStage(socketState.roomId,socketState.CompleteScriptContent);
+  await enterThirdStage(socketState.roomId, socketState.CompleteScriptContent);
 };
 
 // 产生AI整合的内容
@@ -95,8 +93,10 @@ const AiIntegrate = async () => {
     contextData: JSON.stringify(contextData),
     roomId: socketState.roomId,
   };
-  const res = await generateCooperateFramework(data);
-  console.log("res:", res);
+  if (socketState.AICompleteScriptContent.length == 0) {
+    const res = await generateCooperateFramework(data);
+    console.log("res:", res);
+  }
   showAI.value = false;
 };
 </script>
