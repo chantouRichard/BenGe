@@ -1,6 +1,13 @@
 <template>
   <div class="container">
-    <portal-target name="node-detail-drawer" multiple />
+    <div class="portal-container">
+      <portal-target name="node-detail-drawer" multiple />
+      <portal-target name="personal-detail-drawer" multiple />
+      <portal-target name="atmosphere-detail-panel" multiple />
+      <portal-target name="character-detail-panel" multiple />
+      <portal-target name="clue-detail-panel" multiple />
+      <portal-target name="inference-detail-panel" multiple />
+    </div>
     <div v-if="stage == 0" class="main-area">
       <RoleSelector
           :roles="roles"
@@ -129,6 +136,7 @@ function updateMembers(membersList) {
 
 import { watch } from "vue";
 import { userLoadingStore } from "@/stores/userLoadingStore";
+import {PortalTarget} from "portal-vue";
 const loadingStore = userLoadingStore();
 
 // 监听 CompleteScriptContent 的变化
@@ -169,7 +177,12 @@ watch(allMembersChosen, (newVal) => {
 
 <style scoped>
 /* 折叠面板 */
-
+.portal-container {
+  position: relative;
+  width: 0;
+  height: 0;
+  z-index: 3000; /* 确保足够高 */
+}
 /* 外部容器（包含按钮 + 面板） */
 /* 侧边栏容器（整体一起滑动） */
 .side-panel-container {

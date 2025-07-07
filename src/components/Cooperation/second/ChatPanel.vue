@@ -44,7 +44,7 @@ const currentIcon = computed(() =>
   position: fixed;
   bottom: 80px;
   right: 80px;
-  z-index: 1000;
+  z-index: 2000;
   pointer-events: none; /* 保证只有子元素响应点击 */
 }
 

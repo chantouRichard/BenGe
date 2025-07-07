@@ -1,122 +1,125 @@
 <template>
-  <transition name="slide-fade">
-    <div 
-      v-if="visible"
-      class="detail-panel"
-      @click.self="handleClose"
-    >
-      <div class="panel-content">
-        <!-- 头部 -->
-        <div class="panel-header">
-          <h3>{{ formData.title || '氛围详情' }}</h3>
-          <n-button 
-            circle
-            size="small"
-            @click="handleClose"
-          >
-            <n-icon><close-icon /></n-icon>
-          </n-button>
-        </div>
+  <portal to="atmosphere-detail-panel">
+    <transition name="slide-fade">
+      <div
+        v-if="visible"
+        class="detail-panel"
+        @click.self="handleClose"
+      >
+        <div class="panel-content">
+          <!-- 头部 -->
+          <div class="panel-header">
+            <h3>{{ formData.title || '氛围详情' }}</h3>
+            <n-button
+              circle
+              size="small"
+              @click="handleClose"
+            >
+              <n-icon><close-icon /></n-icon>
+            </n-button>
+          </div>
 
-        <!-- 表单主体 -->
-        <div class="panel-body">
-          <n-form
-            ref="formRef"
-            :model="formData"
-            label-placement="top"
-          >
-            <!-- 基本信息 -->
-            <div class="form-section">
-              <h4 class="section-title">基本信息</h4>
-              
-              <!-- 节点标题 -->
-              <n-form-item label="节点标题" path="title">
-                <n-input
-                  v-model:value="formData.title"
-                  placeholder="输入氛围节点标题"
-                />
-              </n-form-item>
+          <!-- 表单主体 -->
+          <div class="panel-body">
+            <n-form
+              ref="formRef"
+              :model="formData"
+              label-placement="top"
+            >
+              <!-- 基本信息 -->
+              <div class="form-section">
+                <h4 class="section-title">基本信息</h4>
 
-              <!-- 时间标签 -->
-              <n-form-item label="时间标签" path="timeLabel">
-                <n-input
-                  v-model:value="formData.timeLabel"
-                  placeholder="例：DAY1 09:00"
-                />
-              </n-form-item>
-            </div>
+                <!-- 节点标题 -->
+                <n-form-item label="节点标题" path="title">
+                  <n-input
+                    v-model:value="formData.title"
+                    placeholder="输入氛围节点标题"
+                  />
+                </n-form-item>
 
-            <!-- 氛围设定 -->
-            <div class="form-section">
-              <h4 class="section-title">氛围设定</h4>
-              
-              <!-- 情绪氛围 -->
-              <n-form-item label="情绪氛围" path="mood">
-                <n-input
-                  v-model:value="formData.mood"
-                  placeholder="如：紧张、温馨、神秘、恐怖"
-                />
-              </n-form-item>
+                <!-- 时间标签 -->
+                <n-form-item label="时间标签" path="timeLabel">
+                  <n-input
+                    v-model:value="formData.timeLabel"
+                    placeholder="例：DAY1 09:00"
+                  />
+                </n-form-item>
+              </div>
 
-              <!-- 灯光设定 -->
-              <n-form-item label="灯光设定" path="lighting">
-                <n-input
-                  v-model:value="formData.lighting"
-                  placeholder="如：昏暗、暖黄、刺眼、忽明忽暗"
-                />
-              </n-form-item>
+              <!-- 氛围设定 -->
+              <div class="form-section">
+                <h4 class="section-title">氛围设定</h4>
 
-              <!-- 音效/BGM -->
-              <n-form-item label="音效/BGM" path="music">
-                <n-input
-                  v-model:value="formData.music"
-                  placeholder="如：雨声、钢琴曲、脚步声"
-                />
-              </n-form-item>
+                <!-- 情绪氛围 -->
+                <n-form-item label="情绪氛围" path="mood">
+                  <n-input
+                    v-model:value="formData.mood"
+                    placeholder="如：紧张、温馨、神秘、恐怖"
+                  />
+                </n-form-item>
 
-              <!-- 天气环境 -->
-              <n-form-item label="天气环境" path="weather">
-                <n-input
-                  v-model:value="formData.weather"
-                  placeholder="如：暴雨、多云、雾气、晴朗"
-                />
-              </n-form-item>
-            </div>
+                <!-- 灯光设定 -->
+                <n-form-item label="灯光设定" path="lighting">
+                  <n-input
+                    v-model:value="formData.lighting"
+                    placeholder="如：昏暗、暖黄、刺眼、忽明忽暗"
+                  />
+                </n-form-item>
 
-            <!-- 额外备注 -->
-            <div class="form-section">
-              <h4 class="section-title">额外备注</h4>
-              <n-form-item label="氛围描述" path="notes">
-                <n-input
-                  v-model:value="formData.notes"
-                  type="textarea"
-                  placeholder="详细描述场景氛围和注意事项..."
-                  :autosize="{ minRows: 3, maxRows: 6 }"
-                />
-              </n-form-item>
-            </div>
-          </n-form>
-        </div>
+                <!-- 音效/BGM -->
+                <n-form-item label="音效/BGM" path="music">
+                  <n-input
+                    v-model:value="formData.music"
+                    placeholder="如：雨声、钢琴曲、脚步声"
+                  />
+                </n-form-item>
 
-        <!-- 操作按钮 -->
-        <div class="panel-footer">
-          <n-button @click="handleClose">取消</n-button>
-          <n-button 
-            type="primary"
-            @click="handleSave"
-          >
+                <!-- 天气环境 -->
+                <n-form-item label="天气环境" path="weather">
+                  <n-input
+                    v-model:value="formData.weather"
+                    placeholder="如：暴雨、多云、雾气、晴朗"
+                  />
+                </n-form-item>
+              </div>
+
+              <!-- 额外备注 -->
+              <div class="form-section">
+                <h4 class="section-title">额外备注</h4>
+                <n-form-item label="氛围描述" path="notes">
+                  <n-input
+                    v-model:value="formData.notes"
+                    type="textarea"
+                    placeholder="详细描述场景氛围和注意事项..."
+                    :autosize="{ minRows: 3, maxRows: 6 }"
+                  />
+                </n-form-item>
+              </div>
+            </n-form>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="panel-footer">
+            <n-button @click="handleClose">取消</n-button>
+            <n-button
+              type="primary"
+              @click="handleSave"
+            >
             保存
-          </n-button>
+            </n-button>
+          </div>
         </div>
       </div>
-    </div>
-  </transition>
+    </transition>
+  </portal>
 </template>
 
 <script setup>
 import { ref, watch, defineEmits, defineProps } from 'vue';
 import { NForm, NFormItem, NInput, NButton, NIcon } from 'naive-ui';
 import { Close as CloseIcon } from '@vicons/ionicons5';
+import {Portal} from "portal-vue";
 
 const props = defineProps({
   visible: {
@@ -196,7 +199,7 @@ const handleClose = () => {
 
 <style scoped>
 .detail-panel {
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
@@ -204,7 +207,7 @@ const handleClose = () => {
   max-width: 400px;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 2500;
   display: flex;
   justify-content: flex-end;
 }
