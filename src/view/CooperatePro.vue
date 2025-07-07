@@ -443,7 +443,9 @@ async function submitRoom() {
       showCreatePage.value = false;
       newRoom.value = { name: "", description: "", havePwd: false, password: "" };
       await fetchRooms();
-      router.push(`/room/${res.roomId}`);
+
+      // enterRoom({ ...currentRoom, roomId: currentRoom.id })
+      // router.push(`/room/${res.roomId}`);
     } else {
       ElMessage.error('创建失败：响应格式不正确');
     }

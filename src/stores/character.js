@@ -11,67 +11,246 @@ export const useCharacterStore = defineStore("characterStore", () => {
   // 所有角色节点数据
   const nodes = ref([
     {
-      id: generateNodeId(),
+      id: "node-shen",
       type: "character",
-      position: { x: 100, y: 100 },
+      position: { x: 100, y: 400 },
       data: {
-        name: "张三",
+        name: "沈知遥",
         avatar: require("@/assets/avatar/1.jpg"),
-        age: 28,
-        occupation: "律师",
-        personality: ["冷静", "理性", "正义感强"],
-        background:
-          "毕业于知名法学院，专攻刑事辩护，有着强烈的正义感和敏锐的洞察力。",
-        skills: ["法律知识", "逻辑推理", "谈判技巧"],
-        items: "一支父亲留下的钢笔，法学院毕业证书",
-        notes: "主要推理角色，善于发现细节线索",
+        age: 33,
+        occupation: "刑警",
+        personality: ["冷静", "坚毅", "隐忍"],
+        background: "本地警局骨干，曾与死者关系亲密，却在案发中显得异常沉默。",
+        skills: ["刑侦推理", "心理观察", "证据分析"],
+        items: "录音笔、死者的旧信件",
+        notes: "矛盾的调查者，掌握关键真相却犹豫揭露。",
         relationships: [
           {
-            type: "前同事",
-            description: "曾在一起接手一桩命案",
+            type: "旧爱",
+            description: "与死者曾有一段旧情",
+            targetId: "林妙音",
+            strength: 6,
+            status: "inactive",
+          },
+          {
+            type: "搭档",
+            description: "与李四有过合作，但理念不合",
             targetId: "李四",
-            strength: 5,
-            status: "active"
+            strength: 4,
+            status: "active",
           },
         ],
       },
     },
     {
-      id: generateNodeId(),
+      id: "node-lin",
       type: "character",
-      position: { x: 300, y: 150 },
+      position: { x: 300, y: 500 },
       data: {
-        name: "李四",
+        name: "林妙音",
         avatar: require("@/assets/avatar/2.jpg"),
-        age: 35,
-        occupation: "警察",
-        personality: ["冲动", "果断", "强势"],
-        background: "一线刑警，参与多起大案调查，但因一次误判被调职。",
-        skills: ["刑侦经验", "枪械熟练", "审讯技巧"],
-        items: "警徽、旧案件笔记本",
-        notes: "对案件有执念，可能带入主观判断",
+        age: 38,
+        occupation: "度假村老板娘",
+        personality: ["精明", "冷静", "控制欲强"],
+        background: "掌管镜湖度假村，与死者共同开发地产项目，因利益关系交恶。",
+        skills: ["财务管理", "谈判", "人际操控"],
+        items: "度假村账本、房地产合同副本",
+        notes: "金钱利益牵扯颇深，曾是死者的重要合作者。",
         relationships: [
           {
-            type: "前同事",
-            description: "曾在一起接手一桩命案",
-            targetId: "张三",
-            strength: 5,
-            status: "active"
+            type: "旧爱",
+            description: "与沈知遥有过一段情",
+            targetId: "沈知遥",
+            strength: 6,
+            status: "inactive",
           },
           {
-            type: "兄弟",
-            description: "死于三年前未破悬案",
-            targetId: "王五",
-            strength: 8,
-            status: "deceased"
-          }
-        ]
+            type: "投资人",
+            description: "资助章沐白诊所初建",
+            targetId: "章沐白",
+            strength: 5,
+            status: "active",
+          },
+        ],
+      },
+    },
+    {
+      id: "node-cheng",
+      type: "character",
+      position: { x: 500, y: 600 },
+      data: {
+        name: "程少庭",
+        avatar: require("@/assets/avatar/3.jpg"),
+        age: 24,
+        occupation: "服务生",
+        personality: ["敏感", "隐忍", "怨恨深重"],
+        background: "死者私生子，为寻找真相隐姓埋名进入度假村工作。",
+        skills: ["伪装", "窃听", "情绪洞察"],
+        items: "父亲照片、DNA检验证明",
+        notes: "情绪激烈，容易失控，但掌握重要亲属信息。",
+        relationships: [
+          {
+            type: "父子",
+            description: "私生子，身份被隐瞒",
+            targetId: "沈文霖",
+            strength: 9,
+            status: "conflicted",
+          },
+          {
+            type: "观察者",
+            description: "时常暗中跟踪章沐白",
+            targetId: "章沐白",
+            strength: 4,
+            status: "active",
+          },
+        ],
+      },
+    },
+    {
+      id: "node-zhang",
+      type: "character",
+      position: { x: 700, y: 450 },
+      data: {
+        name: "章沐白",
+        avatar: require("@/assets/avatar/4.jpg"),
+        age: 41,
+        occupation: "心理医生",
+        personality: ["神秘", "疏离", "冷静"],
+        background: "为富人群体提供特殊催眠治疗，与死者有精神操控实验合作。",
+        skills: ["心理催眠", "精神诱导", "语言操控"],
+        items: "催眠机、患者档案",
+        notes: "关键心理线人物，行为动机复杂。",
+        relationships: [
+          {
+            type: "医生-病人",
+            description: "为死者进行心理治疗",
+            targetId: "沈文霖",
+            strength: 7,
+            status: "past",
+          },
+          {
+            type: "资助人",
+            description: "林妙音出资支持其诊所",
+            targetId: "林妙音",
+            strength: 5,
+            status: "active",
+          },
+        ],
+      },
+    },
+    {
+      id: "node-liu",
+      type: "character",
+      position: { x: 900, y: 550 },
+      data: {
+        name: "柳念之",
+        avatar: require("@/assets/avatar/5.jpg"),
+        age: 30,
+        occupation: "作家",
+        personality: ["好奇", "敏感", "天马行空"],
+        background: "以镜湖为灵感创作小说，却无意中写出案发细节。",
+        skills: ["故事构建", "细节观察", "逻辑联想"],
+        items: "小说草稿本、采访录音",
+        notes: "作家视角，信息来源成谜，或是旁观者或是操控者。",
+        relationships: [
+          {
+            type: "访谈对象",
+            description: "采访章沐白获取创作灵感",
+            targetId: "章沐白",
+            strength: 3,
+            status: "active",
+          },
+        ],
       },
     },
   ]);
 
   // 所有连线
-  const edges = reactive([]);
+  const edges = [
+    {
+      id: "relationship-node-shen-lin",
+      source: "node-shen",
+      sourceHandle: "right-source",
+      target: "node-lin",
+      targetHandle: "left",
+      type: "relationship",
+      data: {
+        type: "旧爱",
+        label: "旧爱",
+        description: "与死者曾有一段旧情",
+        strength: "6",
+        status: "inactive",
+        importance: null,
+        participationType: null,
+        showLabel: true,
+        style: null,
+      },
+    },
+    {
+      id: "relationship-node-shen-li",
+      source: "node-shen",
+      sourceHandle: "right-source",
+      target: "node-li",
+      targetHandle: "left",
+      type: "relationship",
+      data: {
+        type: "搭档",
+        label: "搭档",
+        description: "与李四有过合作，但理念不合",
+        strength: "4",
+        status: "active",
+        showLabel: true,
+      },
+    },
+    {
+      id: "relationship-node-lin-zhang",
+      source: "node-lin",
+      sourceHandle: "right-source",
+      target: "node-zhang",
+      targetHandle: "left",
+      type: "relationship",
+      data: {
+        type: "资助人",
+        label: "资助人",
+        description: "林妙音资助章沐白的诊所",
+        strength: "5",
+        status: "active",
+        showLabel: true,
+      },
+    },
+    {
+      id: "relationship-node-cheng-zhang",
+      source: "node-cheng",
+      sourceHandle: "right-source",
+      target: "node-zhang",
+      targetHandle: "left",
+      type: "relationship",
+      data: {
+        type: "观察者",
+        label: "观察者",
+        description: "时常暗中跟踪章沐白",
+        strength: "4",
+        status: "active",
+        showLabel: true,
+      },
+    },
+    {
+      id: "relationship-node-liu-zhang",
+      source: "node-liu",
+      sourceHandle: "right-source",
+      target: "node-zhang",
+      targetHandle: "left",
+      type: "relationship",
+      data: {
+        type: "访谈对象",
+        label: "访谈对象",
+        description: "采访章沐白获取创作灵感",
+        strength: "3",
+        status: "active",
+        showLabel: true,
+      },
+    },
+  ];
 
   // 当前选择结点
   const selectedNode = ref(null);
@@ -451,7 +630,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
       nodes: nodes.value,
       edges: edges,
     });
-  },300);
+  }, 300);
 
   return {
     nodes,

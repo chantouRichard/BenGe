@@ -10,38 +10,281 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 所有节点数据
   const nodes = ref([
-    {
-      id: generateNodeId(),
-      type: "custom",
-      position: { x: 200, y: 300 },
-      data: {
-        title: "命案现场发现",
-        timeLabel: "DAY1 07:30",
-        characters: "李四",
-        clues: "血迹、打火机",
-        sceneDescription: "废弃仓库内发现男尸，死者为王五",
-        nodeConnections: "与节点7（初步调查）相关",
-        notes: "王五为李四之弟，案件性质复杂",
-      },
-    },
-    {
-      id: generateNodeId(),
-      type: "custom",
-      position: { x: 500, y: 400 },
-      data: {
-        title: "关键目击证词",
-        timeLabel: "DAY1 09:15",
-        characters: "张三",
-        clues: "陌生车牌",
-        sceneDescription: "张三审问附近居民，得知凌晨有可疑车辆出入",
-        nodeConnections: "与节点1关联（命案现场）",
-        notes: "可能出现时间线冲突，需对比证词时间",
-      },
-    },
-  ]);
+  {
+    id: "plot-node-1",
+    type: "custom",
+    position: { x: 200, y: 300 },
+    data: {
+      title: "死者失踪",
+      timeLabel: "DAY1 08:00",
+      characters: "沈知遥、林妙音",
+      clues: "手机信号中断、监控盲区",
+      sceneDescription: "死者沈文霖在镜湖度假村消失，最后画面停留在湖边走廊。",
+      nodeConnections: "与节点2（初步调查）相关",
+      notes: "当时沈知遥正在场，林妙音提供不完整证词"
+    }
+  },
+  {
+    id: "plot-node-2",
+    type: "custom",
+    position: { x: 450, y: 300 },
+    data: {
+      title: "初步调查",
+      timeLabel: "DAY1 10:30",
+      characters: "李四、沈知遥",
+      clues: "湖边脚印、访客记录缺失",
+      sceneDescription: "警方封锁湖区，开始排查失踪时间段所有可疑行为。",
+      nodeConnections: "与节点1（失踪现场）相关",
+      notes: "李四怀疑内部知情人作案，开始审查员工"
+    }
+  },
+  {
+    id: "plot-node-3",
+    type: "custom",
+    position: { x: 700, y: 320 },
+    data: {
+      title: "小说中的预言",
+      timeLabel: "DAY1 15:00",
+      characters: "柳念之",
+      clues: "小说草稿、镜湖溺亡片段",
+      sceneDescription: "作家柳念之的手稿中，出现与死者失踪场景极为相似的内容。",
+      nodeConnections: "与节点4（催眠诊疗记录）相关",
+      notes: "时间线显示小说完成时间早于失踪案"
+    }
+  },
+  {
+    id: "plot-node-4",
+    type: "custom",
+    position: { x: 950, y: 350 },
+    data: {
+      title: "催眠诊疗记录",
+      timeLabel: "DAY2 09:00",
+      characters: "章沐白",
+      clues: "心理录音、治疗日记",
+      sceneDescription: "章沐白治疗记录揭示死者心理失控及“镜中倒影恐惧症”。",
+      nodeConnections: "与节点3（小说手稿）存在因果关系",
+      notes: "可能存在心理暗示导致行为异常"
+    }
+  },
+  {
+    id: "plot-node-5",
+    type: "custom",
+    position: { x: 1200, y: 280 },
+    data: {
+      title: "尸体浮现",
+      timeLabel: "DAY2 18:30",
+      characters: "程少庭、林妙音",
+      clues: "漂浮尸体、遗留戒指",
+      sceneDescription: "尸体在湖中浮现，身上无明显外伤，嘴角带笑，戴有一枚陌生戒指。",
+      nodeConnections: "与节点2（调查节点）和节点4（心理信息）相关",
+      notes: "死者死亡方式疑似自溺，但动机成谜"
+    }
+  },
+  {
+    id: "plot-node-6",
+    type: "custom",
+    position: { x: 1450, y: 350 },
+    data: {
+      title: "真相揭示",
+      timeLabel: "DAY3 14:00",
+      characters: "沈知遥、程少庭",
+      clues: "旧信件、催眠关键词",
+      sceneDescription: "沈知遥坦白早知死者被催眠，自知无法阻止，于是选择沉默。",
+      nodeConnections: "与节点5、4、3 全部相关",
+      notes: "真相复杂，每人皆有动机，死亡为心理操控导致"
+    }
+  },
+  {
+    id: "atmo-node-1",
+    type: "atmosphere",
+    position: { x: 200, y: 600 },
+    data: {
+      title: "雾夜镜湖",
+      timeLabel: "DAY1 夜晚",
+      mood: "迷离、紧张",
+      lighting: "低能见度自然光",
+      music: "低频环境噪音 + 远处水声",
+      weather: "湖边突然起雾，能见度不足3米，疑似有人趁机出入现场。",
+      notes:""
+    }
+  },
+  {
+    id: "atmo-node-2",
+    type: "atmosphere",
+    position: { x: 500, y: 630 },
+    data: {
+      title: "心理室咔哒声",
+      timeLabel: "DAY2 上午",
+      mood: "压抑、不安",
+      lighting: "昏暗灯光",
+      music: "催眠装置的机械节拍声",
+      weather: "催眠治疗过程中不断重复的咔哒声让人产生幻觉。",
+      notes:""
+    }
+  },
+  {
+    id: "atmo-node-3",
+    type: "atmosphere",
+    position: { x: 800, y: 600 },
+    data: {
+      title: "湖中倒影",
+      timeLabel: "DAY2 傍晚",
+      mood: "诡异、压抑",
+      lighting: "水面反光，阳光破碎",
+      music: "无声静谧",
+      weather: "湖面出现与死者长相相似的倒影，引起惊恐。",
+      notes:""
+    }
+  },
+  {
+    id: "atmo-node-4",
+    type: "atmosphere",
+    position: { x: 1100, y: 660 },
+    data: {
+      title: "黑猫惊影",
+      timeLabel: "DAY3 凌晨",
+      mood: "惊悚、诡异",
+      lighting: "手电照明中突现黑影",
+      music: "突发猫叫 + 镜头抖动",
+      weather: "柳念之称案发夜看到黑猫窜入镜湖小路，引发集体恐慌。",
+      notes:""
+    }
+  },
+  {
+    id: "atmo-node-5",
+    type: "atmosphere",
+    position: { x: 1350, y: 610 },
+    data: {
+      title: "时钟停摆",
+      timeLabel: "DAY2 晚上 02:47",
+      mood: "凝固、超现实",
+      lighting: "时钟盘反射窗外月光",
+      music: "秒针卡顿声+静音",
+      weather: "案发小屋时钟指针永远停留在凌晨 2:47。",
+      notes:""
+    }
+  }
+]);
+
 
   // 所有连线
-  const edges = reactive([]);
+  const edges = reactive([
+  {
+    id: "edge-node-1-2",
+    source: "plot-node-1",
+    sourcePosition: "right",
+    target: "plot-node-2",
+    targetPosition: "left",
+    type: "custom",
+    data: { type: "containment", label: "现场到调查" }
+  },
+  {
+    id: "edge-node-2-3",
+    source: "plot-node-2",
+    sourcePosition: "right",
+    target: "plot-node-3",
+    targetPosition: "left",
+    type: "custom",
+    data: { type: "containment", label: "疑点扩散" }
+  },
+  {
+    id: "edge-node-3-4",
+    source: "plot-node-3",
+    sourcePosition: "right",
+    target: "plot-node-4",
+    targetPosition: "left",
+    type: "custom",
+    data: { type: "containment", label: "小说与治疗相关" }
+  },
+  {
+    id: "edge-node-2-5",
+    source: "plot-node-2",
+    sourcePosition: "bottom",
+    target: "plot-node-5",
+    targetPosition: "top",
+    type: "custom",
+    data: { type: "containment", label: "尸体出现" }
+  },
+  {
+    id: "edge-node-5-6",
+    source: "plot-node-5",
+    sourcePosition: "right",
+    target: "plot-node-6",
+    targetPosition: "left",
+    type: "custom",
+    data: { type: "containment", label: "真相浮现" }
+  },
+  {
+    id: "edge-node-4-6",
+    source: "plot-node-4",
+    sourcePosition: "bottom",
+    target: "plot-node-6",
+    targetPosition: "top",
+    type: "custom",
+    data: { type: "containment", label: "心理线汇合" }
+  },
+  {
+    id: "atmo-link-atmo-node-1-plot-node-1",
+    source: "atmo-node-1",
+    target: "plot-node-1",
+    type: "custom",
+    data: {
+      type: "atmosphere-influence",
+      label: "氛围影响",
+      style: "dashed",
+      color: "#ff6b6b"
+    }
+  },
+  {
+    id: "atmo-link-atmo-node-2-plot-node-4",
+    source: "atmo-node-2",
+    target: "plot-node-4",
+    type: "custom",
+    data: {
+      type: "atmosphere-influence",
+      label: "氛围影响",
+      style: "dashed",
+      color: "#ff6b6b"
+    }
+  },
+  {
+    id: "atmo-link-atmo-node-3-plot-node-3",
+    source: "atmo-node-3",
+    target: "plot-node-3",
+    type: "custom",
+    data: {
+      type: "atmosphere-influence",
+      label: "氛围影响",
+      style: "dashed",
+      color: "#ff6b6b"
+    }
+  },
+  {
+    id: "atmo-link-atmo-node-4-plot-node-6",
+    source: "atmo-node-4",
+    target: "plot-node-6",
+    type: "custom",
+    data: {
+      type: "atmosphere-influence",
+      label: "氛围影响",
+      style: "dashed",
+      color: "#ff6b6b"
+    }
+  },
+  {
+    id: "atmo-link-atmo-node-5-plot-node-5",
+    source: "atmo-node-5",
+    target: "plot-node-5",
+    type: "custom",
+    data: {
+      type: "atmosphere-influence",
+      label: "氛围影响",
+      style: "dashed",
+      color: "#ff6b6b"
+    }
+  }
+]);
+
 
   // 当前选择结点
   const selectedNode = ref(null);
