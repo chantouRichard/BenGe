@@ -1,14 +1,6 @@
 <template>
   <div class="container">
     <portal-target name="node-detail-drawer" multiple />
-    <div class="header">
-      <div class="logo">BenGe Vision</div>
-      <div class="right-menu">
-        <div class="menu-item">我的剧本</div>
-        <div class="menu-item">帮助</div>
-        <img src="../../assets/login.png" alt="avatar" class="avatar" />
-      </div>
-    </div>
     <div v-if="stage == 0" class="main-area">
       <RoleSelector
           :roles="roles"
@@ -252,33 +244,6 @@ watch(allMembersChosen, (newVal) => {
   background-size: cover;
   background-repeat: no-repeat;
   overflow: hidden;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  height: 60px;
-  padding: 0 60px;
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.right-menu {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-  gap: 30px;
-}
-
-.menu-item {
-  cursor: pointer;
-  font-size: 16px;
-  color: #333;
 }
 
 .avatar {
