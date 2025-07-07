@@ -1,53 +1,55 @@
 <template>
-  <div
-    class="atmosphere-toolball"
-    :style="toolballStyle"
-    @mouseenter="isExpanded = true"
-    @mouseleave="isExpanded = false"
-    @mousedown="startDrag"
-  >
-    <!-- 主按钮 -->
-    <button class="main-button">
-      <img
-          src="../../../../../assets/second/role4.png"
-          alt="氛围工具"
-          class="icon-main"
-      />
-    </button>
+  <div class="toolball-wrapper">
+    <div
+      class="atmosphere-toolball"
+      :style="toolballStyle"
+      @mouseenter="isExpanded = true"
+      @mousedown="startDrag"
+    >
+      <!-- 主按钮 -->
+      <button class="main-button">
+        <img
+            src="../../../../../assets/second/role4.png"
+            alt="氛围工具"
+            class="icon-main"
+        />
+      </button>
 
-    <!-- 展开面板 -->
-    <transition name="panel-expand">
-      <div
-          v-if="isExpanded"
-          class="tool-panel"
-          :class="[panelDirection === 'left' ? 'panel-left' : 'panel-right']"
-          @mousemove="handlePanelMove"
-          :style="panelHoverStyle"
-      >
-        <button
-          v-for="(btn, i) in buttons"
-          :key="btn.action"
-          class="tool-button"
-          :style="{ '--delay-index': i }"
-          @click="$emit(btn.action)"
-          @mouseenter="btn.hover = true"
-          @mouseleave="btn.hover = false"
+      <!-- 展开面板 -->
+      <transition name="panel-expand">
+        <div
+            v-if="isExpanded"
+            class="tool-panel"
+            :class="[panelDirection === 'left' ? 'panel-left' : 'panel-right']"
+            @mousemove="handlePanelEnter"
+            @mouseleave="handlePanelLeave"
+            :style="panelHoverStyle"
         >
-          <img
-            :src="btn.icon"
-            :alt="btn.tooltip"
-            class="icon-tool"
-            :style="{
-              transform: btn.hover ? 'scale(1.15)' : 'none',
-              filter: btn.hover
-                ? 'drop-shadow(0 0 8px ' + btn.color + ')'
-                : 'none',
-            }"
-          />
-          <span class="tooltip">{{ btn.tooltip }}</span>
-        </button>
-      </div>
-    </transition>
+          <button
+            v-for="(btn, i) in buttons"
+            :key="btn.action"
+            class="tool-button"
+            :style="{ '--delay-index': i }"
+            @click="$emit(btn.action)"
+            @mouseenter="btn.hover = true"
+            @mouseleave="btn.hover = false"
+          >
+            <img
+              :src="btn.icon"
+              :alt="btn.tooltip"
+              class="icon-tool"
+              :style="{
+                transform: btn.hover ? 'scale(1.15)' : 'none',
+                filter: btn.hover
+                  ? 'drop-shadow(0 0 8px ' + btn.color + ')'
+                  : 'none',
+              }"
+            />
+            <span class="tooltip">{{ btn.tooltip }}</span>
+          </button>
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
@@ -116,6 +118,25 @@ const dragStartPos = ref(null);
 const panelHoverPos = ref({ x: 0, y: 0 });
 
 const panelDirection = ref('right');
+
+const closeTimeout = ref(null);
+const isPanelHovered = ref(false);
+
+
+const handlePanelEnter = () => {
+  isPanelHovered.value = true;
+  if (closeTimeout.value) {
+    clearTimeout(closeTimeout.value);
+    closeTimeout.value = null;
+  }
+};
+
+const handlePanelLeave = () => {
+  isPanelHovered.value = false;
+  closeTimeout.value = setTimeout(() => {
+    isExpanded.value = false;
+  }, 200);
+};
 
 const updatePanelDirection = () => {
   const viewportWidth = window.innerWidth;
@@ -227,8 +248,13 @@ defineEmits([
 </script>
 
 <style scoped>
-.atmosphere-toolball {
+.toolball-wrapper {
   position: fixed;
+  z-index: 1000;
+}
+
+.atmosphere-toolball {
+  position: relative;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -236,6 +262,25 @@ defineEmits([
   user-select: none;
   -webkit-user-drag: none;
 }
+
+.atmosphere-toolball::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--panel-width), 300px);
+  height: 56px;
+  top: 0;
+}
+
+.atmosphere-toolball .panel-right:hover::after {
+  left: 100%;
+  width: var(--panel-width);
+}
+
+.tmosphere-toolball .panel-left:hover::after {
+  right: 100%;
+  width: var(--panel-width);
+}
+
 
 .atmosphere-toolball:active {
   cursor: grabbing;

@@ -83,11 +83,11 @@ export function generateCooperateFramework(data) {
 }
 
 // 确认进入第三阶段
+// ✅ 修复后
 export function enterThirdStage(roomId, data) {
-  return request.post("room/enter-third-stage", null, {
-    params: {
-      roomId,
-      data,
-    },
+  return request.post("room/enter-third-stage", {
+    roomId,
+    data,
   });
 }
+

@@ -44,7 +44,7 @@ const currentIcon = computed(() =>
   position: fixed;
   bottom: 80px;
   right: 80px;
-  z-index: 9000;
+  z-index: 2000;
   pointer-events: none; /* 保证只有子元素响应点击 */
 }
 
@@ -58,7 +58,6 @@ const currentIcon = computed(() =>
   padding: 4px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   pointer-events: auto;
-
   background-image: url('@/assets/second/chatbackground.png');
   object-fit: cover;
 }

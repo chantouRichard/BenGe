@@ -2,217 +2,217 @@
   <div class="workspace-container">
     <!-- 悬浮工具球 -->
     <FloatingToolball
-      v-if="socketState.userRole == 0"
-      @add-node="canvasStore.handleAddNode"
-      @add-edge="canvasStore.handleCreateEdgeClick"
-      @export-canvas="handleExportAs"
-      @ai-generate="handleAiGenerate"
-      @ai-integrate="handleAiIntegrate"
+        v-if="socketState.userRole == 0"
+        @add-node="canvasStore.handleAddNode"
+        @add-edge="canvasStore.handleCreateEdgeClick"
+        @export-canvas="handleExportAs"
+        @ai-generate="handleAiGenerate"
+        @ai-integrate="handleAiIntegrate"
     />
     <CharacterToolbar
-      v-if="socketState.userRole == 1"
-      @add-character="characterStore.handleAddNode"
-      @add-relationship="characterStore.handleCreateEdgeClick"
-      @export-canvas="handleExportAs"
-      @ai-generate="handleCharacterAiGenerate"
-      @ai-integrate="handleAiIntegrate"
+        v-if="socketState.userRole == 1"
+        @add-character="characterStore.handleAddNode"
+        @add-relationship="characterStore.handleCreateEdgeClick"
+        @export-canvas="handleExportAs"
+        @ai-generate="handleCharacterAiGenerate"
+        @ai-integrate="handleAiIntegrate"
     />
     <ClueToolbar
-      v-if="socketState.userRole == 2"
-      @add-clue="clueStore.handleAddClueNode"
-      @add-inference="clueStore.handleAddInferenceNode"
-      @add-person="clueStore.handleAddPersonNode"
-      @add-relationship="clueStore.handleCreateEdgeClick"
-      @export-canvas="handleExportAs"
-      @ai-generate="handleClueAiGenerate"
-      @ai-integrate="handleAiIntegrate"
+        v-if="socketState.userRole == 2"
+        @add-clue="clueStore.handleAddClueNode"
+        @add-inference="clueStore.handleAddInferenceNode"
+        @add-person="clueStore.handleAddPersonNode"
+        @add-relationship="clueStore.handleCreateEdgeClick"
+        @export-canvas="handleExportAs"
+        @ai-generate="handleClueAiGenerate"
+        @ai-integrate="handleAiIntegrate"
     />
     <AtmosphereToolbar
-      v-if="socketState.userRole == 3"
-      @add-node="atmosphereStore.handleAddNode"
-      @atmo-palette="handleAtmospherePalette"
-      @link-scene="handleLinkScene"
-      @export-canvas="handleExportAs"
-      @ai-generate="handleAtmosphereAiGenerate"
-      @ai-integrate="handleAiIntegrate"
+        v-if="socketState.userRole == 3"
+        @add-node="atmosphereStore.handleAddNode"
+        @atmo-palette="handleAtmospherePalette"
+        @link-scene="handleLinkScene"
+        @export-canvas="handleExportAs"
+        @ai-generate="handleAtmosphereAiGenerate"
+        @ai-integrate="handleAiIntegrate"
     />
 
-      <AiIntegrate v-if="ShowAiIntegrate && !loadingStore.loading3" :AIcontent="AIContent" @close="ShowAiIntegrate = false" @select="$emit('select')"/>
+    <AiIntegrate v-if="ShowAiIntegrate && !loadingStore.loading3" :AIcontent="AIContent" @close="ShowAiIntegrate = false" @select="$emit('select')"/>
 
     <!-- 主画布 -->
     <CanvasArea
-      ref="canvasRef"
-      v-if="nodes.length > 0"
-      :nodes="nodes"
-      :edges="edges"
-      @delete-node="handleDeleteNode"
-      @node-select="handleNodeClick"
-      @edge-select="handleEdgeSelect"
-      @node-position-change="handleNodePositionChange"
-      @connect-node="handleConnectNode"
+        ref="canvasRef"
+        v-if="nodes.length > 0"
+        :nodes="nodes"
+        :edges="edges"
+        @delete-node="handleDeleteNode"
+        @node-select="handleNodeClick"
+        @edge-select="handleEdgeSelect"
+        @node-position-change="handleNodePositionChange"
+        @connect-node="handleConnectNode"
     />
 
     <!-- 节点详情抽屉 -->
     <div style="height: 100%; width: 100%">
       <NodeDetailDrawer
-        :visible="canvasStore.selectedNode"
-        :nodeData="canvasStore.selectedNode"
-        @save="handleDetailSave"
-        @close="canvasStore.selectedNode = null"
+          :visible="canvasStore.selectedNode"
+          :nodeData="canvasStore.selectedNode"
+          @save="handleDetailSave"
+          @close="canvasStore.selectedNode = null"
       />
 
       <EdgeTypeSelector
-        v-if="canvasStore.showEdgeSelector"
-        :source="canvasStore.selectedNodesForEdge[0]"
-        :target="canvasStore.selectedNodesForEdge[1]"
-        @confirm="canvasStore.handleEdgeConfirm"
-        @cancel="canvasStore.handleEdgeCancel"
+          v-if="canvasStore.showEdgeSelector"
+          :source="canvasStore.selectedNodesForEdge[0]"
+          :target="canvasStore.selectedNodesForEdge[1]"
+          @confirm="canvasStore.handleEdgeConfirm"
+          @cancel="canvasStore.handleEdgeCancel"
       />
 
       <!-- 人物-场景边编辑器 -->
       <CharacterSceneEdgeEditor
-        v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId && isCharacterSceneEdge()"
-        :source="getCharacterEdgeSourceNode()"
-        :target="getCharacterEdgeTargetNode()"
-        :initialParticipationType="getCurrentCharacterEdge()?.data?.participationType || 'protagonist'"
-        :initialImportance="getCurrentCharacterEdge()?.data?.importance || 'normal'"
-        :initialDescription="getCurrentCharacterEdge()?.data?.description || ''"
-        :initialLabel="getCurrentCharacterEdge()?.data?.label || ''"
-        :initialStyle="getCurrentCharacterEdge()?.data?.style || 'solid'"
-        :showDelete="true"
-        @confirm="handleCharacterSceneEdgeEditConfirm"
-        @cancel="characterStore.handleEdgeCancel"
-        @delete-edge="characterStore.handleDeleteEdge"
+          v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId && isCharacterSceneEdge()"
+          :source="getCharacterEdgeSourceNode()"
+          :target="getCharacterEdgeTargetNode()"
+          :initialParticipationType="getCurrentCharacterEdge()?.data?.participationType || 'protagonist'"
+          :initialImportance="getCurrentCharacterEdge()?.data?.importance || 'normal'"
+          :initialDescription="getCurrentCharacterEdge()?.data?.description || ''"
+          :initialLabel="getCurrentCharacterEdge()?.data?.label || ''"
+          :initialStyle="getCurrentCharacterEdge()?.data?.style || 'solid'"
+          :showDelete="true"
+          @confirm="handleCharacterSceneEdgeEditConfirm"
+          @cancel="characterStore.handleEdgeCancel"
+          @delete-edge="characterStore.handleDeleteEdge"
       />
 
       <!-- 普通边编辑器 -->
       <EdgeTypeSelector
-        v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId && !isCharacterSceneEdge()"
-        :initialType="
+          v-if="canvasStore.showEdgeSelector && canvasStore.editingEdgeId && !isCharacterSceneEdge()"
+          :initialType="
           edges?.find((e) => e.id === canvasStore.editingEdgeId)?.data?.type ||
           null
         "
-        :initialLabel="
+          :initialLabel="
           edges?.find((e) => e.id === canvasStore.editingEdgeId)?.data?.label ||
           ''
         "
-        :showDelete="true"
-        @confirm="canvasStore.handleEdgeEditConfirm"
-        @cancel="canvasStore.handleEdgeCancel"
-        @delete-edge="canvasStore.handleDeleteEdge"
+          :showDelete="true"
+          @confirm="canvasStore.handleEdgeEditConfirm"
+          @cancel="canvasStore.handleEdgeCancel"
+          @delete-edge="canvasStore.handleDeleteEdge"
       />
 
       // 角色设计师
       <CharacterDetailPanel
-        :visible="characterStore.selectedNode"
-        :nodeData="characterStore.selectedNode"
-        @save="handleDetailSave"
-        @close="characterStore.selectedNode = null"
+          :visible="characterStore.selectedNode"
+          :nodeData="characterStore.selectedNode"
+          @save="handleDetailSave"
+          @close="characterStore.selectedNode = null"
       />
 
       <!-- 氛围设计师 -->
       <AtmosphereDetailPanel
-        :visible="atmosphereStore.selectedNode"
-        :nodeData="atmosphereStore.selectedNode"
-        @save="handleDetailSave"
-        @close="atmosphereStore.selectedNode = null"
+          :visible="atmosphereStore.selectedNode"
+          :nodeData="atmosphereStore.selectedNode"
+          @save="handleDetailSave"
+          @close="atmosphereStore.selectedNode = null"
       />
 
       <!-- 角色关系编辑器 -->
       <CharacterRelationEditor
-        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId && characterStore.edgeType === 'relationship'"
-        :source="characterStore.selectedNodesForEdge[0]"
-        :target="characterStore.selectedNodesForEdge[1]"
-        @confirm="characterStore.handleEdgeConfirm"
-        @cancel="characterStore.handleEdgeCancel"
+          v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId && characterStore.edgeType === 'relationship'"
+          :source="characterStore.selectedNodesForEdge[0]"
+          :target="characterStore.selectedNodesForEdge[1]"
+          @confirm="characterStore.handleEdgeConfirm"
+          @cancel="characterStore.handleEdgeCancel"
       />
 
       <!-- 角色-场景关系编辑器 -->
       <CharacterSceneEdgeEditor
-        v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId && characterStore.edgeType === 'character-scene'"
-        :source="characterStore.selectedNodesForEdge[0]"
-        :target="characterStore.selectedNodesForEdge[1]"
-        @confirm="characterStore.handleCharacterSceneEdgeConfirm"
-        @cancel="characterStore.handleEdgeCancel"
+          v-if="characterStore.showEdgeSelector && !characterStore.editingEdgeId && characterStore.edgeType === 'character-scene'"
+          :source="characterStore.selectedNodesForEdge[0]"
+          :target="characterStore.selectedNodesForEdge[1]"
+          @confirm="characterStore.handleCharacterSceneEdgeConfirm"
+          @cancel="characterStore.handleEdgeCancel"
       />
 
       <!-- 编辑现有关系 -->
       <CharacterRelationEditor
-        v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId"
-        :source="getCharacterEdgeSourceNode()"
-        :target="getCharacterEdgeTargetNode()"
-        :initialType="getCurrentCharacterEdge()?.data?.type || ''"
-        :initialDescription="getCurrentCharacterEdge()?.data?.description || ''"
-        :initialStrength="getCurrentCharacterEdge()?.data?.strength || 5"
-        :initialStatus="getCurrentCharacterEdge()?.data?.status || 'active'"
-        :showDelete="true"
-        @confirm="characterStore.handleEdgeEditConfirm"
-        @cancel="characterStore.handleEdgeCancel"
-        @delete-relation="characterStore.handleDeleteEdge"
+          v-if="characterStore.showEdgeSelector && characterStore.editingEdgeId"
+          :source="getCharacterEdgeSourceNode()"
+          :target="getCharacterEdgeTargetNode()"
+          :initialType="getCurrentCharacterEdge()?.data?.type || ''"
+          :initialDescription="getCurrentCharacterEdge()?.data?.description || ''"
+          :initialStrength="getCurrentCharacterEdge()?.data?.strength || 5"
+          :initialStatus="getCurrentCharacterEdge()?.data?.status || 'active'"
+          :showDelete="true"
+          @confirm="characterStore.handleEdgeEditConfirm"
+          @cancel="characterStore.handleEdgeCancel"
+          @delete-relation="characterStore.handleDeleteEdge"
       />
 
       // 线索设计师
       <ClueDetailPanel
-        :visible="clueStore.selectedNode?.type == 'clue' || false"
-        :clueData="clueStore.selectedNode"
-        @save="handleDetailSave"
-        @close="clueStore.selectedNode = null"
+          :visible="clueStore.selectedNode?.type == 'clue' || false"
+          :clueData="clueStore.selectedNode"
+          @save="handleDetailSave"
+          @close="clueStore.selectedNode = null"
       />
       <InferenceDetailPanel
-        :visible="clueStore.selectedNode?.type == 'inference' || false"
-        :nodeData="clueStore.selectedNode"
-        @save="handleDetailSave"
-        @close="clueStore.selectedNode = null"
+          :visible="clueStore.selectedNode?.type == 'inference' || false"
+          :nodeData="clueStore.selectedNode"
+          @save="handleDetailSave"
+          @close="clueStore.selectedNode = null"
       />
       <PersonDetailPanel
-        :visible="clueStore.selectedNode?.type == 'person' || false"
-        :nodeData="clueStore.selectedNode"
-        @save="handleDetailSave"
-        @close="clueStore.selectedNode = null"
+          :visible="clueStore.selectedNode?.type == 'person' || false"
+          :nodeData="clueStore.selectedNode"
+          @save="handleDetailSave"
+          @close="clueStore.selectedNode = null"
       />
 
       <ClueEdgeSelector
-        v-if="clueStore.showEdgeSelector"
-        :source="clueStore.selectedNodesForEdge[0]"
-        :target="clueStore.selectedNodesForEdge[1]"
-        @confirm="clueStore.handleEdgeConfirm"
-        @cancel="clueStore.handleEdgeCancel"
+          v-if="clueStore.showEdgeSelector"
+          :source="clueStore.selectedNodesForEdge[0]"
+          :target="clueStore.selectedNodesForEdge[1]"
+          @confirm="clueStore.handleEdgeConfirm"
+          @cancel="clueStore.handleEdgeCancel"
       />
 
       <ClueEdgeSelector
-        v-if="clueStore.showEdgeSelector && clueStore.editingEdgeId"
-        :initialType="
+          v-if="clueStore.showEdgeSelector && clueStore.editingEdgeId"
+          :initialType="
           clueStore.edges.find((e) => e.id === clueStore.editingEdgeId)?.data
             ?.type || null
         "
-        :initialLabel="
+          :initialLabel="
           clueStore.edges.find((e) => e.id === clueStore.editingEdgeId)?.data
             ?.label || ''
         "
-        :showDelete="true"
-        @confirm="clueStore.handleEdgeEditConfirm"
-        @cancel="clueStore.handleEdgeCancel"
-        @delete-edge="clueStore.handleDeleteEdge"
+          :showDelete="true"
+          @confirm="clueStore.handleEdgeEditConfirm"
+          @cancel="clueStore.handleEdgeCancel"
+          @delete-edge="clueStore.handleDeleteEdge"
       />
 
       // 氛围设计师
       <AtmosphereDetailPanel
-        :visible="atmosphereStore.selectedNode"
-        :nodeData="atmosphereStore.selectedNode"
-        @save="handleDetailSave"
-        @close="atmosphereStore.selectedNode = null"
+          :visible="atmosphereStore.selectedNode"
+          :nodeData="atmosphereStore.selectedNode"
+          @save="handleDetailSave"
+          @close="atmosphereStore.selectedNode = null"
       />
       <!-- 氛围调色板 -->
       <AtmospherePalette
-        :visible="showPalette"
-        @close="showPalette = false"
-        @select="handleAtmosphereSelect"
+          :visible="showPalette"
+          @close="showPalette = false"
+          @select="handleAtmosphereSelect"
       />
 
       <!-- 简单的状态指示 -->
       <div v-if="atmosphereStore.isLinkingMode" class="linking-status">
         <span v-if="!atmosphereStore.selectedAtmosphereNode"
-          >🔗 点击氛围节点</span
+        >🔗 点击氛围节点</span
         >
         <span v-else>🎯 点击场景节点建立关联</span>
       </div>
@@ -220,14 +220,14 @@
 
     <!-- AI生成对话框 -->
     <AIGenerateDialog
-      :visible="showAIDialog"
-      :designer-type="currentDesignerType"
-      :context-data="aiContextData"
-      :generate-result="aiGenerateResult"
-      :generate-error="aiGenerateError"
-      @cancel="handleAIDialogCancel"
-      @generate="handleAIDialogGenerate"
-      @close="handleAIDialogClose"
+        :visible="showAIDialog"
+        :designer-type="currentDesignerType"
+        :context-data="aiContextData"
+        :generate-result="aiGenerateResult"
+        :generate-error="aiGenerateError"
+        @cancel="handleAIDialogCancel"
+        @generate="handleAIDialogGenerate"
+        @close="handleAIDialogClose"
     />
   </div>
 </template>
@@ -259,12 +259,15 @@ import { useCharacterStore } from "@/stores/character";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { useClueStore } from "@/stores/clue";
 import { useAtmosphereStore } from "@/stores/atmosphere";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, watchEffect } from "vue";
 import { userLoadingStore } from "@/stores/userLoadingStore";
+import { useSearchStore } from "@/stores/searchStore";
+
 const loadingStore = userLoadingStore();
 
 const ShowAiIntegrate = ref(false);
 const showPalette = ref(false);
+const searchStore = useSearchStore();
 
 // 传入参数
 import { defineProps } from 'vue'
@@ -423,16 +426,16 @@ const handleDeleteNode = (id) => {
 
 const handleNodeClick = (data) => {
   // 根据用户角色直接分发到对应的store
-  if (socketState.userRole === 0) {
+  if (data.node.type === "custom") {
     // 叙事设计师
     canvasStore.handleNodeClick(data);
-  } else if (socketState.userRole === 1) {
+  } else if (data.node.type === "character") {
     // 角色设计师
     characterStore.handleNodeClick(data);
-  } else if (socketState.userRole === 2) {
+  } else if (data.node.type === "clue") {
     // 线索设计师
     clueStore.handleNodeClick(data);
-  } else if (socketState.userRole === 3) {
+  } else if (data.node.type === "atmosphere") {
     // 氛围设计师
     atmosphereStore.handleNodeClick(data);
   }
@@ -471,7 +474,23 @@ const handleEdgeSelect = (edgeId) => {
   }
 };
 
+// 使用watchEffect自动响应式处理
+watchEffect(() => {
+  if (canvasRef.value?.vueFlowApi?.getNodes) {
+    console.log('Detected valid VueFlow API:', canvasRef.value.vueFlowApi)
+    searchStore.setVueFlowApi(canvasRef.value.vueFlowApi)
+  }
+})
 
+onMounted(() => {
+  const timer = setInterval(() => {
+    if (canvasRef.value?.vueFlowApi?.getNodes) {
+      clearInterval(timer)
+      searchStore.setVueFlowApi(canvasRef.value.vueFlowApi)
+      console.log('API confirmed via interval check')
+    }
+  }, 100)
+})
 
 const handleNodePositionChange = (payload) => {
   const { id, position } = payload;
@@ -568,41 +587,41 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
     if (result.success && result.nodes) {
       // 根据设计师类型添加节点到相应的store
       result.nodes.forEach((nodeData, index) => {
-        // 对不同类型节点数据进行格式转换
-        let processedData = nodeData
-        if (currentDesignerType.value === 'character') {
-          processedData = processCharacterNodeData(nodeData)
-        } else if (currentDesignerType.value === 'clue') {
-          processedData = processClueNodeData(nodeData)
-        } else if (currentDesignerType.value === 'atmosphere') {
-          processedData = processAtmosphereNodeData(nodeData)
-        }
+            // 对不同类型节点数据进行格式转换
+            let processedData = nodeData
+            if (currentDesignerType.value === 'character') {
+              processedData = processCharacterNodeData(nodeData)
+            } else if (currentDesignerType.value === 'clue') {
+              processedData = processClueNodeData(nodeData)
+            } else if (currentDesignerType.value === 'atmosphere') {
+              processedData = processAtmosphereNodeData(nodeData)
+            }
 
-        const newNode = {
-          id: `ai-${currentDesignerType.value}-${Date.now()}-${index}`,
-          type: getNodeTypeByDesigner(currentDesignerType.value),
-          position: {
-            x: 400 + index * 250,
-            y: 300 + index * 120
-          },
-          data: processedData
-        }
+            const newNode = {
+              id: `ai-${currentDesignerType.value}-${Date.now()}-${index}`,
+              type: getNodeTypeByDesigner(currentDesignerType.value),
+              position: {
+                x: 400 + index * 250,
+                y: 300 + index * 120
+              },
+              data: processedData
+            }
 
-        if (currentDesignerType.value === 'character') {
-          characterStore.nodes.push(newNode)
-          characterStore.broadcast && characterStore.broadcast()
-        } else if(currentDesignerType.value == 'clue'){
-          clueStore.nodes.push(newNode)
-          clueStore.broadcast && clueStore.broadcast()
-        }else if(currentDesignerType.value == 'atmosphere'){
-          canvasStore.nodes.push(newNode)
-          canvasStore.broadcast && canvasStore.broadcast()
-        }else {
-          canvasStore.nodes.push(newNode)
-          canvasStore.broadcast && canvasStore.broadcast()
-        }
-      }
-    )
+            if (currentDesignerType.value === 'character') {
+              characterStore.nodes.push(newNode)
+              characterStore.broadcast && characterStore.broadcast()
+            } else if(currentDesignerType.value == 'clue'){
+              clueStore.nodes.push(newNode)
+              clueStore.broadcast && clueStore.broadcast()
+            }else if(currentDesignerType.value == 'atmosphere'){
+              canvasStore.nodes.push(newNode)
+              canvasStore.broadcast && canvasStore.broadcast()
+            }else {
+              canvasStore.nodes.push(newNode)
+              canvasStore.broadcast && canvasStore.broadcast()
+            }
+          }
+      )
       // 设置成功结果，让对话框显示
       aiGenerateResult.value = {
         success: true,
@@ -664,17 +683,17 @@ const processCharacterNodeData = (nodeData) => {
   if (processed.personality && typeof processed.personality === 'string') {
     // 按照常见分隔符分割字符串
     processed.personality = processed.personality
-      .split(/[,，、；;]/)
-      .map(item => item.trim())
-      .filter(item => item.length > 0)
+        .split(/[,，、；;]/)
+        .map(item => item.trim())
+        .filter(item => item.length > 0)
   }
 
   // 处理skills字段：如果是字符串，转换为数组
   if (processed.skills && typeof processed.skills === 'string') {
     processed.skills = processed.skills
-      .split(/[,，、；;]/)
-      .map(item => item.trim())
-      .filter(item => item.length > 0)
+        .split(/[,，、；;]/)
+        .map(item => item.trim())
+        .filter(item => item.length > 0)
   }
 
   // 确保必要字段存在
@@ -818,15 +837,15 @@ import { watch } from "vue";
 const AIContent = ref("");
 // 监听AI返回整合剧本的内容
 watch(
-  () => socketState.AICompleteScriptContent,
-  (newData) => {
-    if (newData) {
-      ShowAiIntegrate.value = true;
-      AIContent.value = newData;
-      console.log("newAi:", AIContent.value);
-    }
-  },
-  { deep: true }
+    () => socketState.AICompleteScriptContent,
+    (newData) => {
+      if (newData) {
+        ShowAiIntegrate.value = true;
+        AIContent.value = newData;
+        console.log("newAi:", AIContent.value);
+      }
+    },
+    { deep: true }
 );
 </script>
 

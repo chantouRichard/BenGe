@@ -21,6 +21,8 @@
           :room-id="roomId"
           :members="members"
           :all-directions="allDirections"
+          @submitVote="handleVoteSubmit"
+          @regenerateSuggestion="handleRegenerateRequest"
           @next-stage="$emit('updateStage', 1)"
           class="vote-stage-component"
         />
@@ -29,7 +31,7 @@
       <!-- 右侧区域 -->
       <div class="right-panel">
         <!-- 成员区 -->
-        <MemberList :members="members" />
+        <MemberList members="members" />
 
         <!-- 聊天区 -->
         <ChatPanel
@@ -104,10 +106,22 @@ const updateMembers = (membersList) => {
 };
 
 const handleDirectionConfirm = (selectedDirections) => {
+  // json格式发送到后端并收集所有成员的选择
   showVoteStage.value = true;
 };
 
+// 投票
+const handleVoteSubmit = (voteData) => {
+  // socketState.socket.send(
+  //   JSON.stringify({
+  //     type: "submit_vote",
+  //     roomId: roomId.value,
+  //     directions: voteData.directions,
+  //   })
+  // );
+};
 
+const handleRegenerateRequest = (requestData) => {};
 
 // 监听所有方向数据
 watch(
@@ -347,29 +361,5 @@ defineExpose({
 .fade-leave-from {
   opacity: 1;
   max-height: 200px;
-}
-
-.next-btn {
-  display: block;
-  width: 96px;
-  height: 36px;
-  padding: 2px;
-  background-color: #397FF3;
-  color: white;
-  border: none;
-  border-radius: 24px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  flex-shrink: 0;
-}
-
-.next-btn:hover {
-  background-color: #005cf0;
-}
-
-.next-btn:disabled {
-  background-color: #77767a;
-  cursor: not-allowed;
 }
 </style>

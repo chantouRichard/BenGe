@@ -213,7 +213,7 @@ watch(allMembersVoted, (newVal) => {
       setTimeout(() => {
         loadingStore.hide2();
       });
-    }, 10000);
+    }, 4000);
   }
 });
 

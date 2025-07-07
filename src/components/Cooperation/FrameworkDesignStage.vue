@@ -1,33 +1,34 @@
 <template>
   <div class="container">
-    <div class="header">
-      <div class="logo">BenGe Vision</div>
-      <div class="right-menu">
-        <div class="menu-item">我的剧本</div>
-        <div class="menu-item">帮助</div>
-        <img src="../../assets/login.png" alt="avatar" class="avatar" />
-      </div>
+    <div class="portal-container">
+      <portal-target name="node-detail-drawer" multiple />
+      <portal-target name="personal-detail-drawer" multiple />
+      <portal-target name="atmosphere-detail-panel" multiple />
+      <portal-target name="character-detail-panel" multiple />
+      <portal-target name="clue-detail-panel" multiple />
+      <portal-target name="inference-detail-panel" multiple />
     </div>
     <div v-if="stage == 0" class="main-area">
       <RoleSelector
-        :roles="roles"
-        @selected="handleRoleSelect"
-        @confirm="stage++"
+          :roles="roles"
+          @selected="handleRoleSelect"
+          @confirm="stage++"
       />
     </div>
 
     <div v-else-if="stage == 1">
       <EditArea
-        :roles="roles"
-        :userRole="userRole"
-        @nextStage="changeStage(2)"
+          ref="editArea"
+          :roles="roles"
+          :userRole="userRole"
+          @nextStage="changeStage(2)"
       />
 
       <SearchPanel />
       <MemberList />
       <TaskCard
-        :role="userRole"
-        :content="socketState.roles[socketState.userRole].task"
+          :role="userRole"
+          :content="socketState.roles[socketState.userRole].task"
       />
       <ScollingTips />
       <ChatPanel />
@@ -92,22 +93,22 @@ const roles = ref([
   {
     name: "剧情设计师",
     description:
-      "擅长构建故事主线与反转，通过精妙布局勾勒出跌宕起伏的剧情，掌控节奏与情感张力，引导玩家沉浸在虚构与现实交织的世界中。",
+        "擅长构建故事主线与反转，通过精妙布局勾勒出跌宕起伏的剧情，掌控节奏与情感张力，引导玩家沉浸在虚构与现实交织的世界中。",
   },
   {
     name: "角色设计师",
     description:
-      "负责塑造人物性格与关系网络，为每一个角色赋予鲜明动机与成长轨迹，让玩家在扮演中感受真实的情感与冲突。",
+        "负责塑造人物性格与关系网络，为每一个角色赋予鲜明动机与成长轨迹，让玩家在扮演中感受真实的情感与冲突。",
   },
   {
     name: "线索设计师",
     description:
-      "精于埋设线索与误导，通过巧妙布局隐藏真相，引导推理节奏，确保玩家在抽丝剥茧中感受层层惊喜与挑战。",
+        "精于埋设线索与误导，通过巧妙布局隐藏真相，引导推理节奏，确保玩家在抽丝剥茧中感受层层惊喜与挑战。",
   },
   {
     name: "氛围设计师",
     description:
-      "以视觉、音效与文本语言营造沉浸式体验，塑造紧张或诡秘的氛围，让每一处场景都充满戏剧张力，增强整体代入感。",
+        "以视觉、音效与文本语言营造沉浸式体验，塑造紧张或诡秘的氛围，让每一处场景都充满戏剧张力，增强整体代入感。",
   },
 ]);
 
@@ -135,24 +136,25 @@ function updateMembers(membersList) {
 
 import { watch } from "vue";
 import { userLoadingStore } from "@/stores/userLoadingStore";
+import {PortalTarget} from "portal-vue";
 const loadingStore = userLoadingStore();
 
 // 监听 CompleteScriptContent 的变化
 watch(
-  () => socketState.CompleteScriptContent,
-  (newVal, oldVal) => {
-    if (newVal && newVal !== oldVal) {
-      loadingStore.show3();
-
-      setTimeout(() => {
-        emit("updateStage", 2);
+    () => socketState.CompleteScriptContent,
+    (newVal, oldVal) => {
+      if (newVal && newVal !== oldVal) {
+        loadingStore.show3();
 
         setTimeout(() => {
-          loadingStore.hide3();
-        });
-      }, 4000);
+          emit("updateStage", 2);
+
+          setTimeout(() => {
+            loadingStore.hide3();
+          });
+        }, 4000);
+      }
     }
-  }
 );
 
 // 判断成员是否全部选择了
@@ -175,7 +177,12 @@ watch(allMembersChosen, (newVal) => {
 
 <style scoped>
 /* 折叠面板 */
-
+.portal-container {
+  position: relative;
+  width: 0;
+  height: 0;
+  z-index: 3000; /* 确保足够高 */
+}
 /* 外部容器（包含按钮 + 面板） */
 /* 侧边栏容器（整体一起滑动） */
 .side-panel-container {
@@ -250,33 +257,6 @@ watch(allMembersChosen, (newVal) => {
   background-size: cover;
   background-repeat: no-repeat;
   overflow: hidden;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  height: 60px;
-  padding: 0 60px;
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.right-menu {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-  gap: 30px;
-}
-
-.menu-item {
-  cursor: pointer;
-  font-size: 16px;
-  color: #333;
 }
 
 .avatar {

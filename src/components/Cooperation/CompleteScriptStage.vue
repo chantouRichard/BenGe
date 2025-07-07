@@ -200,7 +200,7 @@ onMounted(async () => {
 
     // 初始化 WebSocket Provider - 使用动态房间ID
     provider = new WebsocketProvider(
-      "wss://further-incoming-mega-divorce.trycloudflare.com",
+      "wss://compiler-soviet-diagram-happens.trycloudflare.com",
       `room-${roomId.value}`,
       ydoc
     );
@@ -496,7 +496,6 @@ function updateMembers(membersList) {
 }
 
 .member-list {
-  position: absolute;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   /* 自动换行、每列最小120px */
