@@ -21,7 +21,7 @@ export class UltimateVueFlowExporter {
       return this.downloadCanvas(finalCanvas, format, filename);
       
     } catch (error) {
-      console.error('导出失败:', error);
+      // console.error('导出失败:', error);
       // 降级方案
       return this.fallbackExport(format, filename);
     }
@@ -51,12 +51,12 @@ export class UltimateVueFlowExporter {
       const actualBgImage = this.getBackgroundImageFromElement();
       
       if (actualBgImage) {
-        console.log('找到实际背景图片:', actualBgImage);
+        // console.log('找到实际背景图片:', actualBgImage);
         const img = new Image();
         img.crossOrigin = 'anonymous';
         
         img.onload = () => {
-          console.log('背景图片加载成功');
+          // console.log('背景图片加载成功');
           const pattern = ctx.createPattern(img, 'repeat');
           ctx.fillStyle = pattern;
           ctx.fillRect(0, 0, width, height);
@@ -64,7 +64,7 @@ export class UltimateVueFlowExporter {
         };
         
         img.onerror = () => {
-          console.warn('背景图片加载失败，使用白色背景');
+          // console.warn('背景图片加载失败，使用白色背景');
           resolve(canvas);
         };
         
@@ -72,11 +72,11 @@ export class UltimateVueFlowExporter {
         
         // 超时保护
         setTimeout(() => {
-          console.warn('背景图片加载超时');
+          // console.warn('背景图片加载超时');
           resolve(canvas);
         }, 5000);
       } else {
-        console.warn('无法获取背景图片，使用白色背景');
+        // console.warn('无法获取背景图片，使用白色背景');
         resolve(canvas);
       }
     });
@@ -92,7 +92,7 @@ export class UltimateVueFlowExporter {
     const computedStyle = window.getComputedStyle(vueFlowElement);
     const backgroundImage = computedStyle.backgroundImage;
     
-    console.log('元素背景图片样式:', backgroundImage);
+    // console.log('元素背景图片样式:', backgroundImage);
     
     if (backgroundImage && backgroundImage !== 'none') {
       // 提取URL

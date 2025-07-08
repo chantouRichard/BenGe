@@ -197,7 +197,7 @@ const handleExport = () => {
     // 调用CanvasArea组件暴露的导出方法
     canvasRef.value?.exportCanvas();
   } else {
-    console.warn('canvasRef or export method not found');
+    // console.warn('canvasRef or export method not found');
   }
 };
 
@@ -271,11 +271,11 @@ const edges = computed(() => [
 
 // const edges = computed(() => canvasStore.edges)
 const handleDetailSave = (updatedData) => {
-  console.log("当前节点数据", updatedData);
+  // console.log("当前节点数据", updatedData);
 
   const index = nodes.value.findIndex((node) => node.id === updatedData.id);
   if (index === -1) {
-    console.warn("未找到对应节点", updatedData.id);
+    // console.warn("未找到对应节点", updatedData.id);
     return;
   }
 
@@ -292,7 +292,7 @@ const handleDetailSave = (updatedData) => {
     newIndex = atmosphereStore.handleDetailSave(updatedData);
   }
 
-  console.log("接受到的索引", newIndex);
+  // console.log("接受到的索引", newIndex);
   // 直接使用更新后的数据进行强制更新
   if (newIndex !== -1) {
     canvasRef.value?.forceUpdateNode(updatedData.id, updatedData.data);
@@ -333,14 +333,14 @@ const handleNodeClick = (data) => {
 const handleEdgeSelect = (edgeId) => {
   // 检查edges是否可用
   if (!edges.value || !Array.isArray(edges.value)) {
-    console.warn('edges数据不可用:', edges.value);
+    // console.warn('edges数据不可用:', edges.value);
     return;
   }
 
   // 根据边ID查找边对象
   const edge = edges.value.find(e => e.id === edgeId);
   if (!edge) {
-    console.warn('未找到边对象:', edgeId);
+    // console.warn('未找到边对象:', edgeId);
     return;
   }
 
@@ -367,7 +367,7 @@ const handleEdgeSelect = (edgeId) => {
 // 使用watchEffect自动响应式处理
 watchEffect(() => {
   if (canvasRef.value?.vueFlowApi?.getNodes) {
-    console.log('Detected valid VueFlow API:', canvasRef.value.vueFlowApi)
+    // console.log('Detected valid VueFlow API:', canvasRef.value.vueFlowApi)
     searchStore.setVueFlowApi(canvasRef.value.vueFlowApi)
   }
 })
@@ -377,7 +377,7 @@ onMounted(() => {
     if (canvasRef.value?.vueFlowApi?.getNodes) {
       clearInterval(timer)
       searchStore.setVueFlowApi(canvasRef.value.vueFlowApi)
-      console.log('API confirmed via interval check')
+      // console.log('API confirmed via interval check')
     }
   }, 100)
 })
@@ -405,7 +405,7 @@ const handleConnectNode = (connection) => {
   const targetNode = nodes.value.find(n => n.id === connection.target);
 
   if (!sourceNode || !targetNode) {
-    console.warn('无法找到连接的节点');
+    // console.warn('无法找到连接的节点');
     return;
   }
 
@@ -523,7 +523,7 @@ const handleAIDialogGenerate = async ({ userInput, template }) => {
       aiGenerateError.value = '生成失败：' + (result.message || '未知错误')
     }
   } catch (error) {
-    console.error('AI生成失败:', error)
+    // console.error('AI生成失败:', error)
     // 设置错误结果
     aiGenerateError.value = '生成失败，请检查网络连接'
   }
@@ -651,17 +651,17 @@ const handleAtmospherePalette = () => {
 const handleLinkScene = () => {
   if (atmosphereStore.isLinkingMode) {
     atmosphereStore.exitLinkingMode()
-    console.log('退出氛围与场景关联模式')
+    // console.log('退出氛围与场景关联模式')
   } else {
     atmosphereStore.handleLinkSceneClick()
-    console.log('进入氛围与场景关联模式')
-    console.log('请先点击氛围节点，再点击场景节点建立关联')
+    // console.log('进入氛围与场景关联模式')
+    // console.log('请先点击氛围节点，再点击场景节点建立关联')
   }
 }
 
 // 处理氛围选择
 const handleAtmosphereSelect = (atmosphereData) => {
-  console.log('选择氛围:', atmosphereData)
+  // console.log('选择氛围:', atmosphereData)
   // 这里可以添加氛围选择的处理逻辑
   showPalette.value = false
 }
@@ -718,7 +718,7 @@ const handleCharacterSceneEdgeEditConfirm = (edgeData) => {
 
 const handleAiIntegrate = () => {
   const contextData = collectContextData();
-  console.log("调用AI整合功能:", contextData);
+  // console.log("调用AI整合功能:", contextData);
 
   ShowAiIntegrate.value = true;
 }
@@ -732,7 +732,7 @@ watch(
     if (newData) {
       ShowAiIntegrate.value = true;
       AIContent.value = newData;
-      console.log("newAi:", AIContent.value);
+      // console.log("newAi:", AIContent.value);
     }
   },
   { deep: true }

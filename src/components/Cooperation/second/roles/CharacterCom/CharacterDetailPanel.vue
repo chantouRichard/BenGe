@@ -231,13 +231,13 @@ const initFormData = () => {
     items: data.items || '',
     notes: data.notes || ''
   };
-  console.log("角色表单数据:", formData.value);
+  // console.log("角色表单数据:", formData.value);
 };
 
 // 监听节点数据变化
 watch(() => props.nodeData, (newNode) => {
   if (newNode) {
-    console.log('初始化角色表单数据', props.nodeData);
+    // console.log('初始化角色表单数据', props.nodeData);
     initFormData();
   }
 }, { deep: true, immediate: true });
@@ -254,7 +254,7 @@ const handleImageError = (event) => {
 
 // 保存处理
 const handleSave = () => {
-  console.log('保存角色数据', formData.value);
+  // console.log('保存角色数据', formData.value);
   if (!props.nodeData?.id) return;
 
   emit('save', {

@@ -128,7 +128,7 @@ const confirmSelection = () => {
   // 事件参数顺序按之前设定 (type, label)
 
   // 可能会有bug
-  console.log("选择的边类型和标签为", selectedType.value, label)
+  // console.log("选择的边类型和标签为", selectedType.value, label)
   emit('confirm', selectedType.value, label)
 }
 

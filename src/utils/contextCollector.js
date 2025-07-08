@@ -350,7 +350,7 @@ export const collectContextData = () => {
       characterCount: statistics.nodesByType.character || 0
     }
   } catch (error) {
-    console.error('收集上下文数据时发生错误:', error)
+    // console.error('收集上下文数据时发生错误:', error)
     return {
       chat: [],
       nodes: {},

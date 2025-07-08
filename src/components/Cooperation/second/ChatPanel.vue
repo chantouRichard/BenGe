@@ -31,7 +31,7 @@ const isCollapsed = ref(false);
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
-  console.log("test:", isCollapsed.value);
+  // console.log("test:", isCollapsed.value);
 };
 
 const currentIcon = computed(() =>

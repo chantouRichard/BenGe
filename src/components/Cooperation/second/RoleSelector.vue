@@ -123,11 +123,11 @@ function emitRoleSelection(roleName) {
       username: socketState.currentUsername,
     })
   );
-  console.log("发送了选择角色消息：", {
-    type: "role",
-    roleName,
-    username: socketState.currentUsername,
-  });
+  // console.log("发送了选择角色消息：", {
+  //   type: "role",
+  //   roleName,
+  //   username: socketState.currentUsername,
+  // });
 }
 /*
 const allPlayersSelected = computed(() => {
@@ -145,14 +145,14 @@ const allPlayersSelected = computed(() => {
 
 // 监听角色选择变化（用于调试）
 watch(() => socketState.roleSelections, (newSelections) => {
-  console.log("角色选择变化:", newSelections);
-  console.log("所有玩家是否已选择:", allPlayersSelected.value);
+  // console.log("角色选择变化:", newSelections);
+  // console.log("所有玩家是否已选择:", allPlayersSelected.value);
 }, { deep: true });
 
 // 监听成员变化（用于调试）
 watch(() => socketState.members, (newMembers) => {
-  console.log("成员变化:", newMembers.length);
-  console.log("所有玩家是否已选择:", allPlayersSelected.value);
+  // console.log("成员变化:", newMembers.length);
+  // console.log("所有玩家是否已选择:", allPlayersSelected.value);
 });
 */
 // 确认角色选择

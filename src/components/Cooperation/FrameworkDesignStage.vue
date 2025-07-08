@@ -59,7 +59,7 @@ function handleRoleSelect(index) {
 import SidePanel from "./second/SidePanel.vue";
 
 function handleMemberClick(data) {
-  console.log("点击了成员：", data.member);
+  // console.log("点击了成员：", data.member);
   selectedMember.value = data.member;
   showOther.value = true;
   isPanelCollapsed.value = false;
@@ -131,7 +131,7 @@ function updateMembers(membersList) {
     name: member.username,
     avatar: member.avatar || userAvatar,
   }));
-  console.log("成员列表已更新:", members.value);
+  // console.log("成员列表已更新:", members.value);
 }
 
 import { watch } from "vue";

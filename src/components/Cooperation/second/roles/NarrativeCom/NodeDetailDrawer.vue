@@ -158,25 +158,25 @@ const initFormData = () => {
     nodeConnections: data.nodeConnections || '',
     notes: data.notes || ''
   };
-  console.log("AI生成节点formData数据:", formData.value);
-  console.log("原始nodeData:", props.nodeData);
+  // console.log("AI生成节点formData数据:", formData.value);
+  // console.log("原始nodeData:", props.nodeData);
 };
 
 
 // 监听节点数据变化
 watch(() => props.nodeData, (newNode) => {
   if (newNode) {
-    console.log('初始化表单数据', props.nodeData);
+    // console.log('初始化表单数据', props.nodeData);
     initFormData();
   }
 }, { deep: true, immediate: true });
 
 // 保存处理
 const handleSave = () => {
-  console.log('保存表单数据', formData.value);
-  console.log("结点信息修改", props.nodeData)
+  // console.log('保存表单数据', formData.value);
+  // console.log("结点信息修改", props.nodeData)
   if (!props.nodeData?.id) return;
-  console.log("id", props.nodeData?.id)
+  // console.log("id", props.nodeData?.id)
 
   emit('save', {
     id: props.nodeData?.id,

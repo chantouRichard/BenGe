@@ -492,7 +492,7 @@ const toggleAnalysisCanvas = async () => {
       document.body.style.overflow = '';
     }
   } catch (error) {
-    console.error("切换画布失败", error);
+    // console.error("切换画布失败", error);
   }
 };
 
@@ -502,10 +502,10 @@ const startAnalysis = async () => {
   isAnalyzing.value = true;
 
   try{
-    console.log('开始分析');
+    // console.log('开始分析');
     await scriptStore.UpdateAnalysis();
   } catch (error) {
-   console.error("分析失败", error); 
+   // console.error("分析失败", error); 
   } finally {
     isAnalyzing.value = false;
   }
@@ -595,7 +595,7 @@ const sendMessage = async () => {
       localChatHistory.value = [];
     }
   } catch (error) {
-    console.error("更新剧本内容失败", error);
+    // console.error("更新剧本内容失败", error);
     
     // 移除正在输入的提示
     localChatHistory.value.pop();
@@ -630,7 +630,7 @@ const generateCompleteScript = async () => {
     isProcessing.value = true; // 设置处理中状态.这时候不允许对话
     await scriptStore.GenerateScript();
   } catch (error) {
-    console.error("生成剧本失败", error);
+    // console.error("生成剧本失败", error);
   } finally {
     isProcessing.value = false; // 处理完成后重置状态
     showGeneratingCanvas.value = false;

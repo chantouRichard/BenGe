@@ -248,7 +248,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
-    console.log("点击创建边按钮");
+    // console.log("点击创建边按钮");
     isCreatingEdge.value = true;
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
@@ -256,7 +256,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
-    console.log("点击的边的Id", edgeId);
+    // console.log("点击的边的Id", edgeId);
     editingEdgeId.value = edgeId;
     showEdgeSelector.value = true;
   };
@@ -350,7 +350,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
   // 用户在角色-场景编辑器中，确认修改角色-场景关系
   const handleCharacterSceneEdgeEditConfirm = (sceneData) => {
     if (!editingEdgeId.value) {
-      console.warn("没有正在编辑的边ID");
+      // console.warn("没有正在编辑的边ID");
       return;
     }
 
@@ -373,7 +373,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
       broadcast();
     } else {
-      console.error("未找到要编辑的角色-场景边:", editingEdgeId.value);
+      // console.error("未找到要编辑的角色-场景边:", editingEdgeId.value);
     }
   };
 
@@ -477,12 +477,12 @@ export const useCharacterStore = defineStore("characterStore", () => {
           edgeType.value = "character-scene";
         } else {
           // 不支持的连接类型
-          console.warn(
-            "不支持的连接类型:",
-            sourceNode.type,
-            "->",
-            targetNode.type
-          );
+          // console.warn(
+          //   "不支持的连接类型:",
+          //   sourceNode.type,
+          //   "->",
+          //   targetNode.type
+          // );
           alert("角色设计师只支持角色与角色、角色与场景之间的连接");
 
           // 重置连接状态
@@ -498,10 +498,10 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log("保存的节点数据：", updatedData);
+    // console.log("保存的节点数据：", updatedData);
 
     if (!updatedData || !updatedData.id || !updatedData.data) {
-      console.warn("[handleDetailSave] 无效参数：", updatedData);
+      // console.warn("[handleDetailSave] 无效参数：", updatedData);
       return -1;
     }
 
@@ -520,13 +520,13 @@ export const useCharacterStore = defineStore("characterStore", () => {
         // ✅ 强制触发响应式更新
         nodes.value[index] = { ...nodes.value[index] };
 
-        console.log("更新后的节点数据：", nodes.value[index]);
+        // console.log("更新后的节点数据：", nodes.value[index]);
       } else {
-        console.warn("未找到对应的节点 ID:", updatedData.id);
+        // console.warn("未找到对应的节点 ID:", updatedData.id);
         return -1;
       }
     } else {
-      console.warn("无选中节点，可能是编辑逻辑未正确触发");
+      // console.warn("无选中节点，可能是编辑逻辑未正确触发");
       return -1;
     }
 
@@ -606,12 +606,9 @@ export const useCharacterStore = defineStore("characterStore", () => {
         characterEdges: edges,
       })
     );
-    console.log("广播的节点信息：", {
-      nodes: nodes.value,
-      edges: edges,
-    });}
+    }
     else{
-      console.error("未连接websocket");
+      // console.error("未连接websocket");
     }
   }, 300);
 

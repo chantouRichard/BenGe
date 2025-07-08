@@ -216,7 +216,7 @@ const timeAtmospheres = ref([
 
 // 选择氛围
 const selectAtmosphere = (atmosphere) => {
-  console.log('选择氛围:', atmosphere.name)
+  // console.log('选择氛围:', atmosphere.name)
   emit('select', atmosphere)
 }
 

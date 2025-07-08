@@ -181,7 +181,7 @@ function onDrop(event, targetArea) {
     unselectedDirections.value.push(item);
   }
 
-  console.log("选择了方向：", selectedDirections.value);
+  // console.log("选择了方向：", selectedDirections.value);
   socketState.socket.send(
     JSON.stringify({ type: "vote", key: selectedDirections.value })
   );
@@ -228,7 +228,7 @@ function confirmSelection() {
     ElMessage.warning("请至少选择一个方向主题");
     return;
   }
-  console.log("最终选择方向：", true);
+  // console.log("最终选择方向：", true);
   socketState.socket.send(JSON.stringify({ type: "vote", hasChosen: true }));
 
   // emit("confirm", selectedDirections.value);

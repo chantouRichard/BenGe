@@ -131,7 +131,7 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
-    console.log("点击创建边按钮");
+    // console.log("点击创建边按钮");
     isCreatingEdge.value = true;
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
@@ -139,7 +139,7 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
-    console.log("点击的边的Id", edgeId);
+    // console.log("点击的边的Id", edgeId);
     editingEdgeId.value = edgeId;
     showEdgeSelector.value = true;
   };
@@ -236,10 +236,10 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log("保存的节点数据：", updatedData);
+    // console.log("保存的节点数据：", updatedData);
 
     if (!updatedData || !updatedData.id || !updatedData.data) {
-      console.warn("[handleDetailSave] 无效参数：", updatedData);
+      // console.warn("[handleDetailSave] 无效参数：", updatedData);
       return -1;
     }
 
@@ -258,13 +258,13 @@ export const useClueStore = defineStore("clueStore", () => {
         // ✅ 强制触发响应式更新
         nodes.value[index] = { ...nodes.value[index] };
 
-        console.log("更新后的节点数据：", nodes.value[index]);
+        // console.log("更新后的节点数据：", nodes.value[index]);
       } else {
-        console.warn("未找到对应的节点 ID:", updatedData.id);
+        // console.warn("未找到对应的节点 ID:", updatedData.id);
         return -1;
       }
     } else {
-      console.warn("无选中节点，可能是编辑逻辑未正确触发");
+      // console.warn("无选中节点，可能是编辑逻辑未正确触发");
       return -1;
     }
 
@@ -369,7 +369,7 @@ export const useClueStore = defineStore("clueStore", () => {
     if (nodeIndex !== -1) {
       nodes.value[nodeIndex].position = position;
       nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] }; // ✅ 强制 Vue 感知变化
-      // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
+      // // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
     }
     broadcast();
   };
@@ -392,9 +392,9 @@ export const useClueStore = defineStore("clueStore", () => {
       };
 
       socketState.socket.send(JSON.stringify(message));
-      console.log("广播的节点信息：", message);
+      // console.log("广播的节点信息：", message);
     } else {
-      console.error("未连接websocket");
+      // console.error("未连接websocket");
     }
   }, 300); // 300ms 内重复调用只执行一次
 

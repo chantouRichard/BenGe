@@ -66,7 +66,7 @@ function updateSearchResults() {
   })
 
   // 输出搜索结果，方便调试
-  console.log('Search results:', search.value)
+  // console.log('Search results:', search.value)
   searching.value = true
   selectedItemIndex.value = -1 // 重置选中的项
 }
@@ -74,12 +74,12 @@ function updateSearchResults() {
 const handleNodeClick = async (node) => {
   if (!node?.id) return
 
-  console.log('Attempting to focus node:', node.id)
-  console.log('Current searchStore API:', searchStore.vueFlowApi)
+  // console.log('Attempting to focus node:', node.id)
+  // console.log('Current searchStore API:', searchStore.vueFlowApi)
 
   const success = await searchStore.focusNode(node.id)
   if (!success) {
-    console.error('Failed to focus node after first attempt, retrying...')
+    // console.error('Failed to focus node after first attempt, retrying...')
     await new Promise(resolve => setTimeout(resolve, 300))
     await searchStore.focusNode(node.id)
   }

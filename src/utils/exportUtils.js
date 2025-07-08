@@ -39,8 +39,8 @@ export class CanvasExporter {
     }
 
     try {
-      console.log('开始PNG导出，画板元素:', canvasElement);
-      console.log('画板子元素数量:', canvasElement.children.length);
+      // console.log('开始PNG导出，画板元素:', canvasElement);
+      // console.log('画板子元素数量:', canvasElement.children.length);
       
       const canvas = await html2canvas(canvasElement, defaultOptions)
       const imgData = canvas.toDataURL('image/png')
@@ -54,7 +54,7 @@ export class CanvasExporter {
       
       return { success: true, data: imgData }
     } catch (error) {
-      console.error('PNG导出失败:', error)
+      // console.error('PNG导出失败:', error)
       return { success: false, error }
     }
   }
@@ -114,7 +114,7 @@ export class CanvasExporter {
     }
 
     try {
-      console.log('开始JPG导出，画板元素:', canvasElement);
+      // console.log('开始JPG导出，画板元素:', canvasElement);
       
       const canvas = await html2canvas(canvasElement, defaultOptions)
       const imgData = canvas.toDataURL('image/jpeg', 0.9)
@@ -128,7 +128,7 @@ export class CanvasExporter {
       
       return { success: true, data: imgData }
     } catch (error) {
-      console.error('JPG导出失败:', error)
+      // console.error('JPG导出失败:', error)
       return { success: false, error }
     }
   }
@@ -155,7 +155,7 @@ export class CanvasExporter {
       URL.revokeObjectURL(url)
       return { success: true, data: jsonData }
     } catch (error) {
-      console.error('JSON导出失败:', error)
+      // console.error('JSON导出失败:', error)
       return { success: false, error }
     }
   }
@@ -212,7 +212,7 @@ export class CanvasExporter {
       
       return { success: true, data: pdf }
     } catch (error) {
-      console.error('PDF导出失败:', error)
+      // console.error('PDF导出失败:', error)
       return { success: false, error }
     }
   }
@@ -279,7 +279,7 @@ export class CanvasExporter {
       URL.revokeObjectURL(url)
       return { success: true, data: markdown }
     } catch (error) {
-      console.error('Markdown导出失败:', error)
+      // console.error('Markdown导出失败:', error)
       return { success: false, error }
     }
   }

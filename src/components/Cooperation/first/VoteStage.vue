@@ -110,13 +110,13 @@ const initializeOptions = async () => {
     keyWords: allKeys,
     roomId: socketState.roomId,
   };
-  console.log("所有Keys：", allKeys);
-  console.log("变化前：", socketState.options);
+  // console.log("所有Keys：", allKeys);
+  // console.log("变化前：", socketState.options);
 
   try {
     await AIIntegrateDirection(data);
   } catch (error) {
-    console.log("请求出错：", error);
+    // console.log("请求出错：", error);
   }
 };
 // 如果不是房主，监听 options 的变化
@@ -124,7 +124,7 @@ watch(
   () => socketState.options,
   (newOptions) => {
     if (newOptions) {
-      console.log("变化后：", socketState.options);
+      // console.log("变化后：", socketState.options);
       topDirections.value = newOptions;
       AIGenerate.value = false;
     }
@@ -160,7 +160,7 @@ const toggleVote = (direction, voteIndex) => {
     vote.value[voteIndex] = 0;
   }
 
-  console.log("投票数组:", vote.value);
+  // console.log("投票数组:", vote.value);
   socketState.socket.send(JSON.stringify({ type: "vote", vote: vote.value }));
 };
 
@@ -169,7 +169,7 @@ const confirmVote = () => {
   if (selectedOptions.value.length === 0) return;
 
   hasVoted.value = true;
-  console.log("有没有投票好：", hasVoted.value);
+  // console.log("有没有投票好：", hasVoted.value);
   socketState.socket.send(
     JSON.stringify({ type: "vote", hasVoted: hasVoted.value })
   );
@@ -187,7 +187,7 @@ const allMembersVoted = computed(
 watch(allMembersVoted, (newVal) => {
   if (newVal) {
     socketState.direction = sortedOptions.value[0].direction;
-    console.log("最终方向：", sortedOptions.value);
+    // console.log("最终方向：", sortedOptions.value);
 
     // ✅ 将最终方向信息插入到每个角色的任务列表前面（或末尾）
     const dirIntro = `🎯 本轮创作方向为《${socketState.direction.title}》：${socketState.direction.description}`;
@@ -227,8 +227,8 @@ watch(
 watch(
   voteOptions,
   (newVal) => {
-    console.log("voteOptions 更新了:", newVal);
-    console.log("socketState.members:", socketState.members);
+    // console.log("voteOptions 更新了:", newVal);
+    // console.log("socketState.members:", socketState.members);
   },
   { deep: true, immediate: true }
 );

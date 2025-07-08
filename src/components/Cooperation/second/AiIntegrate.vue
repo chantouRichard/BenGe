@@ -78,7 +78,7 @@ const handleOverlayClick = () => {
 import { enterThirdStage } from "@/api/script";
 const emitContent = async () => {
   socketState.CompleteScriptContent = editorContent.value;
-  console.log("点击确认：", socketState.CompleteScriptContent);
+  // console.log("点击确认：", socketState.CompleteScriptContent);
 
   await enterThirdStage(socketState.roomId, socketState.CompleteScriptContent);
 };
@@ -88,14 +88,14 @@ import { collectContextData } from "@/utils/contextCollector";
 const contextData = collectContextData();
 import { generateCooperateFramework } from "@/api/script";
 const AiIntegrate = async () => {
-  console.log("contextData:", contextData);
+  // console.log("contextData:", contextData);
   const data = {
     contextData: JSON.stringify(contextData),
     roomId: socketState.roomId,
   };
   if (socketState.AICompleteScriptContent.length == 0) {
     const res = await generateCooperateFramework(data);
-    console.log("res:", res);
+    // console.log("res:", res);
   }
   showAI.value = false;
 };

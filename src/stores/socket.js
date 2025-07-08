@@ -116,14 +116,14 @@ async function ensureStores() {
 async function setupWebSocket() {
   await ensureStores();
   if (socketState.isConnected || socketState.isConnecting) {
-    console.warn("WebSocket 已经连接");
+    // console.warn("WebSocket 已经连接");
     return;
   }
   socketState.isConnecting = true; // 正在连接
 
   const token = localStorage.getItem("token");
   if (!token) {
-    console.error("未找到 token，无法建立 WebSocket 连接");
+    // console.error("未找到 token，无法建立 WebSocket 连接");
     return;
   }
   // 穿透版本
@@ -148,10 +148,10 @@ async function setupWebSocket() {
       socketState.isConnecting = false;
       socketState.isConnected = true;
     } else {
-      console.warn(
-        "WebSocket 还未准备好，当前状态:",
-        socketState.socket.readyState
-      );
+      // console.warn(
+      //   "WebSocket 还未准备好，当前状态:",
+      //   socketState.socket.readyState
+      // );
     }
 
     // 启动心跳机制（每 20 秒发一个 ping）
@@ -161,7 +161,7 @@ async function setupWebSocket() {
         socketState.socket.readyState === WebSocket.OPEN
       ) {
         socketState.socket.send(JSON.stringify({ type: "ping" }));
-        // 可选：console.log("发送 ping 心跳");
+        // 可选：// console.log("发送 ping 心跳");
       }
     }, 20000);
   };
@@ -169,16 +169,16 @@ async function setupWebSocket() {
   socketState.socket.onmessage = (event) => {
     const msg = JSON.parse(event.data);
 
-    console.log("event:", msg);
+    // console.log("event:", msg);
 
     if (msg.type === "userInfo") {
       socketState.currentUserId = msg.userId;
       socketState.currentUsername = msg.username;
-      console.log(
-        "接收到用户信息:",
-        socketState.currentUserId,
-        socketState.currentUsername
-      );
+      // console.log(
+      //   "接收到用户信息:",
+      //   socketState.currentUserId,
+      //   socketState.currentUsername
+      // );
     } else if (msg.type === "chat") {
       const isAIMessage = msg.username === "AI助手" || msg.userId === -1;
       const newMessage = {
@@ -192,7 +192,7 @@ async function setupWebSocket() {
       };
 
       socketState.messages.push(newMessage);
-      console.log("消息数组更新，当前长度:", socketState.messages.length);
+      // console.log("消息数组更新，当前长度:", socketState.messages.length);
     } else if (msg.type === "system") {
       socketState.messages.push({
         type: "system",
@@ -204,7 +204,7 @@ async function setupWebSocket() {
     } else if (msg.type === "members") {
       handleMembersUpdate(msg.members || []);
     } else if (msg.type === "error") {
-      console.error("WebSocket 错误:", msg.message);
+      // console.error("WebSocket 错误:", msg.message);
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
       handleRoleSelection(msg.roleName, msg.username);
@@ -225,7 +225,7 @@ async function setupWebSocket() {
   };
 
   socketState.socket.onclose = () => {
-    console.log("WebSocket 连接已关闭");
+    // console.log("WebSocket 连接已关闭");
     socketState.isConnected = false;
     socketState.isConnecting = false;
     if (pingInterval) clearInterval(pingInterval);
@@ -233,12 +233,12 @@ async function setupWebSocket() {
     if(!socketState.isConnected)setupWebSocket();
     // 自动尝试重连
     // setTimeout(() => {
-    //   console.log("尝试重连 WebSocket...");
+    //   // console.log("尝试重连 WebSocket...");
     // }, 5000); // 可配置：5 秒后重连
   };
 
   socketState.socket.onerror = (err) => {
-    console.error("WebSocket 连接错误:", err);
+    // console.error("WebSocket 连接错误:", err);
     socketState.isConnected = false;
     socketState.isConnecting = false;
     if (pingInterval) clearInterval(pingInterval);
@@ -262,7 +262,7 @@ function handleMembersUpdate(incomingMembers) {
 }
 
 function sendMessage() {
-  console.log("sendMessage:", socketState.newMessage);
+  // console.log("sendMessage:", socketState.newMessage);
   if (socketState.isConnected && socketState.socket) {
     const messageData = {
       type: "chat",
@@ -273,7 +273,7 @@ function sendMessage() {
     socketState.socket.send(JSON.stringify(messageData));
     socketState.newMessage = "";
   } else {
-    console.error("WebSocket 连接未就绪");
+    // console.error("WebSocket 连接未就绪");
   }
 }
 
@@ -292,37 +292,34 @@ function closeWebSocket() {
 function handleRoleSelection(roleName, username) {
   // 遍历所有角色，查找是否有该用户已选择了其他角色
   for (let existingRole in socketState.roleSelections) {
-    console.log("打印：", existingRole);
+    // console.log("打印：", existingRole);
     // 如果当前角色是其他角色且该角色已经被用户名选择
     if (
       socketState.roleSelections[existingRole] === username &&
       existingRole !== roleName
     ) {
       // 清空原来选择的角色
-      console.log(`${username} 已选择了 ${existingRole}，正在清空该角色的选择`);
+      // console.log(`${username} 已选择了 ${existingRole}，正在清空该角色的选择`);
       socketState.roleSelections[existingRole] = ""; // 清空原选择
     }
   }
 
   // 更新当前角色的选择
   socketState.roleSelections[roleName] = username;
-  console.log(
-    "更新后的 socketState.roleSelections:",
-    socketState.roleSelections
-  );
+
 
   // 更新成员列表
   updateMembers(roleName, username);
-  console.log("更新后的成员信息:", socketState.members);
+  // console.log("更新后的成员信息:", socketState.members);
 }
 
 // 同步画布
 function handleCanvas(msg) {
-  console.log("接收到canvas：", msg);
+  // console.log("接收到canvas：", msg);
   if (msg.content) {
-    console.log("进入：", socketState.AICompleteScriptContent);
+    // console.log("进入：", socketState.AICompleteScriptContent);
     socketState.AICompleteScriptContent = msg.content;
-    console.log("OKOK:", socketState.AICompleteScriptContent);
+    // console.log("OKOK:", socketState.AICompleteScriptContent);
     return;
   }
 
@@ -439,7 +436,7 @@ function handleVote(msg) {
   }
   if (msg.content) {
     socketState.options = JSON.parse(msg.content);
-    console.log("socketState.options:", socketState.options);
+    // console.log("socketState.options:", socketState.options);
   }
 }
 

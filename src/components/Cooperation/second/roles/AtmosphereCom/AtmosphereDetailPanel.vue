@@ -168,20 +168,20 @@ const initFormData = () => {
     weather: data.weather || '',
     notes: data.notes || ''
   };
-  console.log('氛围面板初始化表单数据:', formData.value);
+  // console.log('氛围面板初始化表单数据:', formData.value);
 };
 
 // 监听节点数据变化
 watch(() => props.nodeData, (newNode) => {
   if (newNode) {
-    console.log('氛围面板接收到节点数据:', props.nodeData);
+    // console.log('氛围面板接收到节点数据:', props.nodeData);
     initFormData();
   }
 }, { deep: true, immediate: true });
 
 // 保存处理
 const handleSave = () => {
-  console.log('保存氛围表单数据', formData.value);
+  // console.log('保存氛围表单数据', formData.value);
   if (!props.nodeData?.id) return;
 
   emit('save', {

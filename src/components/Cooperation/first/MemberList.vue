@@ -66,7 +66,7 @@ const isMemberOpen = ref(true);
 // 切换成员列表显示
 const toggleMemberListVisibility = () => {
   isMemberOpen.value = !isMemberOpen.value;
-  console.log("成员列表：", socketState.members);
+  // console.log("成员列表：", socketState.members);
 };
 </script>
 

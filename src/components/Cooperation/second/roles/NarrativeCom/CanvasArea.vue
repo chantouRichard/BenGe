@@ -167,7 +167,7 @@ const vueFlowApi = computed(() => ({
 function exportCanvas() {
   const el = document.querySelector('.vue-flow');
   if (!el) {
-    console.warn('画布容器未找到');
+    // console.warn('画布容器未找到');
     return;
   }
 
@@ -183,13 +183,13 @@ function exportCanvas() {
     link.download = 'canvas.png';
     link.click();
   }).catch(err => {
-    console.error('截图失败：', err);
+    // console.error('截图失败：', err);
   });
 }
 
 // 导出画板为指定格式（新增功能）
 function exportCanvasAs(format) {
-  console.log(`导出格式: ${format}`);
+  // console.log(`导出格式: ${format}`);
 
   // 获取完整的画板数据
   const canvasData = {
@@ -225,7 +225,7 @@ function exportCanvasAs(format) {
       CanvasExporter.exportAsMarkdown(canvasData, filename);
       break;
     default:
-      console.warn('不支持的导出格式:', format);
+      // console.warn('不支持的导出格式:', format);
   }
 }
 
@@ -268,16 +268,16 @@ async function exportAsPDF(canvasData, filename) {
       // 保存PDF
       pdf.save(`${filename}.pdf`);
     } else {
-      console.error('PDF导出失败：无法获取画板截图');
+      // console.error('PDF导出失败：无法获取画板截图');
     }
   } catch (error) {
-    console.error('PDF导出失败:', error);
+    // console.error('PDF导出失败:', error);
   }
 }
 
 onMounted(() => {
   searchStore.setVueFlowApi(vueFlowApi.value)
-  console.log('VueFlow API set with nodes:', getNodes.value)
+  // console.log('VueFlow API set with nodes:', getNodes.value)
 });
 
 // 监听聚焦节点变化
@@ -304,15 +304,15 @@ const props = defineProps({
 // watch(
 //   () => props.nodes.map(node => node.data?.title),
 //   (newTitles) => {
-//     // console.log('节点标题变化:', newTitles);
+//     // // console.log('节点标题变化:', newTitles);
 //   },
 //   { deep: false }
 // )
 
 // watch(() => props.nodes, (newVal, oldVal) => {
-//   // console.log('[DEBUG] nodes发生变化')
-//   console.log('新节点列表：', newVal)
-//   console.log('旧节点列表：', oldVal)
+//   // // console.log('[DEBUG] nodes发生变化')
+//   // console.log('新节点列表：', newVal)
+//   // console.log('旧节点列表：', oldVal)
 // }, { deep: true })
 
 const emit = defineEmits(['node-select', "edge-select" , 'delete-node' , 'node-position-change', "connect-node"])
@@ -328,7 +328,7 @@ const computedBackgroundSize = computed(() => {
 
 const handleMove = (viewpoint) => {
   // Vue Flow 的 move 事件会返回 zoom 和 transform 信息
-  // console.log("handleMove：",viewpoint);
+  // // console.log("handleMove：",viewpoint);
 
   zoom.value = viewpoint.flowTransform.zoom // 缩放比例
   backgroundX.value = viewpoint.flowTransform.x;
@@ -343,7 +343,7 @@ const handleNodeClick = (node) => {
 // 处理边点击修改
 const handleEdgeClick = (e) => {
   // 查看具体的数据格式
-  console.log("选择的边", e)
+  // console.log("选择的边", e)
   emit("edge-select", e.edge.id)
 }
 // 删除结点
@@ -353,12 +353,12 @@ const handleDeleteNode = (nodeId) => {
 // 实现结点拖拽
 const handleNodeDrag = (node) => {
   const payload = { id: node.node.id, position: node.node.position };
-  // console.log('emit payload:', payload)
+  // // console.log('emit payload:', payload)
   emit('node-position-change', payload)
 }
 
 const handleNodeDragStop = (node) => {
-  // console.log('拖拽停止:', node); // 调试日志
+  // // console.log('拖拽停止:', node); // 调试日志
   if (!node?.node.position) return
 
   const payload = { id: node.node.id, position: node.node.position };
@@ -385,7 +385,7 @@ const edgeTypes = {
 const { updateNode } = useVueFlow();
 const { updateEdge } = useVueFlow();
 const forceUpdateNode = (id, newData) => {
-  console.log('forceUpdateNode', id, newData)
+  // console.log('forceUpdateNode', id, newData)
   updateNode(id, {
     data: { ...newData },
   })
@@ -412,7 +412,7 @@ const handleConnect = (params) => {
   const targetNode = props.nodes.find(n => n.id === params.target);
 
   if (!sourceNode || !targetNode) {
-    console.warn('无法找到连接的节点');
+    // console.warn('无法找到连接的节点');
     return;
   }
 

@@ -154,7 +154,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 开启氛围与场景关联模式
   const handleLinkSceneClick = () => {
-    console.log("开启氛围与场景关联模式");
+    // console.log("开启氛围与场景关联模式");
     isLinkingMode.value = true;
     selectedAtmosphereNode.value = null;
     // 关闭其他模式
@@ -171,7 +171,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
-    console.log("点击创建边按钮");
+    // console.log("点击创建边按钮");
     isCreatingEdge.value = true;
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
@@ -182,7 +182,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
-    console.log("点击的边的Id", edgeId);
+    // console.log("点击的边的Id", edgeId);
     editingEdgeId.value = edgeId;
     showEdgeSelector.value = true;
   };
@@ -217,7 +217,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
   const handleNodeClick = (node) => {
     // 添加参数验证，防止 undefined 错误
     if (!node) {
-      console.warn('handleNodeClick: node parameter is undefined');
+      // console.warn('handleNodeClick: node parameter is undefined');
       return;
     }
 
@@ -225,7 +225,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
     // 验证 actualNode 是否有效
     if (!actualNode || !actualNode.id) {
-      console.warn('handleNodeClick: invalid node data', actualNode);
+      // console.warn('handleNodeClick: invalid node data', actualNode);
       return;
     }
 
@@ -234,14 +234,14 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       if (actualNode.type === 'atmosphere') {
         // 选择氛围节点
         selectedAtmosphereNode.value = actualNode;
-        console.log('选择氛围节点:', actualNode.data.title);
+        // console.log('选择氛围节点:', actualNode.data.title);
       } else if (actualNode.type === 'custom' && selectedAtmosphereNode.value) {
         // 选择场景节点（custom类型），创建关联
-        console.log('选择场景节点:', actualNode.data.title);
+        // console.log('选择场景节点:', actualNode.data.title);
         createAtmosphereLink(selectedAtmosphereNode.value, actualNode);
         exitLinkingMode();
       } else if (selectedAtmosphereNode.value) {
-        console.log('只能关联到场景节点，当前选择的是:', actualNode.type);
+        // console.log('只能关联到场景节点，当前选择的是:', actualNode.type);
       }
       return;
     }
@@ -256,7 +256,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       }
     } else {
       selectedNode.value = { ...actualNode };
-      console.log('氛围设计师设置选中节点:', selectedNode.value);
+      // console.log('氛围设计师设置选中节点:', selectedNode.value);
     }
   }
 
@@ -276,8 +276,8 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     }
 
     edges.push(newEdge)
-    console.log('[DEBUG] 创建氛围关联:', newEdge)
-    console.log(`氛围节点 "${atmosphereNode.data.title}" 关联到场景节点 "${sceneNode.data.title}"`)
+    // console.log('[DEBUG] 创建氛围关联:', newEdge)
+    // console.log(`氛围节点 "${atmosphereNode.data.title}" 关联到场景节点 "${sceneNode.data.title}"`)
 
     // 广播更新
     broadcast()
@@ -285,10 +285,10 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log('保存的氛围节点数据：', updatedData);
+    // console.log('保存的氛围节点数据：', updatedData);
 
     if (!updatedData || !updatedData.id || !updatedData.data) {
-      console.warn('[handleDetailSave] 无效参数：', updatedData);
+      // console.warn('[handleDetailSave] 无效参数：', updatedData);
       return -1;
     }
 
@@ -307,21 +307,21 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
         // ✅ 强制触发响应式更新
         nodes.value[index] = { ...nodes.value[index] };
 
-        console.log('更新后的氛围节点数据：', nodes.value[index]);
+        // console.log('更新后的氛围节点数据：', nodes.value[index]);
       } else {
-        console.warn('未找到对应的节点 ID:', updatedData.id);
+        // console.warn('未找到对应的节点 ID:', updatedData.id);
         return -1;
       }
     } else {
-      console.warn('无选中节点，可能是编辑逻辑未正确触发');
+      // console.warn('无选中节点，可能是编辑逻辑未正确触发');
       return -1;
     }
 
     // 最后收起面板
     selectedNode.value = null;
 
-    console.log("[DEBUG] 当前节点列表：", JSON.stringify(nodes.value, null, 2));
-    console.log("索引：", index);
+    // console.log("[DEBUG] 当前节点列表：", JSON.stringify(nodes.value, null, 2));
+    // console.log("索引：", index);
 
     // 广播更新
     broadcast()
@@ -371,7 +371,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
   // 边连接完成事件
   const handleConnectNode = (newEdge) => {
     edges.push(newEdge)
-    console.log('[DEBUG] 新增边：', newEdge)
+    // console.log('[DEBUG] 新增边：', newEdge)
 
     // 广播更新
     broadcast()
@@ -388,7 +388,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
         data: reactive(edgeData)
       })
       edges.push(newEdge)
-      console.log('[DEBUG] 新增边：', newEdge)
+      // console.log('[DEBUG] 新增边：', newEdge)
     }
 
     // 重置状态
@@ -417,7 +417,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
           ...edges[edgeIndex].data,
           ...edgeData
         }
-        console.log('[DEBUG] 更新边：', edges[edgeIndex])
+        // console.log('[DEBUG] 更新边：', edges[edgeIndex])
       }
     }
 
@@ -435,7 +435,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
       const edgeIndex = edges.findIndex(e => e.id === editingEdgeId.value)
       if (edgeIndex !== -1) {
         edges.splice(edgeIndex, 1)
-        console.log('[DEBUG] 删除边：', editingEdgeId.value)
+        // console.log('[DEBUG] 删除边：', editingEdgeId.value)
       }
     }
 
@@ -460,10 +460,10 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
           atmosphereEdges: edges,
         })
       );
-      console.log("广播的氛围节点信息：", {
-        atmosphereNodes: nodes.value,
-        atmosphereEdges: edges,
-      });
+      // console.log("广播的氛围节点信息：", {
+      //   atmosphereNodes: nodes.value,
+      //   atmosphereEdges: edges,
+      // });
     }
   },300);
 
