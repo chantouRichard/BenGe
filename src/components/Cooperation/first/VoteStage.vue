@@ -1,18 +1,7 @@
 <template>
-  <transition
-    name="fade"
-    @before-enter="beforeEnter"
-    @before-leave="beforeLeave"
-  >
+  <transition name="fade" @before-enter="beforeEnter" @before-leave="beforeLeave">
     <div v-if="AIGenerate" class="ai-loading-container">
-      <video
-        class="loading-video"
-        autoplay
-        muted
-        loop
-        playsinline
-        src="@/assets/first/book.mp4"
-      ></video>
+      <video class="loading-video" autoplay muted loop playsinline src="@/assets/first/book.mp4"></video>
       <div class="loading-text">稍等，AI正在整合...</div>
     </div>
   </transition>
@@ -23,18 +12,12 @@
     </div>
 
     <div class="vote-options">
-      <div
-        v-for="(option, index) in sortedOptions"
-        :key="index"
-        class="vote-option"
-        :class="{
-          selected: selectedOptions.includes(option.direction),
-          leading: index < 3 && hasVotes,
-        }"
-        @click="
+      <div v-for="(option, index) in sortedOptions" :key="index" class="vote-option" :class="{
+        selected: selectedOptions.includes(option.direction),
+        leading: index < 3 && hasVotes,
+      }" @click="
           toggleVote(option.direction, topDirections.indexOf(option.direction))
-        "
-      >
+          ">
         <div class="option-content">
           <span class="direction">{{ option.direction.title }}</span>
           <span style="font-size: 12px; font-weight: bold">{{
@@ -206,6 +189,14 @@ watch(allMembersVoted, (newVal) => {
     socketState.direction = sortedOptions.value[0].direction;
     console.log("最终方向：", sortedOptions.value);
 
+    // ✅ 将最终方向信息插入到每个角色的任务列表前面（或末尾）
+    const dirIntro = `🎯 本轮创作方向为《${socketState.direction.title}》：${socketState.direction.description}`;
+    socketState.roles.forEach((role) => {
+      if (!role.task.includes(dirIntro)) {
+        role.task.unshift(dirIntro); // 也可以用 push() 添加到末尾
+      }
+    });
+
     loadingStore.show2();
 
     setTimeout(() => {
@@ -303,10 +294,13 @@ watch(
 
 .vote-option {
   padding: 15px;
-  background-color: #eaf6ff; /* 浅蓝背景 */
+  background-color: #eaf6ff;
+  /* 浅蓝背景 */
   border-radius: 12px;
-  border: 2px solid #b3dfff; /* 淡蓝边框 */
-  box-shadow: 0 2px 8px rgba(0, 170, 255, 0.15); /* 浅蓝阴影 */
+  border: 2px solid #b3dfff;
+  /* 淡蓝边框 */
+  box-shadow: 0 2px 8px rgba(0, 170, 255, 0.15);
+  /* 浅蓝阴影 */
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
@@ -314,6 +308,7 @@ watch(
   height: 160px;
   overflow-y: auto;
 }
+
 .vote-option:hover {
   transform: scale(1.02);
   box-shadow: 0 6px 14px rgba(0, 170, 255, 0.25);
@@ -331,7 +326,8 @@ watch(
 }
 
 .option-content {
-  padding-bottom: 30px; /* 留出足够空间给票数显示 */
+  padding-bottom: 30px;
+  /* 留出足够空间给票数显示 */
   position: relative;
   overflow-y: auto;
 }
@@ -340,7 +336,8 @@ watch(
 .direction {
   font-weight: bold;
   font-size: 16px;
-  color: #2b5c88; /* 深蓝色，提升对比度 */
+  color: #2b5c88;
+  /* 深蓝色，提升对比度 */
 }
 
 
@@ -467,10 +464,12 @@ watch(
 }
 
 .loading-video {
-  width: 200px; /* 你可以改成 100% 或 cover 效果 */
+  width: 200px;
+  /* 你可以改成 100% 或 cover 效果 */
   height: 200px;
   object-fit: contain;
 }
+
 .ai-loading-container {
   position: absolute;
 
@@ -486,6 +485,7 @@ watch(
 
   z-index: 9000;
 }
+
 .loading-text {
   font-size: 36px;
   font-weight: bold;
@@ -497,7 +497,11 @@ watch(
   transition: opacity 0.6s ease;
 }
 
-.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+.fade-enter,
+.fade-leave-to
+
+/* .fade-leave-active in <2.1.8 */
+  {
   opacity: 0;
 }
 
@@ -523,5 +527,4 @@ watch(
 .vote-option::-webkit-scrollbar-thumb:hover {
   background: rgba(64, 158, 255, 0.6);
 }
-
 </style>
