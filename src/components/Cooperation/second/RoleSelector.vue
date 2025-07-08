@@ -412,15 +412,15 @@ button[disabled]:hover::after {
 }
 
 .role-text {
-  font-size: 20px;
-  color: #fff;
+  font-size: 24px;
+  color: #000000;
   font-weight: bold;
   margin-bottom: 8px;
 }
 
 .role-description {
-  font-size: 14px;
-  color: #eee;
+  font-size: 18px;
+  color: #000000;
   line-height: 1.5;
 }
 

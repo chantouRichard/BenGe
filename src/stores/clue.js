@@ -10,123 +10,109 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 所有线索节点数据
   const nodes = ref([
-  {
-    id: "clue-node-1",
-    type: "clue",
-    position: { x: 100, y: 50 },
-    data: {
-      title: "湖边脚印",
-      relatedEvent: "死者失踪",
-      detail: "现场发现一组单人脚印，消失在通往湖心栈道的尽头。",
-      logic: "表明有人单独靠近湖区，且未返回。",
-      tags: "物证,现场,湖边",
-      note: "与死者失踪时间段吻合，鞋码待比对"
-    }
-  },
-  {
-    id: "clue-node-2",
-    type: "clue",
-    position: { x: 400, y: 100 },
-    data: {
-      title: "小说草稿",
-      relatedEvent: "小说中的预言",
-      detail: "柳念之小说手稿描述‘湖中倒影吞噬男人’，细节高度相符。",
-      logic: "可能提前得知事件或参与其中。",
-      tags: "创作,心理暗示,柳念之",
-      note: "需核实写作时间与是否知晓案情"
-    }
-  },
-  {
-    id: "clue-node-3",
-    type: "clue",
-    position: { x: 700, y: 180 },
-    data: {
-      title: "心理录音",
-      relatedEvent: "催眠诊疗记录",
-      detail: "录音中死者反复提到‘镜中人想杀我’的恐惧内容。",
-      logic: "死者可能受催眠影响导致行为异常。",
-      tags: "心理,章沐白,死者",
-      note: "录音真实性及完整性需验证"
-    }
-  },
-  {
-    id: "clue-node-4",
-    type: "clue",
-    position: { x: 1000, y: 190 },
-    data: {
-      title: "DNA亲子报告",
-      relatedEvent: "尸体浮现",
-      detail: "确认死者与程少庭存在血缘关系，为生父子。",
-      logic: "证实身份纠纷，有遗产与仇恨动机。",
-      tags: "法医,DNA,程少庭",
-      note: "程少庭此前否认身份，存在隐瞒"
-    }
-  },
-  {
-    id: "clue-node-5",
-    type: "clue",
-    position: { x: 1300, y: 250 },
-    data: {
-      title: "催眠机残片",
-      relatedEvent: "真相揭示",
-      detail: "在湖边破碎木箱中发现章沐白治疗用催眠装置残骸。",
-      logic: "设备可能被毁灭以掩盖治疗记录。",
-      tags: "心理,破坏,证据",
-      note: "需确认谁丢弃了装置，时间与监控缺失段一致"
-    }
-  }
-]);
-
+    {
+      id: "clue-node-1",
+      type: "clue",
+      position: { x: 100, y: 50 },
+      data: {
+        title: "湖边脚印",
+        relatedEvent: "死者失踪",
+        detail: "现场发现一组单人脚印，消失在通往湖心栈道的尽头。",
+        logic: "表明有人单独靠近湖区，且未返回。",
+        tags: "物证,现场,湖边",
+        note: "与死者失踪时间段吻合，鞋码待比对",
+      },
+    },
+    {
+      id: "clue-node-2",
+      type: "clue",
+      position: { x: 400, y: 100 },
+      data: {
+        title: "小说草稿",
+        relatedEvent: "小说中的预言",
+        detail: "柳念之小说手稿描述‘湖中倒影吞噬男人’，细节高度相符。",
+        logic: "可能提前得知事件或参与其中。",
+        tags: "创作,心理暗示,柳念之",
+        note: "需核实写作时间与是否知晓案情",
+      },
+    },
+    {
+      id: "clue-node-3",
+      type: "clue",
+      position: { x: 700, y: 180 },
+      data: {
+        title: "心理录音",
+        relatedEvent: "催眠诊疗记录",
+        detail: "录音中死者反复提到‘镜中人想杀我’的恐惧内容。",
+        logic: "死者可能受催眠影响导致行为异常。",
+        tags: "心理,章沐白,死者",
+        note: "录音真实性及完整性需验证",
+      },
+    },
+    {
+      id: "clue-node-4",
+      type: "clue",
+      position: { x: 1000, y: 190 },
+      data: {
+        title: "DNA亲子报告",
+        relatedEvent: "尸体浮现",
+        detail: "确认死者与程少庭存在血缘关系，为生父子。",
+        logic: "证实身份纠纷，有遗产与仇恨动机。",
+        tags: "法医,DNA,程少庭",
+        note: "程少庭此前否认身份，存在隐瞒",
+      },
+    },
+    
+  ]);
 
   // 所有连线
   const edges = reactive([
-  {
-    id: "edge-clue-1-plot-1",
-    source: "clue-node-1",
-    target: "plot-node-1",
-    type: "custom",
-    sourcePosition: "bottom",
-    targetPosition: "top",
-    data: { type: "evidence", label: "湖边脚印支持失踪案" }
-  },
-  {
-    id: "edge-clue-2-plot-3",
-    source: "clue-node-2",
-    target: "plot-node-3",
-    type: "custom",
-    sourcePosition: "bottom",
-    targetPosition: "top",
-    data: { type: "evidence", label: "草稿引发怀疑" }
-  },
-  {
-    id: "edge-clue-3-plot-4",
-    source: "clue-node-3",
-    target: "plot-node-4",
-    type: "custom",
-    sourcePosition: "right",
-    targetPosition: "left",
-    data: { type: "evidence", label: "心理暗示影响行为" }
-  },
-  {
-    id: "edge-clue-4-plot-5",
-    source: "clue-node-4",
-    target: "plot-node-5",
-    type: "custom",
-    sourcePosition: "bottom",
-    targetPosition: "top",
-    data: { type: "evidence", label: "确认父子身份" }
-  },
-  {
-    id: "edge-clue-5-plot-6",
-    source: "clue-node-5",
-    target: "plot-node-6",
-    type: "custom",
-    sourcePosition: "bottom",
-    targetPosition: "top",
-    data: { type: "evidence", label: "设备销毁指向掩盖动机" }
-  }
-]);
-
+    {
+      id: "edge-clue-1-plot-1",
+      source: "clue-node-1",
+      target: "plot-node-1",
+      type: "custom",
+      sourcePosition: "bottom",
+      targetPosition: "top",
+      data: { type: "evidence", label: "湖边脚印支持失踪案" },
+    },
+    {
+      id: "edge-clue-2-plot-3",
+      source: "clue-node-2",
+      target: "plot-node-3",
+      type: "custom",
+      sourcePosition: "bottom",
+      targetPosition: "top",
+      data: { type: "evidence", label: "草稿引发怀疑" },
+    },
+    {
+      id: "edge-clue-3-plot-4",
+      source: "clue-node-3",
+      target: "plot-node-4",
+      type: "custom",
+      sourcePosition: "right",
+      targetPosition: "left",
+      data: { type: "evidence", label: "心理暗示影响行为" },
+    },
+    {
+      id: "edge-clue-4-plot-5",
+      source: "clue-node-4",
+      target: "plot-node-5",
+      type: "custom",
+      sourcePosition: "bottom",
+      targetPosition: "top",
+      data: { type: "evidence", label: "确认父子身份" },
+    },
+    {
+      id: "edge-clue-5-plot-6",
+      source: "clue-node-5",
+      target: "plot-node-6",
+      type: "custom",
+      sourcePosition: "bottom",
+      targetPosition: "top",
+      data: { type: "evidence", label: "设备销毁指向掩盖动机" },
+    },
+  ]);
 
   // 当前选择结点
   const selectedNode = ref(null);
@@ -389,20 +375,27 @@ export const useClueStore = defineStore("clueStore", () => {
   };
   // 广播节点和边的信息
   const broadcast = debounce(() => {
-    const clueNodes = nodes.value.filter((n) => n.type === "clue");
-    const inferenceNodes = nodes.value.filter((n) => n.type === "inference");
-    const personNodes = nodes.value.filter((n) => n.type === "person");
+    if (
+      socketState?.socket &&
+      socketState.socket.readyState === WebSocket.OPEN
+    ) {
+      const clueNodes = nodes.value.filter((n) => n.type === "clue");
+      const inferenceNodes = nodes.value.filter((n) => n.type === "inference");
+      const personNodes = nodes.value.filter((n) => n.type === "person");
 
-    const message = {
-      type: "clue",
-      clueNodes,
-      inferenceNodes,
-      personNodes,
-      clueEdges: edges,
-    };
+      const message = {
+        type: "clue",
+        clueNodes,
+        inferenceNodes,
+        personNodes,
+        clueEdges: edges,
+      };
 
-    socketState.socket.send(JSON.stringify(message));
-    console.log("广播的节点信息：", message);
+      socketState.socket.send(JSON.stringify(message));
+      console.log("广播的节点信息：", message);
+    } else {
+      console.error("未连接websocket");
+    }
   }, 300); // 300ms 内重复调用只执行一次
 
   return {

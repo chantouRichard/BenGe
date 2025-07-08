@@ -27,7 +27,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     {
       id: "atmo-node-2",
       type: "atmosphere",
-      position: { x: 500, y: 630 },
+      position: { x: 850, y: 630 },
       data: {
         title: "心理室咔哒声",
         timeLabel: "DAY2 上午",
@@ -41,7 +41,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     {
       id: "atmo-node-3",
       type: "atmosphere",
-      position: { x: 800, y: 600 },
+      position: { x: 580, y: 640 },
       data: {
         title: "湖中倒影",
         timeLabel: "DAY2 傍晚",
@@ -55,7 +55,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
     {
       id: "atmo-node-4",
       type: "atmosphere",
-      position: { x: 1100, y: 660 },
+      position: { x: 1550, y: 700 },
       data: {
         title: "黑猫惊影",
         timeLabel: "DAY3 凌晨",
@@ -66,20 +66,7 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
         notes: ""
       }
     },
-    {
-      id: "atmo-node-5",
-      type: "atmosphere",
-      position: { x: 1350, y: 610 },
-      data: {
-        title: "时钟停摆",
-        timeLabel: "DAY2 晚上 02:47",
-        mood: "凝固、超现实",
-        lighting: "时钟盘反射窗外月光",
-        music: "秒针卡顿声+静音",
-        weather: "案发小屋时钟指针永远停留在凌晨 2:47。",
-        notes: ""
-      }
-    }
+
   ]);
 
   // 独立的氛围边数据
@@ -462,7 +449,10 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 广播节点和边的信息
   const broadcast = debounce(() => {
-    if (socketState?.socket?.send) {
+    if (
+      socketState?.socket &&
+      socketState.socket.readyState === WebSocket.OPEN
+    ) {
       socketState.socket.send(
         JSON.stringify({
           type: "atmosphere",

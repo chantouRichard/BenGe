@@ -66,13 +66,6 @@ const buttons = ref([
     hover: false,
   },
   {
-    icon: require("@/assets/icons/atmosphere-modle.svg"),
-    action: "atmo-palette",
-    tooltip: "氛围模板",
-    color: "rgba(255, 182, 193, 0.7)",
-    hover: false,
-  },
-  {
     icon: require("@/assets/icons/link.svg"),
     action: "link-scene",
     tooltip: "关联场景",

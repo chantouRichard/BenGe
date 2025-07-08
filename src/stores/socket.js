@@ -18,6 +18,7 @@ const socketState = reactive({
   messages: [],
   members: [],
   isConnected: false,
+  isConnecting: false, // 👈 添加标记防重复连接
   roomId: null,
   avatar: null,
   newMessage: "",
@@ -114,10 +115,11 @@ async function ensureStores() {
 
 async function setupWebSocket() {
   await ensureStores();
-  if (socketState.socket && socketState.isConnected) {
+  if (socketState.isConnected || socketState.isConnecting) {
     console.warn("WebSocket 已经连接");
     return;
   }
+  socketState.isConnecting = true; // 正在连接
 
   const token = localStorage.getItem("token");
   if (!token) {
@@ -128,7 +130,7 @@ async function setupWebSocket() {
   // socketState.socket = new WebSocket("ws://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws");
 
   socketState.socket = new WebSocket(
-    "wss://municipal-donors-expert-class.trycloudflare.com/ws"
+    "wss://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws"
   );
 
   let pingInterval = null;
@@ -143,6 +145,7 @@ async function setupWebSocket() {
           avatar: socketState.avatar,
         })
       );
+      socketState.isConnecting = false;
       socketState.isConnected = true;
     } else {
       console.warn(
@@ -224,18 +227,20 @@ async function setupWebSocket() {
   socketState.socket.onclose = () => {
     console.log("WebSocket 连接已关闭");
     socketState.isConnected = false;
+    socketState.isConnecting = false;
     if (pingInterval) clearInterval(pingInterval);
 
+    if(!socketState.isConnected)setupWebSocket();
     // 自动尝试重连
-    setTimeout(() => {
-      console.log("尝试重连 WebSocket...");
-      setupWebSocket();
-    }, 5000); // 可配置：5 秒后重连
+    // setTimeout(() => {
+    //   console.log("尝试重连 WebSocket...");
+    // }, 5000); // 可配置：5 秒后重连
   };
 
   socketState.socket.onerror = (err) => {
     console.error("WebSocket 连接错误:", err);
     socketState.isConnected = false;
+    socketState.isConnecting = false;
     if (pingInterval) clearInterval(pingInterval);
   };
 }

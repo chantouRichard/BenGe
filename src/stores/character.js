@@ -13,7 +13,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
     {
       id: "node-shen",
       type: "character",
-      position: { x: 100, y: 400 },
+      position: { x: -200, y: 850 },
       data: {
         name: "沈知遥",
         avatar: require("@/assets/avatar/1.jpg"),
@@ -45,7 +45,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
     {
       id: "node-lin",
       type: "character",
-      position: { x: 300, y: 500 },
+      position: { x: 150, y: 930 },
       data: {
         name: "林妙音",
         avatar: require("@/assets/avatar/2.jpg"),
@@ -77,7 +77,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
     {
       id: "node-cheng",
       type: "character",
-      position: { x: 500, y: 600 },
+      position: { x: 900, y: 940 },
       data: {
         name: "程少庭",
         avatar: require("@/assets/avatar/3.jpg"),
@@ -109,7 +109,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
     {
       id: "node-zhang",
       type: "character",
-      position: { x: 700, y: 450 },
+      position: { x: 570, y: 1140 },
       data: {
         name: "章沐白",
         avatar: require("@/assets/avatar/4.jpg"),
@@ -138,31 +138,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
         ],
       },
     },
-    {
-      id: "node-liu",
-      type: "character",
-      position: { x: 900, y: 550 },
-      data: {
-        name: "柳念之",
-        avatar: require("@/assets/avatar/5.jpg"),
-        age: 30,
-        occupation: "作家",
-        personality: ["好奇", "敏感", "天马行空"],
-        background: "以镜湖为灵感创作小说，却无意中写出案发细节。",
-        skills: ["故事构建", "细节观察", "逻辑联想"],
-        items: "小说草稿本、采访录音",
-        notes: "作家视角，信息来源成谜，或是旁观者或是操控者。",
-        relationships: [
-          {
-            type: "访谈对象",
-            description: "采访章沐白获取创作灵感",
-            targetId: "章沐白",
-            strength: 3,
-            status: "active",
-          },
-        ],
-      },
-    },
+    
   ]);
 
   // 所有连线
@@ -619,6 +595,10 @@ export const useCharacterStore = defineStore("characterStore", () => {
   };
   // 广播节点和边的信息
   const broadcast = debounce(() => {
+        if (
+      socketState?.socket &&
+      socketState.socket.readyState === WebSocket.OPEN
+    ) {
     socketState.socket.send(
       JSON.stringify({
         type: "character",
@@ -629,7 +609,10 @@ export const useCharacterStore = defineStore("characterStore", () => {
     console.log("广播的节点信息：", {
       nodes: nodes.value,
       edges: edges,
-    });
+    });}
+    else{
+      console.error("未连接websocket");
+    }
   }, 300);
 
   return {

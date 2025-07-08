@@ -10,151 +10,153 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 所有节点数据
   const nodes = ref([
-  {
-    id: "plot-node-1",
-    type: "custom",
-    position: { x: 200, y: 300 },
-    data: {
-      title: "死者失踪",
-      timeLabel: "DAY1 08:00",
-      characters: "沈知遥、林妙音",
-      clues: "手机信号中断、监控盲区",
-      sceneDescription: "死者沈文霖在镜湖度假村消失，最后画面停留在湖边走廊。",
-      nodeConnections: "与节点2（初步调查）相关",
-      notes: "当时沈知遥正在场，林妙音提供不完整证词"
-    }
-  },
-  {
-    id: "plot-node-2",
-    type: "custom",
-    position: { x: 450, y: 300 },
-    data: {
-      title: "初步调查",
-      timeLabel: "DAY1 10:30",
-      characters: "李四、沈知遥",
-      clues: "湖边脚印、访客记录缺失",
-      sceneDescription: "警方封锁湖区，开始排查失踪时间段所有可疑行为。",
-      nodeConnections: "与节点1（失踪现场）相关",
-      notes: "李四怀疑内部知情人作案，开始审查员工"
-    }
-  },
-  {
-    id: "plot-node-3",
-    type: "custom",
-    position: { x: 700, y: 320 },
-    data: {
-      title: "小说中的预言",
-      timeLabel: "DAY1 15:00",
-      characters: "柳念之",
-      clues: "小说草稿、镜湖溺亡片段",
-      sceneDescription: "作家柳念之的手稿中，出现与死者失踪场景极为相似的内容。",
-      nodeConnections: "与节点4（催眠诊疗记录）相关",
-      notes: "时间线显示小说完成时间早于失踪案"
-    }
-  },
-  {
-    id: "plot-node-4",
-    type: "custom",
-    position: { x: 950, y: 350 },
-    data: {
-      title: "催眠诊疗记录",
-      timeLabel: "DAY2 09:00",
-      characters: "章沐白",
-      clues: "心理录音、治疗日记",
-      sceneDescription: "章沐白治疗记录揭示死者心理失控及“镜中倒影恐惧症”。",
-      nodeConnections: "与节点3（小说手稿）存在因果关系",
-      notes: "可能存在心理暗示导致行为异常"
-    }
-  },
-  {
-    id: "plot-node-5",
-    type: "custom",
-    position: { x: 1200, y: 280 },
-    data: {
-      title: "尸体浮现",
-      timeLabel: "DAY2 18:30",
-      characters: "程少庭、林妙音",
-      clues: "漂浮尸体、遗留戒指",
-      sceneDescription: "尸体在湖中浮现，身上无明显外伤，嘴角带笑，戴有一枚陌生戒指。",
-      nodeConnections: "与节点2（调查节点）和节点4（心理信息）相关",
-      notes: "死者死亡方式疑似自溺，但动机成谜"
-    }
-  },
-  {
-    id: "plot-node-6",
-    type: "custom",
-    position: { x: 1450, y: 350 },
-    data: {
-      title: "真相揭示",
-      timeLabel: "DAY3 14:00",
-      characters: "沈知遥、程少庭",
-      clues: "旧信件、催眠关键词",
-      sceneDescription: "沈知遥坦白早知死者被催眠，自知无法阻止，于是选择沉默。",
-      nodeConnections: "与节点5、4、3 全部相关",
-      notes: "真相复杂，每人皆有动机，死亡为心理操控导致"
-    }
-  },
-]);
-
+    {
+      id: "plot-node-1",
+      type: "custom",
+      position: { x: 200, y: 500 },
+      data: {
+        title: "死者失踪",
+        timeLabel: "DAY1 08:00",
+        characters: "沈知遥、林妙音",
+        clues: "手机信号中断、监控盲区",
+        sceneDescription:
+          "死者沈文霖在镜湖度假村消失，最后画面停留在湖边走廊。",
+        nodeConnections: "与节点2（初步调查）相关",
+        notes: "当时沈知遥正在场，林妙音提供不完整证词",
+      },
+    },
+    {
+      id: "plot-node-2",
+      type: "custom",
+      position: { x: 450, y: 500 },
+      data: {
+        title: "初步调查",
+        timeLabel: "DAY1 10:30",
+        characters: "李四、沈知遥",
+        clues: "湖边脚印、访客记录缺失",
+        sceneDescription: "警方封锁湖区，开始排查失踪时间段所有可疑行为。",
+        nodeConnections: "与节点1（失踪现场）相关",
+        notes: "李四怀疑内部知情人作案，开始审查员工",
+      },
+    },
+    {
+      id: "plot-node-3",
+      type: "custom",
+      position: { x: 700, y: 500 },
+      data: {
+        title: "小说中的预言",
+        timeLabel: "DAY1 15:00",
+        characters: "柳念之",
+        clues: "小说草稿、镜湖溺亡片段",
+        sceneDescription:
+          "作家柳念之的手稿中，出现与死者失踪场景极为相似的内容。",
+        nodeConnections: "与节点4（催眠诊疗记录）相关",
+        notes: "时间线显示小说完成时间早于失踪案",
+      },
+    },
+    {
+      id: "plot-node-4",
+      type: "custom",
+      position: { x: 950, y: 500 },
+      data: {
+        title: "催眠诊疗记录",
+        timeLabel: "DAY2 09:00",
+        characters: "章沐白",
+        clues: "心理录音、治疗日记",
+        sceneDescription: "章沐白治疗记录揭示死者心理失控及“镜中倒影恐惧症”。",
+        nodeConnections: "与节点3（小说手稿）存在因果关系",
+        notes: "可能存在心理暗示导致行为异常",
+      },
+    },
+    {
+      id: "plot-node-5",
+      type: "custom",
+      position: { x: 1200, y: 500 },
+      data: {
+        title: "尸体浮现",
+        timeLabel: "DAY2 18:30",
+        characters: "程少庭、林妙音",
+        clues: "漂浮尸体、遗留戒指",
+        sceneDescription:
+          "尸体在湖中浮现，身上无明显外伤，嘴角带笑，戴有一枚陌生戒指。",
+        nodeConnections: "与节点2（调查节点）和节点4（心理信息）相关",
+        notes: "死者死亡方式疑似自溺，但动机成谜",
+      },
+    },
+    {
+      id: "plot-node-6",
+      type: "custom",
+      position: { x: 1450, y: 500 },
+      data: {
+        title: "真相揭示",
+        timeLabel: "DAY3 14:00",
+        characters: "沈知遥、程少庭",
+        clues: "旧信件、催眠关键词",
+        sceneDescription:
+          "沈知遥坦白早知死者被催眠，自知无法阻止，于是选择沉默。",
+        nodeConnections: "与节点5、4、3 全部相关",
+        notes: "真相复杂，每人皆有动机，死亡为心理操控导致",
+      },
+    },
+  ]);
 
   // 所有连线
   const edges = reactive([
-  {
-    id: "edge-node-1-2",
-    source: "plot-node-1",
-    sourcePosition: "right",
-    target: "plot-node-2",
-    targetPosition: "left",
-    type: "custom",
-    data: { type: "containment", label: "现场到调查" }
-  },
-  {
-    id: "edge-node-2-3",
-    source: "plot-node-2",
-    sourcePosition: "right",
-    target: "plot-node-3",
-    targetPosition: "left",
-    type: "custom",
-    data: { type: "containment", label: "疑点扩散" }
-  },
-  {
-    id: "edge-node-3-4",
-    source: "plot-node-3",
-    sourcePosition: "right",
-    target: "plot-node-4",
-    targetPosition: "left",
-    type: "custom",
-    data: { type: "containment", label: "小说与治疗相关" }
-  },
-  {
-    id: "edge-node-2-5",
-    source: "plot-node-2",
-    sourcePosition: "bottom",
-    target: "plot-node-5",
-    targetPosition: "top",
-    type: "custom",
-    data: { type: "containment", label: "尸体出现" }
-  },
-  {
-    id: "edge-node-5-6",
-    source: "plot-node-5",
-    sourcePosition: "right",
-    target: "plot-node-6",
-    targetPosition: "left",
-    type: "custom",
-    data: { type: "containment", label: "真相浮现" }
-  },
-  {
-    id: "edge-node-4-6",
-    source: "plot-node-4",
-    sourcePosition: "bottom",
-    target: "plot-node-6",
-    targetPosition: "top",
-    type: "custom",
-    data: { type: "containment", label: "心理线汇合" }
-  }
-]);
-
+    {
+      id: "edge-node-1-2",
+      source: "plot-node-1",
+      sourcePosition: "right",
+      target: "plot-node-2",
+      targetPosition: "left",
+      type: "custom",
+      data: { type: "containment", label: "现场到调查" },
+    },
+    {
+      id: "edge-node-2-3",
+      source: "plot-node-2",
+      sourcePosition: "right",
+      target: "plot-node-3",
+      targetPosition: "left",
+      type: "custom",
+      data: { type: "containment", label: "疑点扩散" },
+    },
+    {
+      id: "edge-node-3-4",
+      source: "plot-node-3",
+      sourcePosition: "right",
+      target: "plot-node-4",
+      targetPosition: "left",
+      type: "custom",
+      data: { type: "containment", label: "小说与治疗相关" },
+    },
+    {
+      id: "edge-node-2-5",
+      source: "plot-node-2",
+      sourcePosition: "bottom",
+      target: "plot-node-5",
+      targetPosition: "top",
+      type: "custom",
+      data: { type: "containment", label: "尸体出现" },
+    },
+    {
+      id: "edge-node-5-6",
+      source: "plot-node-5",
+      sourcePosition: "right",
+      target: "plot-node-6",
+      targetPosition: "left",
+      type: "custom",
+      data: { type: "containment", label: "真相浮现" },
+    },
+    {
+      id: "edge-node-4-6",
+      source: "plot-node-4",
+      sourcePosition: "bottom",
+      target: "plot-node-6",
+      targetPosition: "top",
+      type: "custom",
+      data: { type: "containment", label: "心理线汇合" },
+    },
+  ]);
 
   // 当前选择结点
   const selectedNode = ref(null);
@@ -526,7 +528,10 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 广播节点和边的信息
   const broadcast = debounce(() => {
-    if (socketState?.socket?.send) {
+    if (
+      socketState?.socket &&
+      socketState.socket.readyState === WebSocket.OPEN
+    ) {
       socketState.socket.send(
         JSON.stringify({
           type: "canvas",
@@ -534,12 +539,14 @@ export const useCanvasStore = defineStore("story", () => {
           edges: edges,
         })
       );
-      console.log("广播的剧情节点信息：", {
+      console.log("✅ 广播的剧情节点信息：", {
         nodes: nodes.value,
         edges: edges,
       });
+    } else {
+      console.warn("❌ WebSocket 未连接，跳过广播");
     }
-  },300);
+  }, 300);
 
   return {
     nodes,
