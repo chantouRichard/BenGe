@@ -26,7 +26,7 @@
         <div class="AiIntegrate-content">
           <v-md-editor
             v-model="editorContent"
-            height="400px"
+            height="600px"
             :mode="'editable'"
           />
           <div style="text-align: right; margin-top: 16px">

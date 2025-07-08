@@ -13,7 +13,7 @@ export const useCanvasStore = defineStore("story", () => {
     {
       id: "plot-node-1",
       type: "custom",
-      position: { x: 200, y: 500 },
+      position: { x: 0, y: 500 },
       data: {
         title: "死者失踪",
         timeLabel: "DAY1 08:00",
@@ -28,7 +28,7 @@ export const useCanvasStore = defineStore("story", () => {
     {
       id: "plot-node-2",
       type: "custom",
-      position: { x: 450, y: 500 },
+      position: { x: 300, y: 500 },
       data: {
         title: "初步调查",
         timeLabel: "DAY1 10:30",
@@ -42,7 +42,7 @@ export const useCanvasStore = defineStore("story", () => {
     {
       id: "plot-node-3",
       type: "custom",
-      position: { x: 700, y: 500 },
+      position: { x: 600, y: 500 },
       data: {
         title: "小说中的预言",
         timeLabel: "DAY1 15:00",
@@ -81,21 +81,6 @@ export const useCanvasStore = defineStore("story", () => {
           "尸体在湖中浮现，身上无明显外伤，嘴角带笑，戴有一枚陌生戒指。",
         nodeConnections: "与节点2（调查节点）和节点4（心理信息）相关",
         notes: "死者死亡方式疑似自溺，但动机成谜",
-      },
-    },
-    {
-      id: "plot-node-6",
-      type: "custom",
-      position: { x: 1450, y: 500 },
-      data: {
-        title: "真相揭示",
-        timeLabel: "DAY3 14:00",
-        characters: "沈知遥、程少庭",
-        clues: "旧信件、催眠关键词",
-        sceneDescription:
-          "沈知遥坦白早知死者被催眠，自知无法阻止，于是选择沉默。",
-        nodeConnections: "与节点5、4、3 全部相关",
-        notes: "真相复杂，每人皆有动机，死亡为心理操控导致",
       },
     },
   ]);
