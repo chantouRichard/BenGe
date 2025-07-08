@@ -208,6 +208,7 @@ public class CoopAIServiceImpl implements CoopAIService{
     }
 
     public String generateNodesStr(String userInput, String designerType, Integer count, String contextData) {
+        contextData=contextDataProcessor.generateContextSummary(contextData, designerType);
         String message = xfyunConfig.buildPrompt(userInput, designerType, count, contextData);
 
         Map<String, Object> requestBody = new HashMap<>();
