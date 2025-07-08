@@ -18,7 +18,7 @@ public interface RoomService {
 
     String leaveRoom(int roomId);
 
-    void syncAllRoomMemberCounts();
+
 
     Room getUserCurrentRoom();
 

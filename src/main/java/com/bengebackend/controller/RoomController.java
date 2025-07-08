@@ -107,17 +107,7 @@ public class RoomController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * 同步所有房间的成员数量（管理员功能）
-     *
-     * @return 同步结果的响应实体
-     */
-    @PostMapping("/sync-member-counts")
-    public ResponseEntity<String> syncMemberCounts() {
-        log.debug("开始同步所有房间的成员数量");
-        roomService.syncAllRoomMemberCounts();
-        return ResponseEntity.ok("同步完成");
-    }
+
 
     /**
      * 获取用户当前所在房间

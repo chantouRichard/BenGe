@@ -122,13 +122,7 @@ public class RoomServiceImpl implements RoomService {
         return "success";
     }
 
-    @Override
-    public void syncAllRoomMemberCounts() {
-        List<Integer> roomIds = roomMapper.getAllRoomIds();
-        for (Integer roomId : roomIds) {
-            roomMapper.syncRoomMemberCount(roomId);
-        }
-    }
+
 
     @Override
     public Room getUserCurrentRoom() {
