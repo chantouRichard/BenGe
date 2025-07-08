@@ -68,7 +68,6 @@ public class AiMessageProcessor {
             // 调用AI服务获取回复
             String aiResponse = coopAIService.chat(cleanContent, contextData, user.getUsername());
 
-            aiResponse=aiResponse.substring(aiResponse.indexOf("AI助手:")+5);
             log.info(aiResponse);
 
             

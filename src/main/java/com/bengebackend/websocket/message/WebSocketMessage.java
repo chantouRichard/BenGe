@@ -89,6 +89,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class NodeData {
         /** 节点 ID */
         private String id;
@@ -109,6 +110,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Position {
         /** x 坐标 */
         private Integer x;
@@ -123,6 +125,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class NodeContent {
         /** 节点标题 */
         private String title;
@@ -188,6 +191,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class EdgeContent {
         /** 关系类型 */
         private String type;
@@ -202,6 +206,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CharacterNode {
         /** 节点 ID */
         private String id;
@@ -222,6 +227,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CharacterContent {
         /** 姓名 */
         private String name;
@@ -257,6 +263,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Relationship {
         /** 目标节点 ID */
         private String targetId;
@@ -280,6 +287,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CharacterEdge {
         /** 边 ID */
         private String id;
@@ -347,6 +355,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ClueNode {
         private String id;
         private String type;
@@ -360,13 +369,14 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ClueNodeContent {
         private String title;
         private String relatedEvent;
         private String detail;
         private String logic;
         private String tags;
-        private String note;
+        private String notes;
     }
 
     /**
@@ -375,6 +385,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class InferenceNode {
         private String id;
         private String type;
@@ -388,12 +399,13 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class InferenceContent {
         private String title;
         private String summary;
         private String evidence;
         private String tags;
-        private String note;
+        private String notes;
     }
 
     /**
@@ -402,6 +414,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PersonNode {
         private String id;
         private String type;
@@ -415,12 +428,13 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PersonContent {
         private String name;
         private String bio;
         private List<String> clues;
         private List<String> tags;
-        private String note;
+        private String notes;
     }
 
     /**
@@ -429,6 +443,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AtmosphereNode {
         private String id;
         private String type;
@@ -442,6 +457,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AtmosphereContent {
         private String title;      // 节点标题
         private String timeLabel;  // 时间标签
@@ -458,6 +474,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AtmosphereEdge {
         private String id;
         private String source;
@@ -472,6 +489,7 @@ public class WebSocketMessage {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AtmosphereEdgeContent {
         private String type;    // 边类型，如 atmosphere-influence
         private String label;   // 显示标签

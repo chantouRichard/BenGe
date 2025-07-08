@@ -901,7 +901,7 @@ public class AIServicelmpl implements AIService {
      */
     @Override
     public CompletableFuture<AIMsgDevide> GenFrameworkStream(List<Map<String, String>> msgs,
-            Consumer<String> callback) {
+                                                             Consumer<String> callback) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 msgs.add(0, new HashMap<String, String>() {

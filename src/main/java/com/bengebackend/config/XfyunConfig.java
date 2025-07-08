@@ -314,48 +314,6 @@ public class XfyunConfig {
                 prompt.append("  \"personality\": [\"性格特点1\", \"性格特点2\", \"性格特点3\"],\n");
                 prompt.append("  \"skills\": [\"技能1\", \"技能2\", \"技能3\"],\n");
                 prompt.append("  \"items\": \"携带物品\",\n");
-                prompt.append("  \"notes\": \"备注\",\n");
-                prompt.append("  \"relationships\": []\n");
-                break;
-            case "clue":
-                prompt.append("  \"title\": \"线索名称\",\n");
-                prompt.append("  \"type\": \"线索类型\",\n");
-                prompt.append("  \"description\": \"线索描述\",\n");
-                prompt.append("  \"location\": \"发现地点\",\n");
-                prompt.append("  \"relatedCharacters\": \"相关角色\",\n");
-                prompt.append("  \"importance\": \"重要程度\",\n");
-                prompt.append("  \"hiddenInfo\": \"隐藏信息\",\n");
-                prompt.append("  \"notes\": \"备注\"\n");
-                break;
-            case "atmosphere":
-                prompt.append("  \"title\": \"氛围名称\",\n");
-                prompt.append("  \"mood\": \"情绪氛围(如：紧张、平静、神秘)\",\n");
-                prompt.append("  \"lighting\": \"灯光设置\",\n");
-                prompt.append("  \"music\": \"背景音乐\",\n");
-                prompt.append("  \"weather\": \"天气状况\",\n");
-                prompt.append("  \"timeOfDay\": \"时间段\",\n");
-                prompt.append("  \"sceneElements\": \"场景元素\",\n");
-                prompt.append("  \"notes\": \"备注\"\n");
-                break;
-        }
-        switch (designerType) {
-            case "narrative":
-                prompt.append("  \"title\": \"场景名称\",\n");
-                prompt.append("  \"timeLabel\": \"时间标签(如DAY1 09:00)\",\n");
-                prompt.append("  \"characters\": \"涉及角色\",\n");
-                prompt.append("  \"clues\": \"相关线索\",\n");
-                prompt.append("  \"sceneDescription\": \"场景详细描述\",\n");
-                prompt.append("  \"nodeConnections\": \"与其他节点的关系\",\n");
-                prompt.append("  \"notes\": \"备注\"\n");
-                break;
-            case "character":
-                prompt.append("  \"name\": \"角色姓名\",\n");
-                prompt.append("  \"occupation\": \"职业\",\n");
-                prompt.append("  \"age\": 年龄数字,\n");
-                prompt.append("  \"background\": \"背景故事\",\n");
-                prompt.append("  \"personality\": [\"性格特点1\", \"性格特点2\", \"性格特点3\"],\n");
-                prompt.append("  \"skills\": [\"技能1\", \"技能2\", \"技能3\"],\n");
-                prompt.append("  \"items\": \"携带物品\",\n");
                 prompt.append("  \"notes\": \"备注\"\n");
                 break;
             case "clue":

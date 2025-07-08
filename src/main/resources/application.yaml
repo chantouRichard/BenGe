@@ -23,6 +23,12 @@ jwt:
 server:
   port: 7122
   address: 0.0.0.0
+  tomcat:
+    max-swallow-size: -1       # 不限制最大吞咽大小
+  servlet:
+    context-parameters:
+      org.apache.tomcat.websocket.textBufferSize: 1048576  # 1MB
+      org.apache.tomcat.websocket.binaryBufferSize: 1048576
 logging:
   level:
     com.bengebackend: debug
@@ -40,5 +46,7 @@ xfyun:
   api-url: "https://spark-api-open.xf-yun.com/v2/chat/completions"
 
 ngrok:
-  enabled: true
+  enabled: false
   authToken: 2y3CNYjCCvJzBLqvHlsB1asoNjh_6vQVv6hLQ83UKxW58V7Nh
+
+
