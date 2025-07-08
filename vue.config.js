@@ -37,7 +37,8 @@ module.exports = {
     proxy: {
       '/api': {
         // target: 'https://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app',
-        target: 'https://municipal-donors-expert-class.trycloudflare.com',
+        // target: 'https://municipal-donors-expert-class.trycloudflare.com',
+        target: 'http://localhost:7122',
         changeOrigin: true,
         secure: false,//
         pathRewrite: { '^/api': '/api' }

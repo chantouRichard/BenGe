@@ -52,9 +52,9 @@
             </n-form-item>
 
             <!-- 备注 -->
-            <n-form-item label="备注" path="note">
+            <n-form-item label="备注" path="notes">
               <n-input
-                v-model:value="formData.note"
+                v-model:value="formData.notes"
                 type="textarea"
                 placeholder="其他信息..."
                 :autosize="{ minRows: 2 }"
@@ -106,7 +106,7 @@ const formData = ref({
   detail: '',
   logic: '',
   tags: '',
-  note: ''
+  notes: ''
 });
 
 const initFormData = () => {
@@ -117,7 +117,7 @@ const initFormData = () => {
     detail: data.detail || '',
     logic: data.logic || '',
     tags: data.tags || '', // 直接使用字符串，与store定义一致
-    note: data.note || ''
+    notes: data.notes || ''
   };
 };
 

@@ -20,7 +20,7 @@ export const useClueStore = defineStore("clueStore", () => {
       detail: "现场发现一组单人脚印，消失在通往湖心栈道的尽头。",
       logic: "表明有人单独靠近湖区，且未返回。",
       tags: "物证,现场,湖边",
-      note: "与死者失踪时间段吻合，鞋码待比对"
+      notes: "与死者失踪时间段吻合，鞋码待比对"
     }
   },
   {
@@ -33,7 +33,7 @@ export const useClueStore = defineStore("clueStore", () => {
       detail: "柳念之小说手稿描述‘湖中倒影吞噬男人’，细节高度相符。",
       logic: "可能提前得知事件或参与其中。",
       tags: "创作,心理暗示,柳念之",
-      note: "需核实写作时间与是否知晓案情"
+      notes: "需核实写作时间与是否知晓案情"
     }
   },
   {
@@ -46,7 +46,7 @@ export const useClueStore = defineStore("clueStore", () => {
       detail: "录音中死者反复提到‘镜中人想杀我’的恐惧内容。",
       logic: "死者可能受催眠影响导致行为异常。",
       tags: "心理,章沐白,死者",
-      note: "录音真实性及完整性需验证"
+      notes: "录音真实性及完整性需验证"
     }
   },
   {
@@ -59,7 +59,7 @@ export const useClueStore = defineStore("clueStore", () => {
       detail: "确认死者与程少庭存在血缘关系，为生父子。",
       logic: "证实身份纠纷，有遗产与仇恨动机。",
       tags: "法医,DNA,程少庭",
-      note: "程少庭此前否认身份，存在隐瞒"
+      notes: "程少庭此前否认身份，存在隐瞒"
     }
   },
   {
@@ -72,7 +72,7 @@ export const useClueStore = defineStore("clueStore", () => {
       detail: "在湖边破碎木箱中发现章沐白治疗用催眠装置残骸。",
       logic: "设备可能被毁灭以掩盖治疗记录。",
       tags: "心理,破坏,证据",
-      note: "需确认谁丢弃了装置，时间与监控缺失段一致"
+      notes: "需确认谁丢弃了装置，时间与监控缺失段一致"
     }
   }
 ]);
@@ -304,7 +304,7 @@ export const useClueStore = defineStore("clueStore", () => {
         detail: "", // 线索内容
         logic: "", // 推理逻辑
         tags: "", // 标签（逗号分隔）
-        note: "", // 备注
+        notes: "", // 备注
       },
     };
 
@@ -326,7 +326,7 @@ export const useClueStore = defineStore("clueStore", () => {
         summary: "总结",
         evidence: "证据",
         tags: "",
-        note: "",
+        notes: "",
       },
     };
 
@@ -348,7 +348,7 @@ export const useClueStore = defineStore("clueStore", () => {
         bio: "人物背景简介",
         clues: [], // 与线索有关的ID或标题
         tags: ["可疑"], // 人物特点标签
-        note: "", // 附加备注
+        notes: "", // 附加备注
       },
     };
 
