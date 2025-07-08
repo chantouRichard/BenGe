@@ -47,9 +47,9 @@
             </n-form-item>
 
             <!-- 备注 -->
-            <n-form-item label="备注" path="note">
+            <n-form-item label="备注" path="notes">
               <n-input
-                v-model:value="formData.note"
+                v-model:value="formData.notes"
                 type="textarea"
                 placeholder="其他补充说明..."
                 :autosize="{ minRows: 2 }"
@@ -89,7 +89,7 @@ const formData = ref({
   summary: '',
   evidence: '',
   tags: '',
-  note: ''
+  notes: ''
 })
 
 const initFormData = () => {
@@ -99,7 +99,7 @@ const initFormData = () => {
     summary: data.summary || '',
     evidence: Array.isArray(data.evidence) ? data.evidence.join('\n') : (data.evidence || ''),
     tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
-    note: data.note || ''
+    notes: data.notes || ''
   }
 }
 
@@ -119,7 +119,7 @@ const handleSave = () => {
         .split(',')
         .map(t => t.trim())
         .filter(Boolean),
-      note: formData.value.note
+      notes: formData.value.notes
     }
   })
   handleClose()

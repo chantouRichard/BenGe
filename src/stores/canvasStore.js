@@ -443,7 +443,7 @@ export const useCanvasStore = defineStore("story", () => {
         detail: "", // 线索内容
         logic: "", // 推理逻辑
         tags: "", // 标签（逗号分隔）
-        note: "", // 备注
+        notes: "", // 备注
       },
     };
 
@@ -465,7 +465,7 @@ export const useCanvasStore = defineStore("story", () => {
         summary: "总结",
         evidence: "证据",
         tags: "",
-        note: "",
+        notes: "",
       },
     };
 
@@ -487,7 +487,7 @@ export const useCanvasStore = defineStore("story", () => {
         bio: "人物背景简介",
         clues: [], // 与线索有关的ID或标题
         tags: ["可疑"], // 人物特点标签
-        note: "", // 附加备注
+        notes: "", // 附加备注
       },
     };
 

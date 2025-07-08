@@ -742,7 +742,7 @@ const processAtmosphereNodeData = (nodeData) => {
     lighting: processed.lighting || processed.description || '',
     music: processed.music || '',
     weather: processed.weather || '',
-    note: processed.notes || ''
+    notes: processed.notes || ''
   }
 }
 
