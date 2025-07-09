@@ -73,13 +73,6 @@ const buttons = ref([
     hover: false,
   },
   {
-    icon: require("@/assets/second/role-modle.svg"),
-    action: "character-template",
-    tooltip: "角色模板",
-    color: "rgba(180, 140, 255, 0.7)",
-    hover: false,
-  },
-  {
     icon: require("@/assets/icons/export.svg"),
     action: "export-canvas",
     tooltip: "导出画板",
