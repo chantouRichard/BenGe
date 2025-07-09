@@ -10,108 +10,13 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 所有线索节点数据
   const nodes = ref([
-    {
-      id: "clue-node-1",
-      type: "clue",
-      position: { x: 100, y: 50 },
-      data: {
-        title: "湖边脚印",
-        relatedEvent: "死者失踪",
-        detail: "现场发现一组单人脚印，消失在通往湖心栈道的尽头。",
-        logic: "表明有人单独靠近湖区，且未返回。",
-        tags: "物证,现场,湖边",
-        note: "与死者失踪时间段吻合，鞋码待比对",
-      },
-    },
-    {
-      id: "clue-node-2",
-      type: "clue",
-      position: { x: 400, y: 100 },
-      data: {
-        title: "小说草稿",
-        relatedEvent: "小说中的预言",
-        detail: "柳念之小说手稿描述‘湖中倒影吞噬男人’，细节高度相符。",
-        logic: "可能提前得知事件或参与其中。",
-        tags: "创作,心理暗示,柳念之",
-        note: "需核实写作时间与是否知晓案情",
-      },
-    },
-    {
-      id: "clue-node-3",
-      type: "clue",
-      position: { x: 700, y: 180 },
-      data: {
-        title: "心理录音",
-        relatedEvent: "催眠诊疗记录",
-        detail: "录音中死者反复提到‘镜中人想杀我’的恐惧内容。",
-        logic: "死者可能受催眠影响导致行为异常。",
-        tags: "心理,章沐白,死者",
-        note: "录音真实性及完整性需验证",
-      },
-    },
-    {
-      id: "clue-node-4",
-      type: "clue",
-      position: { x: 1000, y: 190 },
-      data: {
-        title: "DNA亲子报告",
-        relatedEvent: "尸体浮现",
-        detail: "确认死者与程少庭存在血缘关系，为生父子。",
-        logic: "证实身份纠纷，有遗产与仇恨动机。",
-        tags: "法医,DNA,程少庭",
-        note: "程少庭此前否认身份，存在隐瞒",
-      },
-    },
-    
+
+
   ]);
 
   // 所有连线
   const edges = reactive([
-    {
-      id: "edge-clue-1-plot-1",
-      source: "clue-node-1",
-      target: "plot-node-1",
-      type: "custom",
-      sourcePosition: "bottom",
-      targetPosition: "top",
-      data: { type: "evidence", label: "湖边脚印支持失踪案" },
-    },
-    {
-      id: "edge-clue-2-plot-3",
-      source: "clue-node-2",
-      target: "plot-node-3",
-      type: "custom",
-      sourcePosition: "bottom",
-      targetPosition: "top",
-      data: { type: "evidence", label: "草稿引发怀疑" },
-    },
-    {
-      id: "edge-clue-3-plot-4",
-      source: "clue-node-3",
-      target: "plot-node-4",
-      type: "custom",
-      sourcePosition: "right",
-      targetPosition: "left",
-      data: { type: "evidence", label: "心理暗示影响行为" },
-    },
-    {
-      id: "edge-clue-4-plot-5",
-      source: "clue-node-4",
-      target: "plot-node-5",
-      type: "custom",
-      sourcePosition: "bottom",
-      targetPosition: "top",
-      data: { type: "evidence", label: "确认父子身份" },
-    },
-    {
-      id: "edge-clue-5-plot-6",
-      source: "clue-node-5",
-      target: "plot-node-6",
-      type: "custom",
-      sourcePosition: "bottom",
-      targetPosition: "top",
-      data: { type: "evidence", label: "设备销毁指向掩盖动机" },
-    },
+
   ]);
 
   // 当前选择结点
