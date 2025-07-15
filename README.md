@@ -5,6 +5,8 @@
 * **前端运行方式**：在前端根文件夹下通过 `npm run serve` 指令编译代码，默认在本机的 `8080` 端口运行
 * **后端运行方式**：运行后端的启动类 `BengeBackendApplication`，默认端口为 `7122`
 * **Redis 锁启动方式**：安装 `Redis-x64-3.2.100`，使用默认的端口 `6379`
+* **y-websocket启动方式** 使用`node .\start-y-websocket.js`命令运行y-websocket（在1234端口），第三阶段的同步编辑功能才能正常运行
+* **注：**如果需要本地模拟多人协作功能，可以使用后端的ngrok配置，在一个人暴露SpringBoot的7122端口，在另外一个人使用ngrok暴露1234端口，然后将前端代码中的config配置文件的后端地址更换成SpringBoot地址，然后socket.js文件的websocket地址也更换，Complete
 
 > 💡 **注意**：只有正确配置 Redis 环境，才能运行后端
 > 如果需要在本机开启**多人协作模式**，Redis 为必需依赖
