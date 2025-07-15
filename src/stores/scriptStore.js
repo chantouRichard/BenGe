@@ -31,17 +31,17 @@ export const usescriptStore = defineStore('script', () => {
       try {  
         const response = await getAllScript();
         
-        console.log("获取用户对应的剧本列表成功", response);
+        // console.log("获取用户对应的剧本列表成功", response);
 
         if(response){
           scripts.value = response;
           filteredScripts.value = response;
         }
       } catch (error) {
-        console.error("获取用户对应的剧本列表出错");
+        // console.error("获取用户对应的剧本列表出错");
 
-        if(error.response && error.response.data)
-          console.error("报错信息", error.response.data);
+        // if(error.response && error.response.data)
+          // console.error("报错信息", error.response.data);
       }
     }
 
@@ -109,11 +109,11 @@ export const usescriptStore = defineStore('script', () => {
         try {
             const response = await getSelectScript(id);
 
-            console.log("获取剧本详情成功", response);
+            // console.log("获取剧本详情成功", response);
 
             if (response){
                 if(response.history){
-                    console.log("获取剧本历史记录成功", response.history);
+                    // console.log("获取剧本历史记录成功", response.history);
                     chatHistory.value = convertScriptHistories(response.history);
                 }
                 if(response.visualElements)
@@ -136,9 +136,9 @@ export const usescriptStore = defineStore('script', () => {
                 selectedDirection.value = null;
             }
         } catch (error){
-            console.error("获取选择的剧本元素出错");
-            if(error.response && error.response.data)
-                console.error("报错信息", error.response.data);
+            // console.error("获取选择的剧本元素出错");
+            // if(error.response && error.response.data)
+                // console.error("报错信息", error.response.data);
         }
       }
     };
@@ -148,7 +148,7 @@ export const usescriptStore = defineStore('script', () => {
       try{
         const response = await createScript();
 
-        console.log("创建新剧本成功", response);
+        // console.log("创建新剧本成功", response);
 
         if(response){
           const responseScript = response.script;
@@ -171,10 +171,9 @@ export const usescriptStore = defineStore('script', () => {
           handleSelectScript(newScript.id);
         }
       } catch (error){
-        console.error("创建新剧本出错");
+        // console.error("创建新剧本出错");
 
-        if(error.response && error.response.data)
-          console.error("报错信息", error.response.data);
+
       }
     };
       
@@ -183,7 +182,7 @@ export const usescriptStore = defineStore('script', () => {
       try{
         // 发送删除请求
         const response = await deleteScriptApi(id);
-        console.log("删除剧本成功", response);
+        // console.log("删除剧本成功", response);
 
         // 从原始剧本和过滤列表中删除（通过id）
         scripts.value = scripts.value.filter(script => script.id !== id);
@@ -205,9 +204,7 @@ export const usescriptStore = defineStore('script', () => {
           }
         }
       } catch (error){
-        console.error("删除剧本出错");
-        if(error.response && error.response.data)
-          console.error("报错信息", error.response.data); 
+
       }
     };
       
@@ -219,7 +216,7 @@ export const usescriptStore = defineStore('script', () => {
     
     // 设置方向选项（添加selected字段）
     const setDirections = (directions) => {
-      console.log("设置方向选项", directions);
+      // console.log("设置方向选项", directions);
       if(Array.isArray(directions)){
         const formattedDirections = directions.map((slogan, index) => {
           const contentLines = slogan.content.split('\n');
@@ -242,7 +239,7 @@ export const usescriptStore = defineStore('script', () => {
     const selectDirectionLocally = (directionId) => {
       const direction = scriptDirections.value.find(dir => dir.id === directionId);
       if (!direction) {
-        console.error(`找不到ID为${directionId}的方向`);
+        // console.error(`找不到ID为${directionId}的方向`);
         return false;
       }
       
@@ -255,7 +252,7 @@ export const usescriptStore = defineStore('script', () => {
       direction.selected = true;
       selectedDirection.value = direction;
       
-      console.log(`已在store中选择方向: ${direction.id}`);
+      // console.log(`已在store中选择方向: ${direction.id}`);
       return true;
     };
     
@@ -267,7 +264,7 @@ export const usescriptStore = defineStore('script', () => {
         const content = selectedDirection.value.content;
         const coreIdea = selectedDirection.value.coreIdea;
 
-        // console.log("确认方向", selectedDirection.value);
+        // // console.log("确认方向", selectedDirection.value);
         // 调用API更新剧本内容和阶段
         const response = await updateScriptContent(selectScriptId.value, content + coreIdea, 2);
         
@@ -295,9 +292,9 @@ export const usescriptStore = defineStore('script', () => {
         
         return false;
       } catch (error) {
-        console.error("确认方向失败", error);
+        // console.error("确认方向失败", error);
         if (error.response && error.response.data)
-          console.error("报错信息", error.response.data);
+          // console.error("报错信息", error.response.data);
         return false;
       }
     };
@@ -323,14 +320,12 @@ export const usescriptStore = defineStore('script', () => {
           }
 
           chatHistory.value = convertScriptHistories(response.dialogHistory);
-          console.log("response.dialogHistory.length::", response.dialogHistory.length);
-          console.log("response.script.scriptHistories.length::", response.script.scriptHistories);
+          // console.log("response.dialogHistory.length::", response.dialogHistory.length);
+          // console.log("response.script.scriptHistories.length::", response.script.scriptHistories);
           return true;
         }
       } catch (error){
-        console.error("更新剧本内容失败", error);
-        if(error.response && error.response.data)
-          console.error("报错信息", error.response.data); 
+
       }
     }
 
@@ -346,22 +341,20 @@ export const usescriptStore = defineStore('script', () => {
           analysis.value = response.analysisResult;
         }
       } catch (error){
-        console.error("更新剧本分析失败", error);
-        if(error.response && error.response.data)
-          console.error("报错信息", error.response.data);
+
       }
     }
 
     // 生成完整内容
     const GenerateScript = async () => {
-      console.log("生成完整内容");
+      // console.log("生成完整内容");
 
       if(selectScriptId.value === -1) return;
       if(scriptContent.value === '') return;
 
       try{
         const response = await generateCompleteScript(selectScriptId.value, scriptContent.value);
-        console.log("生成完整内容成功", response);
+        // console.log("生成完整内容成功", response);
         if(response && response.script){
           // 用返回的script更新本地的scripts和filteredScripts
           const updatedScript = response.script;
@@ -383,9 +376,7 @@ export const usescriptStore = defineStore('script', () => {
           }
         }
       } catch (error){
-        console.error("生成完整内容失败", error);
-        if(error.response && error.response.data)
-          console.error("报错信息", error.response.data);
+
       }
     }
     // 用于流式添加单个剧本方向
@@ -411,7 +402,7 @@ export const usescriptStore = defineStore('script', () => {
         const element = visualElements.value.find(el => el.id === visualElementId);
         if(element){
           const response = await generateElementImage(selectScriptId.value, visualElementId);
-          console.log("生成可视化元素图片成功", response);
+          // console.log("生成可视化元素图片成功", response);
           if(response && response.imageUrl){
             const index = visualElements.value.findIndex(el => el.id === visualElementId);
             if(index !== -1){
@@ -426,9 +417,9 @@ export const usescriptStore = defineStore('script', () => {
         }
         return null;
       } catch (error){
-        console.error("生成可视化元素图片失败", error);
+        // console.error("生成可视化元素图片失败", error);
         if(error.response && error.response.data)
-          console.error("报错信息", error.response.data); 
+          // console.error("报错信息", error.response.data); 
         return null;
       }
     }

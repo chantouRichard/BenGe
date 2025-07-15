@@ -1,6 +1,6 @@
 <template>
   <teleport to="body">
-    <div class="AiIntegrate-overlay" @click="handleOverlayClick">
+    <div class="AiIntegrate-overlay">
       <div
         v-if="showAI"
         class="AiIntegrate-panel"
@@ -26,7 +26,7 @@
         <div class="AiIntegrate-content">
           <v-md-editor
             v-model="editorContent"
-            height="400px"
+            height="600px"
             :mode="'editable'"
           />
           <div style="text-align: right; margin-top: 16px">
@@ -57,13 +57,19 @@ const props = defineProps({
 const emit = defineEmits(["close", "select"]);
 
 const editorContent = ref(props.AIcontent);
+
+// 监听 props 变化时同步到本地
+watch(
+  () => props.AIcontent,
+  (newVal) => {
+    editorContent.value = newVal;
+  }
+);
 const showAI = ref(true);
 
 onMounted(() => {
   AiIntegrate();
 });
-
-
 
 const handleOverlayClick = () => {
   emit("close");
@@ -72,9 +78,9 @@ const handleOverlayClick = () => {
 import { enterThirdStage } from "@/api/script";
 const emitContent = async () => {
   socketState.CompleteScriptContent = editorContent.value;
-  console.log("点击确认：", socketState.CompleteScriptContent);
+  // console.log("点击确认：", socketState.CompleteScriptContent);
 
-  await enterThirdStage(socketState.roomId,socketState.CompleteScriptContent);
+  await enterThirdStage(socketState.roomId, socketState.CompleteScriptContent);
 };
 
 // 产生AI整合的内容
@@ -82,56 +88,15 @@ import { collectContextData } from "@/utils/contextCollector";
 const contextData = collectContextData();
 import { generateCooperateFramework } from "@/api/script";
 const AiIntegrate = async () => {
-  //   setTimeout(() => {
-  //     editorContent.value = `
-  // # 剧本标题：迷雾之城
-
-  // ## 故事背景
-  // 在一座被常年迷雾笼罩的古老城市中，流传着一段关于“雾中杀人案”的传说。七位毫无交集的人物突然被邀请前往一栋偏远的山庄，在那里他们将揭开一场隐藏已久的真相……
-
-  // ## 登场角色
-  // 1. **林默（侦探）**：曾因揭露警方腐败而被开除，现为私人调查员。
-  // 2. **江雪（医生）**：性格冷静，擅长心理剖析，似乎知道每个人的秘密。
-  // 3. **陆川（作家）**：创作以“真实犯罪”为题材的小说，对这次邀请格外敏感。
-  // 4. **白雯（富家女）**：外表高傲，实则内心脆弱，与受害人有不为人知的关系。
-
-  // ## 剧情结构
-
-  // ### 起
-  // 1. 七人接到神秘邀请函，前往山庄参加所谓的“剧本体验”。
-  // 2. 到达后大雾封山，通讯中断，一具尸体出现在客厅。
-
-  // ### 承
-  // 1. 每人收到一张线索卡片，内容彼此矛盾。
-  // 2. 众人开始怀疑彼此，逐步揭示出死者生前掌握众人的秘密。
-  // 3. 林默逐步还原事件过程，发现这并非第一次杀人事件。
-
-  // ### 转
-  // 1. 第二位受害者出现，江雪突然失踪。
-  // 2. 陆川的小说竟提前记录了所有线索细节，被众人质疑为凶手。
-  // 3. 调查中众人找到一份“山庄日记”，揭示房主十年前被害的真相。
-
-  // ### 合
-  // 1. 林默通过重建案发现场，揭开凶手的真实身份。
-  // 2. 凶手因十年前之恨而复仇，但最终良知复苏，向警方自首。
-  // 3. 大雾散去，众人各自离开，城市再次归于平静。
-
-  // ## 核心主题
-  // 1. 信任与欺骗、真相与记忆、命运的轮回。
-
-  // ## 结局提示
-  // 本剧本适合沉浸式角色扮演，有多条分支结局，鼓励玩家从不同角色视角探索真相。
-
-  //     `.trim();
-  //     showAI.value = false;
-  //   }, 3000);
-  console.log("contextData:", contextData);
+  // console.log("contextData:", contextData);
   const data = {
     contextData: JSON.stringify(contextData),
     roomId: socketState.roomId,
   };
-  const res = await generateCooperateFramework(data);
-  console.log("res:", res);
+  if (socketState.AICompleteScriptContent.length == 0) {
+    const res = await generateCooperateFramework(data);
+    // console.log("res:", res);
+  }
   showAI.value = false;
 };
 </script>
@@ -155,8 +120,8 @@ const AiIntegrate = async () => {
   background: white;
   border-radius: 24px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  width: 720px;
-  height: 600px;
+  width: 960px;
+  height: 800px;
   margin: 20px;
 }
 
@@ -200,7 +165,7 @@ const AiIntegrate = async () => {
   padding: 24px;
 
   width: 100%;
-  height: 70%;
+  height: 90%;
   background-color: white;
 }
 .confirm-btn {

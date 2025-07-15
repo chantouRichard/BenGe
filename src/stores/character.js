@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { socketState } from "./socket";
+import { debounce } from "lodash";
 
 export const useCharacterStore = defineStore("characterStore", () => {
   // 生成结点的ID
@@ -9,68 +10,14 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
   // 所有角色节点数据
   const nodes = ref([
-    {
-      id: generateNodeId(),
-      type: "character",
-      position: { x: 100, y: 100 },
-      data: {
-        name: "张三",
-        avatar: require("@/assets/avatar/1.jpg"),
-        age: 28,
-        occupation: "律师",
-        personality: ["冷静", "理性", "正义感强"],
-        background:
-          "毕业于知名法学院，专攻刑事辩护，有着强烈的正义感和敏锐的洞察力。",
-        skills: ["法律知识", "逻辑推理", "谈判技巧"],
-        items: "一支父亲留下的钢笔，法学院毕业证书",
-        notes: "主要推理角色，善于发现细节线索",
-        relationships: [
-          {
-            type: "前同事",
-            description: "曾在一起接手一桩命案",
-            targetId: "李四",
-            strength: 5,
-            status: "active"
-          },
-        ],
-      },
-    },
-    {
-      id: generateNodeId(),
-      type: "character",
-      position: { x: 300, y: 150 },
-      data: {
-        name: "李四",
-        avatar: require("@/assets/avatar/2.jpg"),
-        age: 35,
-        occupation: "警察",
-        personality: ["冲动", "果断", "强势"],
-        background: "一线刑警，参与多起大案调查，但因一次误判被调职。",
-        skills: ["刑侦经验", "枪械熟练", "审讯技巧"],
-        items: "警徽、旧案件笔记本",
-        notes: "对案件有执念，可能带入主观判断",
-        relationships: [
-          {
-            type: "前同事",
-            description: "曾在一起接手一桩命案",
-            targetId: "张三",
-            strength: 5,
-            status: "active"
-          },
-          {
-            type: "兄弟",
-            description: "死于三年前未破悬案",
-            targetId: "王五",
-            strength: 8,
-            status: "deceased"
-          }
-        ]
-      },
-    },
+  
+    
   ]);
 
   // 所有连线
-  const edges = reactive([]);
+  const edges = [
+   
+  ];
 
   // 当前选择结点
   const selectedNode = ref(null);
@@ -92,7 +39,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
-    console.log("点击创建边按钮");
+    // console.log("点击创建边按钮");
     isCreatingEdge.value = true;
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
@@ -100,7 +47,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
-    console.log("点击的边的Id", edgeId);
+    // console.log("点击的边的Id", edgeId);
     editingEdgeId.value = edgeId;
     showEdgeSelector.value = true;
   };
@@ -194,7 +141,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
   // 用户在角色-场景编辑器中，确认修改角色-场景关系
   const handleCharacterSceneEdgeEditConfirm = (sceneData) => {
     if (!editingEdgeId.value) {
-      console.warn("没有正在编辑的边ID");
+      // console.warn("没有正在编辑的边ID");
       return;
     }
 
@@ -217,7 +164,7 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
       broadcast();
     } else {
-      console.error("未找到要编辑的角色-场景边:", editingEdgeId.value);
+      // console.error("未找到要编辑的角色-场景边:", editingEdgeId.value);
     }
   };
 
@@ -321,12 +268,12 @@ export const useCharacterStore = defineStore("characterStore", () => {
           edgeType.value = "character-scene";
         } else {
           // 不支持的连接类型
-          console.warn(
-            "不支持的连接类型:",
-            sourceNode.type,
-            "->",
-            targetNode.type
-          );
+          // console.warn(
+          //   "不支持的连接类型:",
+          //   sourceNode.type,
+          //   "->",
+          //   targetNode.type
+          // );
           alert("角色设计师只支持角色与角色、角色与场景之间的连接");
 
           // 重置连接状态
@@ -342,10 +289,10 @@ export const useCharacterStore = defineStore("characterStore", () => {
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log("保存的节点数据：", updatedData);
+    // console.log("保存的节点数据：", updatedData);
 
     if (!updatedData || !updatedData.id || !updatedData.data) {
-      console.warn("[handleDetailSave] 无效参数：", updatedData);
+      // console.warn("[handleDetailSave] 无效参数：", updatedData);
       return -1;
     }
 
@@ -364,13 +311,13 @@ export const useCharacterStore = defineStore("characterStore", () => {
         // ✅ 强制触发响应式更新
         nodes.value[index] = { ...nodes.value[index] };
 
-        console.log("更新后的节点数据：", nodes.value[index]);
+        // console.log("更新后的节点数据：", nodes.value[index]);
       } else {
-        console.warn("未找到对应的节点 ID:", updatedData.id);
+        // console.warn("未找到对应的节点 ID:", updatedData.id);
         return -1;
       }
     } else {
-      console.warn("无选中节点，可能是编辑逻辑未正确触发");
+      // console.warn("无选中节点，可能是编辑逻辑未正确触发");
       return -1;
     }
 
@@ -438,7 +385,11 @@ export const useCharacterStore = defineStore("characterStore", () => {
     broadcast();
   };
   // 广播节点和边的信息
-  const broadcast = () => {
+  const broadcast = debounce(() => {
+        if (
+      socketState?.socket &&
+      socketState.socket.readyState === WebSocket.OPEN
+    ) {
     socketState.socket.send(
       JSON.stringify({
         type: "character",
@@ -446,11 +397,11 @@ export const useCharacterStore = defineStore("characterStore", () => {
         characterEdges: edges,
       })
     );
-    console.log("广播的节点信息：", {
-      nodes: nodes.value,
-      edges: edges,
-    });
-  };
+    }
+    else{
+      // console.error("未连接websocket");
+    }
+  }, 300);
 
   return {
     nodes,

@@ -1,53 +1,55 @@
 <template>
-  <div
-    class="toolball"
-    :style="toolballStyle"
-    @mouseenter="isExpanded = true"
-    @mouseleave="isExpanded = false"
-    @mousedown="startDrag"
-  >
-    <!-- 主按钮 -->
-    <button class="main-button">
-      <img
-        src="../../../../../assets/second/role1.png"
-        alt="剧情工具"
-        class="icon-main"
-      />
-    </button>
+  <div class="toolball-wrapper">
+    <div
+      class="toolball"
+      :style="toolballStyle"
+      @mouseenter="isExpanded = true"
+      @mousedown="startDrag"
+    >
+      <!-- 主按钮 -->
+      <button class="main-button">
+        <img
+          src="../../../../../assets/second/role1.png"
+          alt="剧情工具"
+          class="icon-main"
+        />
+      </button>
 
-    <!-- 展开面板 -->
-    <transition name="panel-expand">
-      <div
-        v-if="isExpanded"
-        class="tool-panel"
-        :class="[panelDirection === 'left' ? 'panel-left' : 'panel-right']"
-        @mousemove="handlePanelMove"
-        :style="panelHoverStyle"
-      >
-        <button
-          v-for="(btn, i) in buttons"
-          :key="btn.action"
-          class="tool-button"
-          :style="{ '--delay-index': i }"
-          @click="$emit(btn.action)"
-          @mouseenter="btn.hover = true"
-          @mouseleave="btn.hover = false"
+      <!-- 展开面板 -->
+      <transition name="panel-expand">
+        <div
+          v-if="isExpanded"
+          class="tool-panel"
+          :class="[panelDirection === 'left' ? 'panel-left' : 'panel-right']"
+          @mousemove="handlePanelEnter"
+          @mouseleave="handlePanelLeave"
+          :style="panelHoverStyle"
         >
-          <img
-            :src="btn.icon"
-            :alt="btn.tooltip"
-            class="icon-tool"
-            :style="{
-              transform: btn.hover ? 'scale(1.15)' : 'none',
-              filter: btn.hover
-                ? 'drop-shadow(0 0 8px ' + btn.color + ')'
-                : 'none',
-            }"
-          />
-          <span class="tooltip">{{ btn.tooltip }}</span>
-        </button>
-      </div>
-    </transition>
+          <button
+            v-for="(btn, i) in buttons"
+            :key="btn.action"
+            class="tool-button"
+            :style="{ '--delay-index': i }"
+            @click="$emit(btn.action)"
+            @mouseenter="btn.hover = true"
+            @mouseleave="btn.hover = false"
+          >
+            <img
+              :src="btn.icon"
+              :alt="btn.tooltip"
+              class="icon-tool"
+              :style="{
+                transform: btn.hover ? 'scale(1.15)' : 'none',
+                filter: btn.hover
+                  ? 'drop-shadow(0 0 8px ' + btn.color + ')'
+                  : 'none',
+              }"
+            />
+            <span class="tooltip">{{ btn.tooltip }}</span>
+          </button>
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
@@ -71,16 +73,9 @@ const buttons = ref([
   },
   {
     icon: require("@/assets/icons/export.svg"),
-    action: "export-md",
-    tooltip: "导出Markdown",
+    action: "export-canvas",
+    tooltip: "导出画布",
     color: "rgba(255, 140, 200, 0.7)",
-    hover: false,
-  },
-  {
-    icon: require("@/assets/icons/export-PDF.svg"),
-    action: "export-pdf",
-    tooltip: "导出PDF",
-    color: "rgba(100, 220, 180, 0.7)",
     hover: false,
   },
   {
@@ -116,6 +111,24 @@ const dragStartPos = ref(null);
 const panelHoverPos = ref({ x: 0, y: 0 });
 
 const panelDirection = ref('right');
+
+const closeTimeout = ref(null);
+const isPanelHovered = ref(false);
+
+const handlePanelEnter = () => {
+  isPanelHovered.value = true;
+  if (closeTimeout.value) {
+    clearTimeout(closeTimeout.value);
+    closeTimeout.value = null;
+  }
+};
+
+const handlePanelLeave = () => {
+  isPanelHovered.value = false;
+  closeTimeout.value = setTimeout(() => {
+    isExpanded.value = false;
+  }, 200);
+};
 
 const updatePanelDirection = () => {
   const viewportWidth = window.innerWidth;
@@ -214,22 +227,43 @@ const startDrag = (e) => {
 defineEmits([
   "add-node",
   "add-edge",
-  "export-md",
-  "export-pdf",
+  "export-canvas",
   "ai-generate",
   "ai-integrate",
 ]);
 </script>
 
 <style scoped>
-.toolball {
+.toolball-wrapper {
   position: fixed;
   z-index: 1000;
+}
+
+.toolball {
+  position: relative;
   display: flex;
   align-items: center;
   cursor: grab;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+.toolball::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--panel-width), 300px);
+  height: 56px;
+  top: 0;
+}
+
+.toolball .panel-right:hover::after {
+  left: 100%;
+  width: var(--panel-width);
+}
+
+.toolball .panel-left:hover::after {
+  right: 100%;
+  width: var(--panel-width);
 }
 
 .toolball:active {

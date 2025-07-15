@@ -202,7 +202,7 @@ export default defineComponent({
           }
         }
       } catch (error) {
-        console.error("Error fetching AI response:", error);
+        // console.error("Error fetching AI response:", error);
         messages.push({ type: "ai", content: "AI 回复失败，请稍后重试。" });
       } finally {
         loading.value = false;

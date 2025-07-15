@@ -123,7 +123,7 @@ const renderMarkdown = (content) => {
 
     return sanitized;
   } catch (error) {
-    console.error('Markdown渲染失败:', error);
+    // console.error('Markdown渲染失败:', error);
     // 渲染失败时返回原始文本，但进行HTML转义
     return content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -152,7 +152,7 @@ const sendChatMessage = () => {
       };
       messageContent = `@ai:${JSON.stringify(aiMessageData)}`;
     } catch (error) {
-      console.error('收集上下文数据失败:', error);
+      // console.error('收集上下文数据失败:', error);
       // 如果上下文收集失败，发送简单的@ai消息
       messageContent = newMessage.value;
     }
@@ -170,7 +170,7 @@ const sendChatMessage = () => {
     // 发送消息后自动滚动到底部
     scrollToBottom();
   } else {
-    console.error("WebSocket连接未就绪");
+    // console.error("WebSocket连接未就绪");
   }
 
   newMessage.value = "";
@@ -185,43 +185,29 @@ const isUserScrollingUp = () => {
   const threshold = 300; // 增加阈值到300px
   const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
 
-  console.log('📏 [SCROLL DEBUG] 滚动位置检查:', {
-    scrollHeight: container.scrollHeight,
-    scrollTop: container.scrollTop,
-    clientHeight: container.clientHeight,
-    distanceFromBottom: distanceFromBottom,
-    threshold: threshold,
-    isScrollingUp: distanceFromBottom > threshold
-  });
-
   return distanceFromBottom > threshold;
 };
 
 // 滚动到最底部（带平滑效果和智能判断）
 const scrollToBottom = (force = false) => {
-  console.log('🎯 [SCROLL DEBUG] scrollToBottom被调用, force:', force);
+  // console.log('🎯 [SCROLL DEBUG] scrollToBottom被调用, force:', force);
 
   nextTick(() => {
     if (!messagesContainer.value) {
-      console.log('❌ [SCROLL DEBUG] messagesContainer未找到');
+      // console.log('❌ [SCROLL DEBUG] messagesContainer未找到');
       return;
     }
 
     const container = messagesContainer.value;
-    console.log('📊 [SCROLL DEBUG] 容器信息:', {
-      scrollHeight: container.scrollHeight,
-      scrollTop: container.scrollTop,
-      clientHeight: container.clientHeight,
-      offsetHeight: container.offsetHeight
-    });
+
 
     // 如果用户正在查看历史消息且不是强制滚动，则不自动滚动
     if (!force && isUserScrollingUp()) {
-      console.log('🚫 [SCROLL DEBUG] 用户正在查看历史消息，跳过自动滚动');
+      // console.log('🚫 [SCROLL DEBUG] 用户正在查看历史消息，跳过自动滚动');
       return;
     }
 
-    console.log('✅ [SCROLL DEBUG] 开始执行滚动');
+    // console.log('✅ [SCROLL DEBUG] 开始执行滚动');
 
     // 平滑滚动到底部
     container.scrollTo({
@@ -231,11 +217,7 @@ const scrollToBottom = (force = false) => {
 
     // 验证滚动结果
     setTimeout(() => {
-      console.log('🔍 [SCROLL DEBUG] 滚动完成后的位置:', {
-        scrollTop: container.scrollTop,
-        scrollHeight: container.scrollHeight,
-        isAtBottom: Math.abs(container.scrollHeight - container.scrollTop - container.clientHeight) < 5
-      });
+
     }, 200);
   });
 };
@@ -263,43 +245,33 @@ const isNearBottom = () => {
 
 // 监听消息数组变化
 watch(() => socketState.messages, (newMessages) => {
-  console.log('🔍 [SCROLL DEBUG] 消息数组变化检测');
-  console.log('当前消息数量:', newMessages?.length);
-  console.log('上次记录数量:', lastMessageCount);
+  // console.log('🔍 [SCROLL DEBUG] 消息数组变化检测');
+  // console.log('当前消息数量:', newMessages?.length);
+  // console.log('上次记录数量:', lastMessageCount);
 
   const currentCount = newMessages?.length || 0;
   const hasNewMessage = currentCount > lastMessageCount;
 
   if (hasNewMessage && currentCount > 0) {
     const latestMessage = newMessages[currentCount - 1];
-    console.log('🆕 [SCROLL DEBUG] 检测到新消息:', {
-      sender: latestMessage.sender,
-      username: latestMessage.username,
-      isAI: latestMessage.isAI,
-      isMe: latestMessage.isMe,
-      contentPreview: latestMessage.content?.substring(0, 50) + '...'
-    });
+
 
     // 判断是否应该自动滚动
     const shouldAutoScroll = wasNearBottom || latestMessage.isMe;
-    console.log('📊 [SCROLL DEBUG] 滚动决策:', {
-      wasNearBottom: wasNearBottom,
-      isMyMessage: latestMessage.isMe,
-      shouldAutoScroll: shouldAutoScroll
-    });
+
 
     if (shouldAutoScroll) {
-      console.log('🚀 [SCROLL DEBUG] 准备执行自动滚动');
+      // console.log('🚀 [SCROLL DEBUG] 准备执行自动滚动');
 
       nextTick(() => {
-        console.log('📋 [SCROLL DEBUG] nextTick执行');
+        // console.log('📋 [SCROLL DEBUG] nextTick执行');
         setTimeout(() => {
-          console.log('⏰ [SCROLL DEBUG] setTimeout执行，强制滚动到底部');
+          // console.log('⏰ [SCROLL DEBUG] setTimeout执行，强制滚动到底部');
           scrollToBottom(true); // 强制滚动，忽略isUserScrollingUp检查
         }, latestMessage.isAI ? 200 : 50); // AI消息需要更多时间渲染
       });
     } else {
-      console.log('🚫 [SCROLL DEBUG] 用户不在底部，跳过自动滚动');
+      // console.log('🚫 [SCROLL DEBUG] 用户不在底部，跳过自动滚动');
     }
   }
 
@@ -308,7 +280,7 @@ watch(() => socketState.messages, (newMessages) => {
   // 延迟更新wasNearBottom状态，避免在DOM更新过程中误判
   setTimeout(() => {
     wasNearBottom = isNearBottom();
-    console.log('📍 [SCROLL DEBUG] 更新底部状态:', wasNearBottom);
+    // console.log('📍 [SCROLL DEBUG] 更新底部状态:', wasNearBottom);
   }, 100);
 }, {
   deep: true,
@@ -321,10 +293,7 @@ onMounted(() => {
   lastMessageCount = socketState.messages?.length || 0;
   wasNearBottom = true;
 
-  console.log('🚀 [SCROLL DEBUG] 组件挂载，初始化状态:', {
-    messageCount: lastMessageCount,
-    wasNearBottom: wasNearBottom
-  });
+
 
   // 延迟执行确保组件完全挂载
   nextTick(() => {

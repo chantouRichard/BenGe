@@ -200,7 +200,7 @@ onMounted(async () => {
 
     // 初始化 WebSocket Provider - 使用动态房间ID
     provider = new WebsocketProvider(
-      "ws://localhost:1234",
+      "wss://bike-very-journalism-ts.trycloudflare.com",
       `room-${roomId.value}`,
       ydoc
     );
@@ -218,7 +218,7 @@ onMounted(async () => {
 
     // 监听连接状态
     provider.on("status", (event) => {
-      console.log("Y.js连接状态:", event.status);
+      // console.log("Y.js连接状态:", event.status);
       if (event.status === "connected") {
         isConnected.value = true;
         connectionStatus.value = "已连接";
@@ -264,8 +264,8 @@ onMounted(async () => {
     // const isQuillEmpty =
     //   quillContents.ops.length === 1 && quillContents.ops[0].insert === "\n";
 
-    // console.log("quill.getLength:", quill.getText());
-    // console.log("Quill:", quill);
+    // // console.log("quill.getLength:", quill.getText());
+    // // console.log("Quill:", quill);
     // quill.setText(socketState.CompleteScriptContent);
     // if (!quill.getLength() && socketState.CompleteScriptContent) {
     //   const markdown = socketState.CompleteScriptContent;
@@ -286,14 +286,14 @@ onMounted(async () => {
     quill.setContents([], 'api'); // 清空旧内容
     quill.clipboard.dangerouslyPasteHTML(0, html, 'api');
 
-    console.log("✏️ 初次插入内容成功！");
+    // console.log("✏️ 初次插入内容成功！");
   } else {
-    console.log("✅ 已有内容，跳过初始化。");
+    // console.log("✅ 已有内容，跳过初始化。");
   }
 });
 
   } catch (error) {
-    console.error("初始化编辑器失败:", error);
+    // console.error("初始化编辑器失败:", error);
     ElMessage.error("初始化编辑器失败，请刷新页面重试");
     connectionStatus.value = "连接失败";
   }
@@ -351,22 +351,22 @@ async function saveToServer() {
 
       if (response.data === "success" || response.status === 200) {
         ElMessage.success("剧本保存成功！");
-        console.log("✅ 保存成功，内容：\n", markdown);
+        // console.log("✅ 保存成功，内容：\n", markdown);
       } else {
         ElMessage.error("保存失败：" + (response.data || "未知错误"));
       }
     } catch (apiError) {
       // 如果后端接口不存在，先在本地保存
-      console.warn("后端保存接口未实现，使用本地保存:", apiError.message);
+      // console.warn("后端保存接口未实现，使用本地保存:", apiError.message);
       ElMessage.warning("后端接口未实现，内容已保存到控制台");
-      console.log("✅ 本地保存内容：\n", markdown);
+      // console.log("✅ 本地保存内容：\n", markdown);
 
       // 可以保存到 localStorage 作为临时方案
       localStorage.setItem(`room_${roomId.value}_script`, markdown);
       ElMessage.success("剧本已临时保存到本地");
     }
   } catch (error) {
-    console.error("保存失败:", error);
+    // console.error("保存失败:", error);
     ElMessage.error("保存失败：" + error.message);
   }
 }
@@ -416,9 +416,9 @@ function output() {
     URL.revokeObjectURL(url);
 
     ElMessage.success("剧本导出成功！");
-    console.log("✅ 导出 Markdown：\n", markdown);
+    // console.log("✅ 导出 Markdown：\n", markdown);
   } catch (error) {
-    console.error("导出失败:", error);
+    // console.error("导出失败:", error);
     ElMessage.error("导出失败：" + error.message);
   }
 }
@@ -430,7 +430,7 @@ function updateMembers(membersList) {
     name: member.username,
     avatar: member.avatar || loginImage,
   }));
-  console.log("成员列表已更新:", members.value);
+  // console.log("成员列表已更新:", members.value);
 }
 </script>
 
@@ -496,7 +496,6 @@ function updateMembers(membersList) {
 }
 
 .member-list {
-  position: absolute;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   /* 自动换行、每列最小120px */

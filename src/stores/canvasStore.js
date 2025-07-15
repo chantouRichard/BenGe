@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { socketState } from "./socket";
+import { debounce } from "lodash";
 
 export const useCanvasStore = defineStore("story", () => {
   // 生成结点的ID
@@ -9,38 +10,13 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 所有节点数据
   const nodes = ref([
-    {
-      id: generateNodeId(),
-      type: "custom",
-      position: { x: 200, y: 300 },
-      data: {
-        title: "命案现场发现",
-        timeLabel: "DAY1 07:30",
-        characters: "李四",
-        clues: "血迹、打火机",
-        sceneDescription: "废弃仓库内发现男尸，死者为王五",
-        nodeConnections: "与节点7（初步调查）相关",
-        notes: "王五为李四之弟，案件性质复杂",
-      },
-    },
-    {
-      id: generateNodeId(),
-      type: "custom",
-      position: { x: 500, y: 400 },
-      data: {
-        title: "关键目击证词",
-        timeLabel: "DAY1 09:15",
-        characters: "张三",
-        clues: "陌生车牌",
-        sceneDescription: "张三审问附近居民，得知凌晨有可疑车辆出入",
-        nodeConnections: "与节点1关联（命案现场）",
-        notes: "可能出现时间线冲突，需对比证词时间",
-      },
-    },
+
   ]);
 
   // 所有连线
-  const edges = reactive([]);
+  const edges = reactive([
+  
+  ]);
 
   // 当前选择结点
   const selectedNode = ref(null);
@@ -59,13 +35,13 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
-    console.log("点击创建边按钮");
+    // console.log("点击创建边按钮");
     isCreatingEdge.value = true;
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
   };
   const handleCreateClueEdgeClick = () => {
-    console.log("点击创建边按钮");
+    // console.log("点击创建边按钮");
     isCreatingEdge.value = true;
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
@@ -73,7 +49,7 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
-    console.log("点击的边的Id", edgeId);
+    // console.log("点击的边的Id", edgeId);
     editingEdgeId.value = edgeId;
     showEdgeSelector.value = true;
   };
@@ -130,7 +106,7 @@ export const useCanvasStore = defineStore("story", () => {
   // 处理人物-场景边编辑确认
   const handleCharacterSceneEdgeEditConfirm = (edgeData) => {
     if (!editingEdgeId.value) {
-      console.warn("没有正在编辑的边ID");
+      // console.warn("没有正在编辑的边ID");
       return;
     }
 
@@ -152,7 +128,7 @@ export const useCanvasStore = defineStore("story", () => {
 
       broadcast();
     } else {
-      console.error("未找到要编辑的边:", editingEdgeId.value);
+      // console.error("未找到要编辑的边:", editingEdgeId.value);
     }
   };
 
@@ -179,7 +155,7 @@ export const useCanvasStore = defineStore("story", () => {
 
   // 连接结点
   const handleConnectNode = (newEdge) => {
-    console.log("[DEBUG] 连接结点边：", newEdge);
+    // console.log("[DEBUG] 连接结点边：", newEdge);
     edges.push(newEdge);
 
     broadcast();
@@ -189,7 +165,7 @@ export const useCanvasStore = defineStore("story", () => {
   const handleNodeClick = (node) => {
     // 添加参数验证，防止 undefined 错误
     if (!node) {
-      console.warn("handleNodeClick: node parameter is undefined");
+      // console.warn("handleNodeClick: node parameter is undefined");
       return;
     }
 
@@ -197,33 +173,33 @@ export const useCanvasStore = defineStore("story", () => {
 
     // 验证 actualNode 是否有效
     if (!actualNode || !actualNode.id) {
-      console.warn("handleNodeClick: invalid node data", actualNode);
+      // console.warn("handleNodeClick: invalid node data", actualNode);
       return;
     }
 
     if (isCreatingEdge.value) {
-      console.log("当前选择结点", actualNode);
+      // console.log("当前选择结点", actualNode);
       if (!selectedNodesForEdge.value.find((n) => n.id === actualNode.id)) {
         selectedNodesForEdge.value.push(actualNode);
       }
 
       if (selectedNodesForEdge.value.length === 2) {
-        console.log("已选择两个节点：", selectedNodesForEdge.value);
+        // console.log("已选择两个节点：", selectedNodesForEdge.value);
         showEdgeSelector.value = true;
       }
       broadcast();
     } else {
       selectedNode.value = { ...actualNode };
-      console.log("设置选中节点:", selectedNode.value);
+      // console.log("设置选中节点:", selectedNode.value);
     }
   };
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log("保存的节点数据：", updatedData);
+    // console.log("保存的节点数据：", updatedData);
 
     if (!updatedData || !updatedData.id || !updatedData.data) {
-      console.warn("[handleDetailSave] 无效参数：", updatedData);
+      // console.warn("[handleDetailSave] 无效参数：", updatedData);
       return -1;
     }
 
@@ -241,21 +217,21 @@ export const useCanvasStore = defineStore("story", () => {
 
         nodes.value[index] = { ...nodes.value[index] };
 
-        console.log("更新后的节点数据：", nodes.value[index]);
+        // console.log("更新后的节点数据：", nodes.value[index]);
       } else {
-        console.warn("未找到对应的节点 ID:", updatedData.id);
+        // console.warn("未找到对应的节点 ID:", updatedData.id);
         return -1;
       }
     } else {
-      console.warn("无选中节点，可能是编辑逻辑未正确触发");
+      // console.warn("无选中节点，可能是编辑逻辑未正确触发");
       return -1;
     }
 
     // 最后收起面板
     selectedNode.value = null;
 
-    console.log("[DEBUG] 当前节点列表：", JSON.stringify(nodes.value, null, 2));
-    console.log("索引：", index);
+    // console.log("[DEBUG] 当前节点列表：", JSON.stringify(nodes.value, null, 2));
+    // console.log("索引：", index);
 
     broadcast();
     return index;
@@ -282,7 +258,7 @@ export const useCanvasStore = defineStore("story", () => {
       },
     };
     nodes.value.push(newNode);
-    console.log("[DEBUG] 当前节点列表：", JSON.stringify(nodes.value, null, 2));
+    // console.log("[DEBUG] 当前节点列表：", JSON.stringify(nodes.value, null, 2));
 
     broadcast();
   };
@@ -327,7 +303,7 @@ export const useCanvasStore = defineStore("story", () => {
         detail: "", // 线索内容
         logic: "", // 推理逻辑
         tags: "", // 标签（逗号分隔）
-        note: "", // 备注
+        notes: "", // 备注
       },
     };
 
@@ -349,7 +325,7 @@ export const useCanvasStore = defineStore("story", () => {
         summary: "总结",
         evidence: "证据",
         tags: "",
-        note: "",
+        notes: "",
       },
     };
 
@@ -371,7 +347,7 @@ export const useCanvasStore = defineStore("story", () => {
         bio: "人物背景简介",
         clues: [], // 与线索有关的ID或标题
         tags: ["可疑"], // 人物特点标签
-        note: "", // 附加备注
+        notes: "", // 附加备注
       },
     };
 
@@ -411,8 +387,11 @@ export const useCanvasStore = defineStore("story", () => {
   };
 
   // 广播节点和边的信息
-  const broadcast = () => {
-    if (socketState?.socket?.send) {
+  const broadcast = debounce(() => {
+    if (
+      socketState?.socket &&
+      socketState.socket.readyState === WebSocket.OPEN
+    ) {
       socketState.socket.send(
         JSON.stringify({
           type: "canvas",
@@ -420,12 +399,14 @@ export const useCanvasStore = defineStore("story", () => {
           edges: edges,
         })
       );
-      console.log("广播的剧情节点信息：", {
-        nodes: nodes.value,
-        edges: edges,
-      });
+      // console.log("✅ 广播的剧情节点信息：", {
+      //   nodes: nodes.value,
+      //   edges: edges,
+      // });
+    } else {
+      // console.warn("❌ WebSocket 未连接，跳过广播");
     }
-  };
+  }, 300);
 
   return {
     nodes,

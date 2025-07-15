@@ -366,7 +366,7 @@ const getImageUrl = (url) => {
 
 // 处理图片加载错误
 const handleImageError = (event) => {
-  console.error('图片加载失败', event);
+  // console.error('图片加载失败', event);
   // 设置为默认图片
   event.target.src = '/placeholder-image.png'; // 替换为你的默认图片路径
   // 添加错误样式
@@ -390,7 +390,7 @@ const generateImage = async () => {
       };
     }
   } catch (error) {
-    console.error('生成图片失败', error);
+    // console.error('生成图片失败', error);
   } finally {
     isGeneratingImage.value = false;
   }

@@ -2,17 +2,18 @@
   <div class="edit-area">
 
     <!-- 全屏编辑区域 -->
-      <transition name="fullscreen-slide">
-        <div class="canvas fullscreen">
-          <!-- <div style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;">第二阶段<br>你的角色是：{{ roles[userRole].name }}</div> -->
-          <!-- <button style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;" @click="$emit('nextStage')">下一阶段</button> -->
-          <div class="canvas"> 
-            <NarrativeWorkspace
+    <transition name="fullscreen-slide">
+      <div class="canvas fullscreen">
+        <!-- <div style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;">第二阶段<br>你的角色是：{{ roles[userRole].name }}</div> -->
+        <!-- <button style="font-size: 24px;position: fixed;top: 20px;left: 40px;z-index: 9000;font-family: 'Montserrat', 'Arial', sans-serif;" @click="$emit('nextStage')">下一阶段</button> -->
+        <div class="canvas">
+          <NarrativeWorkspace
+              ref="narrativeWorkspace"
               @updateGraph="handleGraphUpdate"
-            />
-          </div>
+          />
         </div>
-      </transition>
+      </div>
+    </transition>
   </div>
 </template>
 

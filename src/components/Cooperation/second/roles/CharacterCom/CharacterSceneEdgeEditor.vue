@@ -210,9 +210,7 @@ watch([
   () => props.initialLabel,
   () => props.initialStyle
 ], ([participationType, importance, description, label, style]) => {
-  console.log('CharacterSceneEdgeEditor - 初始化数据:', {
-    participationType, importance, description, label, style
-  });
+
   formData.value = {
     participationType: participationType || 'protagonist',
     importance: importance || 'normal',
@@ -220,7 +218,6 @@ watch([
     label: label || '',
     style: style || 'solid'
   };
-  console.log('CharacterSceneEdgeEditor - 表单数据:', formData.value);
 }, { immediate: true });
 
 // 确认参与设置

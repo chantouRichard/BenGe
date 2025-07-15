@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { socketState } from "./socket";
+import { debounce } from "lodash";
 
 export const useClueStore = defineStore("clueStore", () => {
   // 生成结点的ID
@@ -9,36 +10,14 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 所有线索节点数据
   const nodes = ref([
-    {
-      id: generateNodeId(),
-      type: "clue",
-      position: { x: 600, y: 200 },
-      data: {
-        title: "打火机",
-        relatedEvent: "命案现场发现",
-        detail: "打火机带有‘LS’字样，疑似李四的私人物品",
-        logic: "嫌疑人可能在现场遗落打火机，需验证指纹",
-        tags: "物证,李四",
-        note: "可能是伪装嫁祸",
-      },
-    },
-    {
-      id: generateNodeId(),
-      type: "clue",
-      position: { x: 700, y: 250 },
-      data: {
-        title: "陌生车牌",
-        relatedEvent: "关键目击证词",
-        detail: "车牌为‘浙A·7B9Q8’，未登记在案",
-        logic: "可能是作案工具或潜逃车辆",
-        tags: "目击,车辆",
-        note: "需调取交通监控记录追踪",
-      },
-    },
+
+
   ]);
 
   // 所有连线
-  const edges = reactive([]);
+  const edges = reactive([
+
+  ]);
 
   // 当前选择结点
   const selectedNode = ref(null);
@@ -57,7 +36,7 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 用户点击创建边按钮时，调用此方法
   const handleCreateEdgeClick = () => {
-    console.log("点击创建边按钮");
+    // console.log("点击创建边按钮");
     isCreatingEdge.value = true;
     selectedNodesForEdge.value = [];
     showEdgeSelector.value = false;
@@ -65,7 +44,7 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 用户点击边时，进入边选择器
   const handleEdgeSelect = (edgeId) => {
-    console.log("点击的边的Id", edgeId);
+    // console.log("点击的边的Id", edgeId);
     editingEdgeId.value = edgeId;
     showEdgeSelector.value = true;
   };
@@ -162,10 +141,10 @@ export const useClueStore = defineStore("clueStore", () => {
 
   // 修改结点信息的保存
   const handleDetailSave = (updatedData) => {
-    console.log("保存的节点数据：", updatedData);
+    // console.log("保存的节点数据：", updatedData);
 
     if (!updatedData || !updatedData.id || !updatedData.data) {
-      console.warn("[handleDetailSave] 无效参数：", updatedData);
+      // console.warn("[handleDetailSave] 无效参数：", updatedData);
       return -1;
     }
 
@@ -184,13 +163,13 @@ export const useClueStore = defineStore("clueStore", () => {
         // ✅ 强制触发响应式更新
         nodes.value[index] = { ...nodes.value[index] };
 
-        console.log("更新后的节点数据：", nodes.value[index]);
+        // console.log("更新后的节点数据：", nodes.value[index]);
       } else {
-        console.warn("未找到对应的节点 ID:", updatedData.id);
+        // console.warn("未找到对应的节点 ID:", updatedData.id);
         return -1;
       }
     } else {
-      console.warn("无选中节点，可能是编辑逻辑未正确触发");
+      // console.warn("无选中节点，可能是编辑逻辑未正确触发");
       return -1;
     }
 
@@ -216,7 +195,7 @@ export const useClueStore = defineStore("clueStore", () => {
         detail: "", // 线索内容
         logic: "", // 推理逻辑
         tags: "", // 标签（逗号分隔）
-        note: "", // 备注
+        notes: "", // 备注
       },
     };
 
@@ -238,7 +217,7 @@ export const useClueStore = defineStore("clueStore", () => {
         summary: "总结",
         evidence: "证据",
         tags: "",
-        note: "",
+        notes: "",
       },
     };
 
@@ -260,7 +239,7 @@ export const useClueStore = defineStore("clueStore", () => {
         bio: "人物背景简介",
         clues: [], // 与线索有关的ID或标题
         tags: ["可疑"], // 人物特点标签
-        note: "", // 附加备注
+        notes: "", // 附加备注
       },
     };
 
@@ -295,34 +274,34 @@ export const useClueStore = defineStore("clueStore", () => {
     if (nodeIndex !== -1) {
       nodes.value[nodeIndex].position = position;
       nodes.value[nodeIndex] = { ...nodes.value[nodeIndex] }; // ✅ 强制 Vue 感知变化
-      // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
+      // // console.log(`[DEBUG] 节点 ${id} 位置已更新为：`, nodes.value);
     }
     broadcast();
   };
   // 广播节点和边的信息
-  const broadcast = () => {
-    // 分类节点
-    const clueNodes = nodes.value.filter((n) => n.type === "clue");
-    const inferenceNodes = nodes.value.filter((n) => n.type === "inference");
-    const personNodes = nodes.value.filter((n) => n.type === "person");
+  const broadcast = debounce(() => {
+    if (
+      socketState?.socket &&
+      socketState.socket.readyState === WebSocket.OPEN
+    ) {
+      const clueNodes = nodes.value.filter((n) => n.type === "clue");
+      const inferenceNodes = nodes.value.filter((n) => n.type === "inference");
+      const personNodes = nodes.value.filter((n) => n.type === "person");
 
-    console.log("clue:", clueNodes);
-    console.log("inference:", inferenceNodes);
-    console.log("personNodes:", personNodes);
-    // 构造消息体
-    const message = {
-      type: "clue", // 或者你可以改成 "clueSync"、"canvasUpdate"，看你的协议设计
-      clueNodes,
-      inferenceNodes,
-      personNodes,
-      clueEdges: edges,
-    };
+      const message = {
+        type: "clue",
+        clueNodes,
+        inferenceNodes,
+        personNodes,
+        clueEdges: edges,
+      };
 
-    // 发送广播消息
-    socketState.socket.send(JSON.stringify(message));
-
-    console.log("广播的节点信息：", message);
-  };
+      socketState.socket.send(JSON.stringify(message));
+      // console.log("广播的节点信息：", message);
+    } else {
+      // console.error("未连接websocket");
+    }
+  }, 300); // 300ms 内重复调用只执行一次
 
   return {
     nodes,

@@ -107,15 +107,6 @@ const updateMembers = (membersList) => {
 
 const handleDirectionConfirm = (selectedDirections) => {
   // json格式发送到后端并收集所有成员的选择
-  // socketState.socket.send(
-  //   JSON.stringify({
-  //     type: "submit_directions",
-  //     roomId: roomId.value,
-  //     directions: selectedDirections,
-  //   })
-  // );
-  // allDirections.value.push(selectedDirections);
-
   showVoteStage.value = true;
 };
 
@@ -370,29 +361,5 @@ defineExpose({
 .fade-leave-from {
   opacity: 1;
   max-height: 200px;
-}
-
-.next-btn {
-  display: block;
-  width: 96px;
-  height: 36px;
-  padding: 2px;
-  background-color: #397FF3;
-  color: white;
-  border: none;
-  border-radius: 24px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  flex-shrink: 0;
-}
-
-.next-btn:hover {
-  background-color: #005cf0;
-}
-
-.next-btn:disabled {
-  background-color: #77767a;
-  cursor: not-allowed;
 }
 </style>

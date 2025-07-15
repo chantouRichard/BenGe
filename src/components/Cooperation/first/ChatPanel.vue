@@ -247,7 +247,7 @@ const sendChatMessage = () => {
       };
       messageContent = `@ai:${JSON.stringify(aiMessageData)}`;
     } catch (error) {
-      console.error('收集上下文数据失败:', error);
+      // console.error('收集上下文数据失败:', error);
       // 如果上下文收集失败，发送简单的@ai消息
       messageContent = newMessage.value;
     }
@@ -263,7 +263,7 @@ const sendChatMessage = () => {
   if (socketState.socket && socketState.socket.readyState === WebSocket.OPEN) {
     socketState.socket.send(JSON.stringify(messageData));
   } else {
-    console.error("WebSocket连接未就绪");
+    // console.error("WebSocket连接未就绪");
   }
 
   newMessage.value = "";

@@ -409,12 +409,12 @@ const sendMessage = async () => {
             pendingSlogans.value = [...slogans];
           }
         } catch (error) {
-          console.error('解析失败:', error, '原始数据:', line);
+          // console.error('解析失败:', error, '原始数据:', line);
         }
       }
     }
-    console.log("fullcontent:::",fullContent);
-    console.log('最终 slogans:', slogans);    
+    // console.log("fullcontent:::",fullContent);
+    // console.log('最终 slogans:', slogans);    
 
       // 设置完整的AI回复文本
       fullResponseText.value = '我已为您生成了几个剧本方向，请在左侧选择一个您喜欢的方向继续创作。您可以将鼠标悬停在卡片上查看核心创意。';
@@ -431,7 +431,7 @@ const sendMessage = async () => {
       // 开始流式输出
       startStreaming();
     }catch (error) {
-    console.error('Error getting script directions:', error);
+    // console.error('Error getting script directions:', error);
     chatHistory.value.push({
       sender: 'ai',
       content: '抱歉，获取剧本方向时出现了错误。',
@@ -555,10 +555,10 @@ const selectDirection = async (directionId) => {
         timestamp: new Date()
       });
       
-      console.log(`已选择方向ID: ${directionId}, 索引: ${selectedIndex-1}`);
+      // console.log(`已选择方向ID: ${directionId}, 索引: ${selectedIndex-1}`);
     }
   } catch (error) {
-    console.error("选择方向失败", error);
+    // console.error("选择方向失败", error);
     
     // 添加错误提示
     chatHistory.value.push({

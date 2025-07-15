@@ -1,18 +1,7 @@
 <template>
-  <transition
-    name="fade"
-    @before-enter="beforeEnter"
-    @before-leave="beforeLeave"
-  >
+  <transition name="fade" @before-enter="beforeEnter" @before-leave="beforeLeave">
     <div v-if="AIGenerate" class="ai-loading-container">
-      <video
-        class="loading-video"
-        autoplay
-        muted
-        loop
-        playsinline
-        src="@/assets/first/book.mp4"
-      ></video>
+      <video class="loading-video" autoplay muted loop playsinline src="@/assets/first/book.mp4"></video>
       <div class="loading-text">稍等，AI正在整合...</div>
     </div>
   </transition>
@@ -23,18 +12,12 @@
     </div>
 
     <div class="vote-options">
-      <div
-        v-for="(option, index) in sortedOptions"
-        :key="index"
-        class="vote-option"
-        :class="{
-          selected: selectedOptions.includes(option.direction),
-          leading: index < 3 && hasVotes,
-        }"
-        @click="
+      <div v-for="(option, index) in sortedOptions" :key="index" class="vote-option" :class="{
+        selected: selectedOptions.includes(option.direction),
+        leading: index < 3 && hasVotes,
+      }" @click="
           toggleVote(option.direction, topDirections.indexOf(option.direction))
-        "
-      >
+          ">
         <div class="option-content">
           <span class="direction">{{ option.direction.title }}</span>
           <span style="font-size: 12px; font-weight: bold">{{
@@ -53,7 +36,7 @@
       </div>
     </div>
 
-    <div class="action-buttons">
+    <div class="action-buttons" v-show="!AIGenerate">
       <button class="confirm-btn" :disabled="!canConfirm" @click="confirmVote">
         {{ hasVoted ? "等待其他成员..." : "确认投票" }}
       </button>
@@ -124,32 +107,30 @@ import { AIIntegrateDirection } from "@/api/room";
 const initializeOptions = async () => {
   const allKeys = socketState.members.flatMap((member) => member.key || []);
   const data = {
-    keyWords:allKeys,
-    roomId:socketState.roomId
-  }
-  console.log("所有Keys：", allKeys);
+    keyWords: allKeys,
+    roomId: socketState.roomId,
+  };
+  // console.log("所有Keys：", allKeys);
+  // console.log("变化前：", socketState.options);
 
   try {
     await AIIntegrateDirection(data);
   } catch (error) {
-    console.log("请求出错：", error);
+    // console.log("请求出错：", error);
   }
-
-  // 如果不是房主，监听 options 的变化
-  watch(
-    () => socketState.options,
-    (newOptions) => {
-      if (newOptions) {
-        console.log("打印socketState：",socketState.options);
-        console.log("打印new：",newOptions);
-        topDirections.value = newOptions;
-        AIGenerate.value = false;
-      }
-    },
-    { immediate: true } // 确保初始化时就检查一次
-  );
 };
-
+// 如果不是房主，监听 options 的变化
+watch(
+  () => socketState.options,
+  (newOptions) => {
+    if (newOptions) {
+      // console.log("变化后：", socketState.options);
+      topDirections.value = newOptions;
+      AIGenerate.value = false;
+    }
+  },
+  { immediate: false } // 确保初始化时就检查一次
+);
 initializeOptions();
 
 // 计算属性
@@ -179,7 +160,7 @@ const toggleVote = (direction, voteIndex) => {
     vote.value[voteIndex] = 0;
   }
 
-  console.log("投票数组:", vote.value);
+  // console.log("投票数组:", vote.value);
   socketState.socket.send(JSON.stringify({ type: "vote", vote: vote.value }));
 };
 
@@ -188,24 +169,10 @@ const confirmVote = () => {
   if (selectedOptions.value.length === 0) return;
 
   hasVoted.value = true;
-  console.log("有没有投票好：", hasVoted.value);
+  // console.log("有没有投票好：", hasVoted.value);
   socketState.socket.send(
     JSON.stringify({ type: "vote", hasVoted: hasVoted.value })
   );
-};
-
-// 处理收到的投票更新
-const handleVoteUpdate = (data) => {
-  // 更新投票数据
-  voteOptions.value = data.options;
-  allVotesReceived.value = data.allVoted;
-
-  // 如果所有人都投票了，显示AI建议
-  if (allVotesReceived.value) {
-    showAISuggestion.value = true;
-    // 这里应该从后端获取AI建议
-    aiSuggestion.value = "这是基于投票结果生成的AI创作建议...";
-  }
 };
 
 import { userLoadingStore } from "@/stores/userLoadingStore";
@@ -219,11 +186,16 @@ const allMembersVoted = computed(
 );
 watch(allMembersVoted, (newVal) => {
   if (newVal) {
-    // showAISuggestion.value = true;
-    // 这里应该从后端获取AI建议
-    // aiSuggestion.value = "这是基于投票结果生成的AI创作建议...";
     socketState.direction = sortedOptions.value[0].direction;
-    console.log("最终方向：", sortedOptions.value);
+    // console.log("最终方向：", sortedOptions.value);
+
+    // ✅ 将最终方向信息插入到每个角色的任务列表前面（或末尾）
+    const dirIntro = `🎯 本轮创作方向为《${socketState.direction.title}》：${socketState.direction.description}`;
+    socketState.roles.forEach((role) => {
+      if (!role.task.includes(dirIntro)) {
+        role.task.unshift(dirIntro); // 也可以用 push() 添加到末尾
+      }
+    });
 
     loadingStore.show2();
 
@@ -232,23 +204,9 @@ watch(allMembersVoted, (newVal) => {
       setTimeout(() => {
         loadingStore.hide2();
       });
-    }, 10000);
+    }, 4000);
   }
 });
-
-// 请求重新生成AI建议
-const requestRegeneration = () => {
-  if (isRegenerating.value) return;
-
-  isRegenerating.value = true;
-  // 发送重新生成请求到后端
-  emit("regenerateSuggestion", {
-    roomId: props.roomId,
-    modification: modificationRequest.value,
-  });
-
-  // 此处websocket监听更新
-};
 
 // 监听成员变化
 watch(
@@ -269,8 +227,8 @@ watch(
 watch(
   voteOptions,
   (newVal) => {
-    console.log("voteOptions 更新了:", newVal);
-    console.log("socketState.members:", socketState.members);
+    // console.log("voteOptions 更新了:", newVal);
+    // console.log("socketState.members:", socketState.members);
   },
   { deep: true, immediate: true }
 );
@@ -278,7 +236,6 @@ watch(
 
 <style scoped>
 .vote-stage {
-
   top: 100px;
   padding: 20px;
   font-family: "Arial", sans-serif;
@@ -333,66 +290,72 @@ watch(
   min-height: 360px;
 
   overflow-y: auto;
-
 }
 
 .vote-option {
   padding: 15px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #eaf6ff;
+  /* 浅蓝背景 */
+  border-radius: 12px;
+  border: 2px solid #b3dfff;
+  /* 淡蓝边框 */
+  box-shadow: 0 2px 8px rgba(0, 170, 255, 0.15);
+  /* 浅蓝阴影 */
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   position: relative;
-  border: 2px solid transparent;
-  overflow: hidden;
   width: 200px;
   height: 160px;
-
   overflow-y: auto;
 }
 
 .vote-option:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 6px 14px rgba(0, 170, 255, 0.25);
 }
+
 
 .vote-option.selected {
   border-color: #409eff;
-  background-color: rgba(64, 158, 255, 0.05);
+  background: linear-gradient(135deg, #eaf6ff 0%, #d2ebff 100%);
 }
 
+
 .vote-option.leading {
-  border-left: 4px solid #67c23a;
+  border-left: 4px solid #397FF3;
 }
 
 .option-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  margin-bottom: 10px;
-
+  padding-bottom: 30px;
+  /* 留出足够空间给票数显示 */
   position: relative;
-
   overflow-y: auto;
 }
+
 
 .direction {
   font-weight: bold;
   font-size: 16px;
-
-  text-align: left;
+  color: #2b5c88;
+  /* 深蓝色，提升对比度 */
 }
+
 
 .vote-count {
   position: absolute;
-  top: 0;
-  right: 0;
-  background-color: #f0f0f0;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-size: 14px;
+  bottom: 8px;
+  right: 8px;
+  background-color: #d1ecff;
+  color: #2b5c88;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0, 150, 255, 0.1);
 }
+
+
 
 .voters {
   display: flex;
@@ -412,12 +375,14 @@ watch(
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #67c23a;
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
   color: white;
-  padding: 2px 8px;
+  padding: 4px 10px;
   font-size: 12px;
+  font-weight: bold;
   border-bottom-left-radius: 5px;
 }
+
 
 .action-buttons {
   text-align: center;
@@ -426,7 +391,7 @@ watch(
 
 .confirm-btn {
   padding: 12px 30px;
-  background-color: #67c23a;
+  background-color: #67C23A;
   color: white;
   border: none;
   border-radius: 4px;
@@ -499,10 +464,12 @@ watch(
 }
 
 .loading-video {
-  width: 200px; /* 你可以改成 100% 或 cover 效果 */
+  width: 200px;
+  /* 你可以改成 100% 或 cover 效果 */
   height: 200px;
   object-fit: contain;
 }
+
 .ai-loading-container {
   position: absolute;
 
@@ -518,6 +485,7 @@ watch(
 
   z-index: 9000;
 }
+
 .loading-text {
   font-size: 36px;
   font-weight: bold;
@@ -529,7 +497,34 @@ watch(
   transition: opacity 0.6s ease;
 }
 
-.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+.fade-enter,
+.fade-leave-to
+
+/* .fade-leave-active in <2.1.8 */
+  {
   opacity: 0;
+}
+
+/* 优化所有滚动条样式 */
+.vote-options::-webkit-scrollbar,
+.vote-option::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vote-options::-webkit-scrollbar-track,
+.vote-option::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vote-options::-webkit-scrollbar-thumb,
+.vote-option::-webkit-scrollbar-thumb {
+  background: rgba(64, 158, 255, 0.4);
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.vote-options::-webkit-scrollbar-thumb:hover,
+.vote-option::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 158, 255, 0.6);
 }
 </style>

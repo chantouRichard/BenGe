@@ -18,6 +18,7 @@ const socketState = reactive({
   messages: [],
   members: [],
   isConnected: false,
+  isConnecting: false, // 👈 添加标记防重复连接
   roomId: null,
   avatar: null,
   newMessage: "",
@@ -41,7 +42,7 @@ const socketState = reactive({
         "事件之间的关系也要梳理清楚，保证故事流畅又紧凑。",
         "当你确定节点，别忘了告诉角色设计师和线索架构师，让他们准备配合哦！",
         "需要灵感？找协作助理AI聊聊，给你意想不到的剧情闪光点！",
-        "加油，让我们一起把这场悬疑故事推向高潮！"
+        "加油，让我们一起把这场悬疑故事推向高潮！",
       ],
     },
     {
@@ -55,7 +56,7 @@ const socketState = reactive({
         "构建角色关系网，谁是朋友，谁是敌人？让人物之间产生火花！",
         "随时和线索架构师沟通，确保人物动机和线索逻辑一致。",
         "记得用标签和注释帮团队快速理解每个角色。",
-        "角色鲜活了，故事才精彩！"
+        "角色鲜活了，故事才精彩！",
       ],
     },
     {
@@ -69,7 +70,7 @@ const socketState = reactive({
         "绑定线索与事件、角色，保证逻辑清晰，别让推理跑偏！",
         "常和剧情设计师和角色设计师交流，确认线索和故事同步推进。",
         "利用冲突检测AI，找出可能的逻辑漏洞。",
-        "把握好线索节奏，玩家才能越推越带劲！"
+        "把握好线索节奏，玩家才能越推越带劲！",
       ],
     },
     {
@@ -83,20 +84,19 @@ const socketState = reactive({
         "利用AI帮忙快速生成视觉素材或背景描述。",
         "时刻关注剧情节奏，调整氛围色调，打造悬疑、紧张或神秘的感觉。",
         "跟剧情设计师保持沟通，确保氛围与故事情绪一致。",
-        "场景有了氛围，故事才有“灵魂”！"
+        "场景有了氛围，故事才有“灵魂”！",
       ],
     },
   ],
   // 第一阶段存储的方向
-  options:[],
+  options: [],
   direction: {
     title: "",
     description: "",
   },
-  AICompleteScriptContent:"",
-  CompleteScriptContent:"",
+  AICompleteScriptContent: "",
+  CompleteScriptContent: "",
 });
-
 
 // 在这里初始化 store，确保只初始化一次
 async function ensureStores() {
@@ -115,46 +115,70 @@ async function ensureStores() {
 
 async function setupWebSocket() {
   await ensureStores();
-  if (socketState.socket && socketState.isConnected) {
-    console.warn("WebSocket 已经连接");
+  if (socketState.isConnected || socketState.isConnecting) {
+    // console.warn("WebSocket 已经连接");
     return;
   }
+  socketState.isConnecting = true; // 正在连接
 
   const token = localStorage.getItem("token");
   if (!token) {
-    console.error("未找到 token，无法建立 WebSocket 连接");
+    // console.error("未找到 token，无法建立 WebSocket 连接");
     return;
   }
+  // 穿透版本
+  // socketState.socket = new WebSocket("ws://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws");
 
-  socketState.socket = new WebSocket("ws://localhost:7122/ws");
+  socketState.socket = new WebSocket(
+    "wss://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws"
+  );
+
+  let pingInterval = null;
 
   socketState.socket.onopen = () => {
-    console.log("WebSocket 连接已建立");
+    if (socketState.socket.readyState === WebSocket.OPEN) {
+      socketState.socket.send(
+        JSON.stringify({
+          type: "auth",
+          token,
+          roomId: socketState.roomId,
+          avatar: socketState.avatar,
+        })
+      );
+      socketState.isConnecting = false;
+      socketState.isConnected = true;
+    } else {
+      // console.warn(
+      //   "WebSocket 还未准备好，当前状态:",
+      //   socketState.socket.readyState
+      // );
+    }
 
-    socketState.socket.send(
-      JSON.stringify({
-        type: "auth",
-        token,
-        roomId: socketState.roomId,
-        avatar: socketState.avatar,
-      })
-    );
-    socketState.isConnected = true;
+    // 启动心跳机制（每 20 秒发一个 ping）
+    pingInterval = setInterval(() => {
+      if (
+        socketState.socket &&
+        socketState.socket.readyState === WebSocket.OPEN
+      ) {
+        socketState.socket.send(JSON.stringify({ type: "ping" }));
+        // 可选：// console.log("发送 ping 心跳");
+      }
+    }, 20000);
   };
 
   socketState.socket.onmessage = (event) => {
     const msg = JSON.parse(event.data);
 
-    console.log("event:", msg);
+    // console.log("event:", msg);
 
     if (msg.type === "userInfo") {
       socketState.currentUserId = msg.userId;
       socketState.currentUsername = msg.username;
-      console.log(
-        "接收到用户信息:",
-        socketState.currentUserId,
-        socketState.currentUsername
-      );
+      // console.log(
+      //   "接收到用户信息:",
+      //   socketState.currentUserId,
+      //   socketState.currentUsername
+      // );
     } else if (msg.type === "chat") {
       const isAIMessage = msg.username === "AI助手" || msg.userId === -1;
       const newMessage = {
@@ -168,7 +192,7 @@ async function setupWebSocket() {
       };
 
       socketState.messages.push(newMessage);
-      console.log("消息数组更新，当前长度:", socketState.messages.length);
+      // console.log("消息数组更新，当前长度:", socketState.messages.length);
     } else if (msg.type === "system") {
       socketState.messages.push({
         type: "system",
@@ -180,7 +204,7 @@ async function setupWebSocket() {
     } else if (msg.type === "members") {
       handleMembersUpdate(msg.members || []);
     } else if (msg.type === "error") {
-      console.error("WebSocket 错误:", msg.message);
+      // console.error("WebSocket 错误:", msg.message);
       alert("错误: " + msg.message);
     } else if (msg.type === "role") {
       handleRoleSelection(msg.roleName, msg.username);
@@ -193,21 +217,31 @@ async function setupWebSocket() {
       handleCanvas(msg);
     } else if (msg.type === "vote") {
       handleVote(msg);
-    }  else if(msg.type == "enter-third-stage"){
-    socketState.CompleteScriptContent= msg.content;
-  } else if(msg.type == "enter-second-stage"){
-    socketState.direction = JSON.parse(msg.content);
-  }
+    } else if (msg.type == "enter-third-stage") {
+      socketState.CompleteScriptContent = msg.content;
+    } else if (msg.type == "enter-second-stage") {
+      socketState.direction = JSON.parse(msg.content);
+    }
   };
 
   socketState.socket.onclose = () => {
-    console.log("WebSocket 连接已关闭");
+    // console.log("WebSocket 连接已关闭");
     socketState.isConnected = false;
+    socketState.isConnecting = false;
+    if (pingInterval) clearInterval(pingInterval);
+
+    if(!socketState.isConnected)setupWebSocket();
+    // 自动尝试重连
+    // setTimeout(() => {
+    //   // console.log("尝试重连 WebSocket...");
+    // }, 5000); // 可配置：5 秒后重连
   };
 
   socketState.socket.onerror = (err) => {
-    console.error("WebSocket 连接错误:", err);
+    // console.error("WebSocket 连接错误:", err);
     socketState.isConnected = false;
+    socketState.isConnecting = false;
+    if (pingInterval) clearInterval(pingInterval);
   };
 }
 
@@ -228,7 +262,7 @@ function handleMembersUpdate(incomingMembers) {
 }
 
 function sendMessage() {
-  console.log("sendMessage:", socketState.newMessage);
+  // console.log("sendMessage:", socketState.newMessage);
   if (socketState.isConnected && socketState.socket) {
     const messageData = {
       type: "chat",
@@ -239,7 +273,7 @@ function sendMessage() {
     socketState.socket.send(JSON.stringify(messageData));
     socketState.newMessage = "";
   } else {
-    console.error("WebSocket 连接未就绪");
+    // console.error("WebSocket 连接未就绪");
   }
 }
 
@@ -258,37 +292,34 @@ function closeWebSocket() {
 function handleRoleSelection(roleName, username) {
   // 遍历所有角色，查找是否有该用户已选择了其他角色
   for (let existingRole in socketState.roleSelections) {
-    console.log("打印：", existingRole);
+    // console.log("打印：", existingRole);
     // 如果当前角色是其他角色且该角色已经被用户名选择
     if (
       socketState.roleSelections[existingRole] === username &&
       existingRole !== roleName
     ) {
       // 清空原来选择的角色
-      console.log(`${username} 已选择了 ${existingRole}，正在清空该角色的选择`);
+      // console.log(`${username} 已选择了 ${existingRole}，正在清空该角色的选择`);
       socketState.roleSelections[existingRole] = ""; // 清空原选择
     }
   }
 
   // 更新当前角色的选择
   socketState.roleSelections[roleName] = username;
-  console.log(
-    "更新后的 socketState.roleSelections:",
-    socketState.roleSelections
-  );
+
 
   // 更新成员列表
   updateMembers(roleName, username);
-  console.log("更新后的成员信息:", socketState.members);
+  // console.log("更新后的成员信息:", socketState.members);
 }
 
 // 同步画布
 function handleCanvas(msg) {
-  console.log("接收到canvas：", msg);
-  if(msg.content){
-    console.log("进入：",socketState.AICompleteScriptContent);
+  // console.log("接收到canvas：", msg);
+  if (msg.content) {
+    // console.log("进入：", socketState.AICompleteScriptContent);
     socketState.AICompleteScriptContent = msg.content;
-    console.log("OKOK:",socketState.AICompleteScriptContent);
+    // console.log("OKOK:", socketState.AICompleteScriptContent);
     return;
   }
 
@@ -301,17 +332,17 @@ function handleCanvas(msg) {
     const existingEdges = canvasStore.edges || [];
 
     // 移除现有的叙事设计师边（type为'custom'且不是线索相关的边）
-    const filteredEdges = existingEdges.filter(edge => {
+    const filteredEdges = existingEdges.filter((edge) => {
       // 保留人物设计师的边（character-scene, relationship）
-      if (edge.type === 'character-scene' || edge.type === 'relationship') {
+      if (edge.type === "character-scene" || edge.type === "relationship") {
         return true;
       }
       // 保留线索设计师的边（custom类型但data.type包含clue相关）
-      if (edge.type === 'custom' && edge.data?.type?.includes('clue')) {
+      if (edge.type === "custom" && edge.data?.type?.includes("clue")) {
         return true;
       }
       // 保留氛围设计师的边
-      if (edge.data?.type === 'atmosphere-scene') {
+      if (edge.data?.type === "atmosphere-scene") {
         return true;
       }
       // 移除叙事设计师的边
@@ -320,7 +351,6 @@ function handleCanvas(msg) {
 
     // 合并边数组
     canvasStore.edges = [...filteredEdges, ...incomingEdges];
-
   } else if (msg.type == "character") {
     // 更新人物设计师的节点和边
     characterStore.nodes = msg.characterNodes || [];
@@ -331,13 +361,12 @@ function handleCanvas(msg) {
     const existingCanvasEdges = canvasStore.edges || [];
 
     // 移除现有的人物设计师边
-    const filteredCanvasEdges = existingCanvasEdges.filter(edge =>
-      edge.type !== 'character-scene' && edge.type !== 'relationship'
+    const filteredCanvasEdges = existingCanvasEdges.filter(
+      (edge) => edge.type !== "character-scene" && edge.type !== "relationship"
     );
 
     // 合并边数组
     canvasStore.edges = [...filteredCanvasEdges, ...incomingCharacterEdges];
-
   } else if (msg.type == "clue") {
     // 更新线索设计师的节点
     clueStore.nodes = [
@@ -353,30 +382,20 @@ function handleCanvas(msg) {
     const existingCanvasEdges = canvasStore.edges || [];
 
     // 移除现有的线索设计师边
-    const filteredCanvasEdges = existingCanvasEdges.filter(edge => {
+    const filteredCanvasEdges = existingCanvasEdges.filter((edge) => {
       // 保留非线索相关的边
-      return !(edge.type === 'clue-edge' || (edge.type === 'custom' && edge.data?.type?.includes('clue')));
+      return !(
+        edge.type === "clue-edge" ||
+        (edge.type === "custom" && edge.data?.type?.includes("clue"))
+      );
     });
 
     // 合并边数组
     canvasStore.edges = [...filteredCanvasEdges, ...incomingClueEdges];
-
   } else if (msg.type == "atmosphere") {
-    // 氛围节点需要更新到canvasStore，因为atmosphere.js使用computed从canvasStore获取数据
-    const atmosphereNodes = msg.atmosphereNodes || [];
-    const atmosphereEdges = msg.atmosphereEdges || [];
-
-    // 移除现有的氛围节点
-    canvasStore.nodes = canvasStore.nodes.filter(node => node.type !== 'atmosphere');
-
-    // 移除现有的氛围边
-    canvasStore.edges = canvasStore.edges.filter(edge => {
-      return edge.data?.type !== 'atmosphere-scene';
-    });
-
-    // 添加新的氛围节点和边
-    canvasStore.nodes.push(...atmosphereNodes);
-    canvasStore.edges.push(...atmosphereEdges);
+    // 更新氛围设计师的节点和边
+    atmosphereStore.nodes = msg.atmosphereNodes || [];
+    atmosphereStore.edges = msg.atmosphereEdges || [];
   }
 }
 
@@ -415,9 +434,9 @@ function handleVote(msg) {
       member.hasVoted = msg.hasVoted;
     }
   }
-  if(msg.content){
+  if (msg.content) {
     socketState.options = JSON.parse(msg.content);
-    console.log("socketState.options:",socketState.options);
+    // console.log("socketState.options:", socketState.options);
   }
 }
 
