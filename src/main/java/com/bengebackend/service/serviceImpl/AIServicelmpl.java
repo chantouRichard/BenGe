@@ -769,9 +769,17 @@ public class AIServicelmpl implements AIService {
             } else if (!line.isEmpty() && !line.startsWith("#")) {
                 // 收集内容
                 if (isSlogan) {
-                    currentSlogan = line;
+                    if (!currentSlogan.isEmpty()) {
+                        currentSlogan += "\n" + line;
+                    } else {
+                        currentSlogan = line;
+                    }
                 } else if (isCoreIdea) {
-                    currentCoreIdea = line;
+                    if (!currentCoreIdea.isEmpty()) {
+                        currentCoreIdea += "\n" + line;
+                    } else {
+                        currentCoreIdea = line;
+                    }
                 }
             }
         }
