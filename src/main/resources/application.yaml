@@ -52,6 +52,10 @@ xfyun:
   gen_image_api_secret_wwb: "ZDY3NzA0ZTNkZGFiMDZmZjc5ZGNmMzBk"
   gen_image_api_key_wwb: "6e7c2a3271a09fcbb55f1d5e5e4c38cd"
   gen_image_request_url: "https://spark-api.cn-huabei-1.xf-yun.com/v2.1/tti"
+  
+  # AI流式聊天相关配置
+  x1_http_api_password: "cYcztSMumlkSHwUCtJDK:TGLbxtRdJiyPEuudsULa"
+  x1_http_api_url: "https://spark-api-open.xf-yun.com/v2/chat/completions"
 
 ngrok:
   enabled: false

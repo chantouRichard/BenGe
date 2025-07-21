@@ -40,34 +40,6 @@ public class AIServicelmpl implements AIService {
 
     private final XfyunConfig xfyunConfig;
 
-    // 星火X1 API认证信息(第一阶段)
-    private static final String X1_HTTP_API_PASSWORD = "cYcztSMumlkSHwUCtJDK:TGLbxtRdJiyPEuudsULa";
-    private static final String X1_HTTP_API_URL = "https://spark-api-open.xf-yun.com/v2/chat/completions";
-
-    // Slogan生成系统提示词
-    private static final String SLOGAN_SYSTEM_PROMPT = """
-            你是一名专业的剧本杀创作助手，擅长生成吸引人的标语和核心创意。
-            请根据用户提供的内容生成3个不同风格的标语，并遵循以下规则：
-            1、标语要求简洁有力，能够抓住读者注意力，体现剧本的核心主题和氛围，并具有悬疑感和吸引力。
-            2、生成的是标语，不是标题
-            3、生成内容涵盖如下内容：
-                标语（一段话）
-                核心创意（一段话）
-            请遵循如下MarkDown格式输出：
-                # 标语
-                ...
-                # 核心创意
-                ...
-                # 标语
-                ...
-                # 核心创意
-                ...
-                # 标语
-                ...
-                # 核心创意
-                ...
-                        """;
-
     @SuppressWarnings("unused")
     private final RestTemplate restTemplate;
     @SuppressWarnings("unused")
@@ -86,7 +58,7 @@ public class AIServicelmpl implements AIService {
         msgs.add(0, new HashMap<String, String>() {
             {
                 put("role", "system");
-                put("content", System_MSG);
+                put("content", XfyunConfig.SYSTEM_MSG);
             }
         });
 
@@ -303,7 +275,7 @@ public class AIServicelmpl implements AIService {
             try {
                 // 构建请求消息
                 List<Map<String, String>> messages = new ArrayList<>();
-                messages.add(Map.of("role", "system", "content", SLOGAN_SYSTEM_PROMPT));
+                messages.add(Map.of("role", "system", "content", XfyunConfig.SLOGAN_SYSTEM_PROMPT));
                 messages.add(Map.of("role", "user", "content", request.getPrompt()));
 
                 // 执行流式请求
@@ -329,7 +301,7 @@ public class AIServicelmpl implements AIService {
             try {
                 // 构建请求消息
                 List<Map<String, String>> messages = new ArrayList<>();
-                messages.add(Map.of("role", "system", "content", SLOGAN_SYSTEM_PROMPT));
+                messages.add(Map.of("role", "system", "content", XfyunConfig.SLOGAN_SYSTEM_PROMPT));
                 messages.add(Map.of("role", "user", "content", request.getPrompt()));
 
                 // 执行非流式请求
@@ -445,11 +417,11 @@ public class AIServicelmpl implements AIService {
                     "max_tokens", 32768));
 
             // 使用HttpURLConnection进行流式处理
-            java.net.URL url = new java.net.URL(X1_HTTP_API_URL);
+            java.net.URL url = new java.net.URL(xfyunConfig.getX1HttpApiUrl());
             java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
 
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("Authorization", "Bearer " + X1_HTTP_API_PASSWORD);
+            connection.setRequestProperty("Authorization", "Bearer " + xfyunConfig.getX1HttpApiPassword());
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "text/event-stream");
             connection.setDoOutput(true);
@@ -529,7 +501,7 @@ public class AIServicelmpl implements AIService {
                 msgs.add(0, new HashMap<String, String>() {
                     {
                         put("role", "system");
-                        put("content", System_MSG);
+                        put("content", XfyunConfig.SYSTEM_MSG);
                     }
                 });
                 // 构建消息数组
@@ -604,8 +576,7 @@ public class AIServicelmpl implements AIService {
         }
         return fullContent.toString();
     }
-
-    private static final String[] GenDetailSysPrompt = {
+}
             """
                     你是剧本杀创作的一员，你的任务是完善剧本背景，要求如下：
                     	1、请以如下模板输出
