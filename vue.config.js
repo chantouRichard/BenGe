@@ -1,25 +1,39 @@
 // module.exports = {
 //   devServer: {
-//     // https: true, // 启用 HTTPS
 //     hot: true,
 //     host: '0.0.0.0',
 //     historyApiFallback: true,
 //     client: {
-//       webSocketURL: 'auto://0.0.0.0:8080/ws', // 自动选择 ws/wss
+//       webSocketURL: 'auto://0.0.0.0:8080/ws', // 这是正确的WebSocket配置位置
 //     },
-//     allowedHosts: 'all', // 允许所有 Host（或指定 ngrok 域名）
+//     allowedHosts: 'all',
 //     proxy: {
 //       '/api': {
-//         // target: process.env.VUE_APP_API_BASE_URL || 'https://benge-vision-production.up.railway.app',//
-//         target: 'http://localhost:7122',//
+//         target: 'http://localhost:7122',
 //         changeOrigin: true,
-//         secure: false,//
+//         secure: false,
 //         pathRewrite: { '^/api': '/api' },
-//         allowedHosts: 'all'
+//         // 确保流式传输正常工作
+//         onProxyRes: function(proxyRes) {
+//           proxyRes.headers['connection'] = 'keep-alive';
+//           proxyRes.headers['cache-control'] = 'no-cache';
+//           delete proxyRes.headers['content-length'];
+//         },
+
 //       }
-//     }
+//     },
+//     // 正确的WebSocket服务器配置
+//     webSocketServer: {
+//       type: 'ws',
+//       options: {
+//         path: '/ws'
+//       }
+//     },
+//     // 禁用开发服务器的压缩
+//     compress: false
 //   }
-// };
+// }
+
 // module.exports = {
 //   devServer: {
 //     proxy: {
@@ -32,6 +46,7 @@
 //     }
 //   }
 // };
+
 module.exports = {
   devServer: {
     proxy: {
@@ -40,7 +55,13 @@ module.exports = {
         target: 'https://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app',
         changeOrigin: true,
         secure: false,//
-        pathRewrite: { '^/api': '/api' }
+        pathRewrite: { '^/api': '/api' },
+
+        onProxyRes: function(proxyRes) {
+          proxyRes.headers['connection'] = 'keep-alive';
+          proxyRes.headers['cache-control'] = 'no-cache';
+          delete proxyRes.headers['content-length'];
+        },
       }
     } ,
     client: {
