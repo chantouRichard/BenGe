@@ -5,6 +5,7 @@ import com.bengebackend.entity.Slogan;
 import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.model.ScriptHistory;
 import com.bengebackend.service.AIService;
+import com.bengebackend.service.ScriptHistoryService;
 import com.bengebackend.util.ContextDataProcessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +42,9 @@ public class AIStreamController {
 
     @Autowired
     private ScriptService scriptService;
+
+    @Autowired
+    private ScriptHistoryService scriptHistoryService;
 
     private final ExecutorService executor = new ThreadPoolExecutor(
             2, // corePoolSize
@@ -146,18 +151,20 @@ public class AIStreamController {
         SseEmitter emitter = new SseEmitter(0L);
         // 准备消息
         ScriptDetailDto sdd = scriptService.getScriptByIdAsync(request.getScriptId());
-        List<ScriptHistory> history = sdd.getHistory();
         List<Map<String, String>> messages = new ArrayList<>();
-        for (ScriptHistory h : history) {
-            Map<String, String> msg = new HashMap<>();
-            if (h.getResponse() == "" && h.getMessage() != "") {
-                msg.put("role", "user");
-                msg.put("content", h.getMessage());
-            } else {
-                msg.put("role", "assistant");
-                msg.put("content", h.getResponse());
+        if (sdd != null) {
+            List<ScriptHistory> history = sdd.getHistory();
+            for (ScriptHistory h : history) {
+                Map<String, String> msg = new HashMap<>();
+                if (h.getResponse() == "" && h.getMessage() != "") {
+                    msg.put("role", "user");
+                    msg.put("content", h.getMessage());
+                } else {
+                    msg.put("role", "assistant");
+                    msg.put("content", h.getResponse());
+                }
+                messages.add(msg);
             }
-            messages.add(msg);
         }
         messages.add(new HashMap<String, String>() {
             {
@@ -187,9 +194,23 @@ public class AIStreamController {
                 // 异常处理
                 emitter.completeWithError(ex);
             } else {
-                // 正常完成
+                // 正常完成，更新剧本
                 emitter.complete();
                 scriptService.updateScriptAsync(request.getScriptId(), result.getTitle(), result.getStrScript(), 2);
+                // 更新对话历史
+                ScriptHistory userHistory = new ScriptHistory();
+                userHistory.setScriptId(request.getScriptId());
+                userHistory.setMessage(request.getMessage());
+                userHistory.setResponse("");
+                userHistory.setCreatedAt(LocalDateTime.now());
+                scriptHistoryService.addHistory(userHistory);
+
+                ScriptHistory aiHistory = new ScriptHistory();
+                aiHistory.setScriptId(request.getScriptId());
+                aiHistory.setMessage("");
+                aiHistory.setResponse(result.getMsgForUser());
+                aiHistory.setCreatedAt(LocalDateTime.now());
+                scriptHistoryService.addHistory(aiHistory);
             }
         });
 

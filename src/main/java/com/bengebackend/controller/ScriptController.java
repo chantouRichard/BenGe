@@ -151,23 +151,6 @@ public class ScriptController {
     }
 
     /**
-     * 第二阶段对话 - 流式生成(注意：此接口已废弃，实际流式处理在AIStreamController中实现)
-     */
-    @PutMapping("/reply2nd/stream")
-    public ResponseEntity<String> streamHandleUserMessage2nd(@RequestBody ScriptReplyRequestEntity request) {
-        if (request.getMessage() == null || request.getMessage().trim().isEmpty() || request.getScriptId() <= 0) {
-            return ResponseEntity.badRequest().body("修改的剧本或者用户输入的消息不能为空");
-        }
-
-        try {
-            String result = "当前服务已在controller-aistream中实现，请访问对应的流式接口";
-            return ResponseEntity.ok(result);
-        } catch (Exception ex) {
-            return ResponseEntity.badRequest().body("生成失败：" + ex.getMessage());
-        }
-    }
-
-    /**
      * 第三阶段 - 获取完整剧本
      */
     @PostMapping("/reply3rd")

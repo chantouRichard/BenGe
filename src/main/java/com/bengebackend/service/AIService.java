@@ -40,9 +40,9 @@ public interface AIService {
     CompletableFuture<List<List<List<String>>>> GetThreeTypesOfDesc(String strScript);
 
     /**
-     * 根据描述和负面提示词生成图片
+     * 根据描述生成图片
      */
-    CompletableFuture<String> GenImage(String Description, String NegPrompt);
+    CompletableFuture<String> GenImage(String Description);
 
     /**
      * 生成Slogan流式输出

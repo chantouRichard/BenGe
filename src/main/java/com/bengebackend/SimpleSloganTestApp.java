@@ -1,5 +1,6 @@
 package com.bengebackend;
 
+import com.bengebackend.config.XfyunConfig;
 import com.bengebackend.entity.SloganRequestEntity;
 import com.bengebackend.service.serviceImpl.AIServicelmpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +29,8 @@ public class SimpleSloganTestApp {
         // 初始化服务
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper objectMapper = new ObjectMapper();
-        AIServicelmpl aiService = new AIServicelmpl(restTemplate, objectMapper);
+        XfyunConfig xfyunConfig = new XfyunConfig();
+        AIServicelmpl aiService = new AIServicelmpl(restTemplate, objectMapper, xfyunConfig);
 
         Scanner scanner = new Scanner(System.in);
 

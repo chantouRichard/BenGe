@@ -140,9 +140,6 @@ public class ScriptServiceImpl implements ScriptService {
         AIMsgDevide aiMsgTemp = aiService.GenFramework(messages).join();
         String mockResponse = aiMsgTemp.getStrScript();
         String title = aiMsgTemp.getTitle();
-        // String mockResponse = "\"背景\":
-        // \"在太平洋航行的豪华游轮[爱神号]上，正举行珠宝大亨千金的婚礼。仪式开始前15分钟，新娘突然从化妆室消失，只留下地板上未干的血迹。游轮还有1小时即将起航，所有宾客都成为了嫌疑人......\"";
-        // String title = "消失的新娘";
 
         // 更新剧本
         updateScriptAsync(request.getScriptId(), title, mockResponse, 2);
@@ -226,8 +223,7 @@ public class ScriptServiceImpl implements ScriptService {
     @Override
     public String visualizeScriptAsync(Integer scriptId, Integer elementId) {
         VisualElement selectedVE = visualElementService.getElementById(elementId);
-        String Image_base64 = aiService.GenImage(selectedVE.getName() + "：" +
-                selectedVE.getDescription(), null).join();
+        String Image_base64 = aiService.GenImage(selectedVE.getName() + "：" + selectedVE.getDescription()).join();
         visualElementService.updateElementUrl(elementId, Image_base64);
         return Image_base64;
 
