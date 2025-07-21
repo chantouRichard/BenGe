@@ -1,14 +1,12 @@
 package com.bengebackend.service.serviceImpl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.bengebackend.entity.AIMsgDevide;
 import com.bengebackend.entity.SloganRequestEntity;
 import com.bengebackend.entity.Slogan;
 import com.bengebackend.service.*;
+import com.bengebackend.config.XfyunConfig;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,44 +20,25 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.Duration;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 @Slf4j
 @Service
 public class AIServicelmpl implements AIService {
-    private static final String XFAPP_ID = "0772d014";
-    private static final String HiDreamAPI_SECRET = "ZDY3NzA0ZTNkZGFiMDZmZjc5ZGNmMzBk";
-    private static final String HiDreamAPI_KEY = "6e7c2a3271a09fcbb55f1d5e5e4c38cd";
 
-    private static final String HIDREAM_CREATE_URL = "https://cn-huadong-1.xf-yun.com/v1/private/s3fd61810/create";
-    private static final String HIDREAM_QUERY_URL = "https://cn-huadong-1.xf-yun.com/v1/private/s3fd61810/query";
+    private final XfyunConfig xfyunConfig;
 
     // 星火X1 API认证信息(第一阶段)
     private static final String X1_HTTP_API_PASSWORD = "cYcztSMumlkSHwUCtJDK:TGLbxtRdJiyPEuudsULa";
@@ -94,9 +73,10 @@ public class AIServicelmpl implements AIService {
     @SuppressWarnings("unused")
     private final ObjectMapper objectMapper;
 
-    public AIServicelmpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public AIServicelmpl(RestTemplate restTemplate, ObjectMapper objectMapper, XfyunConfig xfyunConfig) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.xfyunConfig = xfyunConfig;
     }
 
     // ====================== 单人创作和多人创作AI部分分割线 ==================
@@ -111,10 +91,10 @@ public class AIServicelmpl implements AIService {
         });
 
         // 获取API输出
-        return GetAPIOutputAsync(msgs, "x1")
+        return xfyunConfig.GetAPIOutputAsync(msgs, "x1")
                 .thenApply(content -> {
                     AIMsgDevide devidedMsg = new AIMsgDevide();
-                    DevideScriptContent(devidedMsg, content, true);
+                    xfyunConfig.DevideScriptContent(devidedMsg, content, true);
                     return devidedMsg;
                 });
     }
@@ -122,7 +102,7 @@ public class AIServicelmpl implements AIService {
     @Override
     public CompletableFuture<String> GenDetail(String Frame, String Title) {
         AIMsgDevide devidedMsg = new AIMsgDevide(Title, Frame);
-        DevideScriptContent(devidedMsg, Frame, false);
+        xfyunConfig.DevideScriptContent(devidedMsg, Frame, false);
         List<List<Map<String, String>>> messagesList = new ArrayList<>(); // 0背景 4-n人物剧本 1线索 2真相 3组织者手册
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of(
@@ -164,7 +144,7 @@ public class AIServicelmpl implements AIService {
 
                 // 并行处理当前批次
                 List<CompletableFuture<String>> futures = batch.stream()
-                        .map(msgs -> GetAPIOutputAsync(msgs, "x1"))
+                        .map(msgs -> xfyunConfig.GetAPIOutputAsync(msgs, "x1"))
                         .collect(Collectors.toList());
 
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -174,12 +154,12 @@ public class AIServicelmpl implements AIService {
                     try {
                         resultBuilder.append(future.join());
                         if (addTime.get() == 0) {
-                            resultBuilder.append("\n---\n## 人物剧本\n");
+                            resultBuilder.append("\n\n---\n\n## 人物剧本\n\n");
                         }
                         if (addTime.get() != 0 && addTime.get() < devidedMsg.getChrScript().size()) {
                             resultBuilder.append("\n\n");
                         } else {
-                            resultBuilder.append("\n---\n");
+                            resultBuilder.append("\n\n---\n\n");
                         }
                         addTime.incrementAndGet();
                     } catch (CompletionException e) {
@@ -200,7 +180,7 @@ public class AIServicelmpl implements AIService {
         messages.add(Map.of(
                 "role", "user",
                 "content", StrScript));
-        return GetAPIOutputAsync(messages, "4.0Ultra");
+        return xfyunConfig.GetAPIOutputAsync(messages, "4.0Ultra");
     }
 
     @Override
@@ -221,7 +201,7 @@ public class AIServicelmpl implements AIService {
 
             // 处理当前批次
             List<CompletableFuture<List<List<String>>>> batchFutures = batch.stream()
-                    .map(msgs -> ParseAIRespOfGetDesc(GetAPIOutputAsync(msgs, "4.0Ultra")))
+                    .map(msgs -> xfyunConfig.ParseAIRespOfGetDesc(xfyunConfig.GetAPIOutputAsync(msgs, "4.0Ultra")))
                     .collect(Collectors.toList());
 
             // 等待当前批次完成
@@ -246,390 +226,48 @@ public class AIServicelmpl implements AIService {
     }
 
     @Override
-    public CompletableFuture<String> GenImage(String Description, String NegPrompt) {
-        try {
-            if (NegPrompt == null) {
-                NegPrompt = "";
-            }
-            // 异步创建任务
-            CompletableFuture<String> taskFuture = CreateGenImageTaskAsync(Description, NegPrompt);
-
-            // 当创建任务完成后处理结果
-            return taskFuture.thenCompose(taskId -> {
-                System.out.println("创建图片生成任务成功，任务ID: " + taskId);
-                return GetImageURLAsync(taskId)
-                        .thenCompose(url -> {
-                            if (url != null) {
-                                return DownloadImageToBase64Async(url);
-                            }
-                            return null;
-                        });
-            }).exceptionally(e -> {
-                System.err.println("创建图片生成任务失败: " + e.getMessage());
-                e.printStackTrace();
-                return null;
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public CompletableFuture<String> GetAPIOutputAsync(List<Map<String, String>> messages, String ModelName) {
-        String[] APIPassword = { "ZxztQfIySwHMqrLvRLGa:gZdZClyqiPxeoHVTZQbO",
-                "IpOQfvhLEITliSekghNa:SqZiQwEmoHfKXqIaIVSi" };
-        String[] API_URL = { "https://spark-api-open.xf-yun.com/v2/chat/completions",
-                "https://spark-api-open.xf-yun.com/v1/chat/completions" };
-        int ModelNum = 1;
-        ObjectMapper mapper = new ObjectMapper();
-        String requestBody;
-        try {
-            if (ModelName == "x1") {
-                requestBody = mapper.writeValueAsString(Map.of(
-                        "model", "x1",
-                        "user", "user_id",
-                        "messages", messages,
-                        "stream", false,
-                        "max_tokens", 32768,
-                        "tools", List.of(Map.of(
-                                "type", "web_search",
-                                "web_search", Map.of(
-                                        "enable", false,
-                                        "search_mode", "deep")))));
-                ModelNum = 0;
-            } else {
-                requestBody = mapper.writeValueAsString(Map.of(
-                        "model", "4.0Ultra",
-                        "user", "user_id",
-                        "messages", messages,
-                        "stream", false,
-                        "max_tokens", 8192,
-                        "tools", List.of(Map.of(
-                                "type", "web_search",
-                                "web_search", Map.of(
-                                        "enable", false,
-                                        "search_mode", "deep"))),
-                        "response_format", Map.of("type", "text")));
-                ModelNum = 1;
-            }
-        } catch (JsonProcessingException e) {
-            System.err.println("JSON处理失败: " + e.getMessage());
-            return null;
-        }
-
-        // 2. 创建 HTTP 请求
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL[ModelNum]))
-                .header("Authorization", "Bearer " + APIPassword[ModelNum])
-                .header("content-type", "application/json")
-                .POST(BodyPublishers.ofString(requestBody))
-                .build();
-
-        // 3. 发送请求
-        HttpClient client = HttpClient.newHttpClient();
-        return client.sendAsync(request, BodyHandlers.ofString())
-                .thenApplyAsync(response -> {
-                    // 4. 处理响应
-                    try {
-                        JsonNode rootNode = mapper.readTree(response.body());
-
-                        // 检查错误码
-                        if (rootNode.has("code") && rootNode.get("code").asInt() != 0) {
-                            String errorMsg = rootNode.get("message").asText();
-                            System.err.println("API请求失败: " + errorMsg);
-                            throw new RuntimeException("API Error: " + errorMsg);
-                        }
-
-                        // 提取content内容
-                        return rootNode.path("choices")
-                                .path(0)
-                                .path("message")
-                                .path("content")
-                                .asText();
-                    } catch (JsonProcessingException e) {
-                        System.err.println("JSON解析失败: " + e.getMessage());
-                        throw new RuntimeException("JSON Parse Error", e);
-                    }
-                })
-                .exceptionally(e -> {
-                    System.err.println("请求过程中发生异常: " + e.getMessage());
-                    return null; // 或者返回默认值/抛出特定异常
-                });
-    }
-
-    public void DevideScriptContent(AIMsgDevide devidedMsg, String content, boolean setReplyAndTitle) {
-        String[] parts;
-        // System.out.println("\n开始分割剧本内容:\n" + content + "\n\n");
-        if (setReplyAndTitle) {
-            parts = content.split("》》》", 2);
-            if (parts.length == 2)
-                devidedMsg.setMsgForUser(parts[0]);
-            else {
-                System.out.println("未找到分隔符》》》，回答与剧本内容分割失败");
-                devidedMsg.setMsgForUser("已按您的要求修改剧本");
-            }
-
-            parts = content.split("#", 2);
-            parts = parts[1].split("背景\\s*", 2);
-            parts[0] = parts[0].replaceAll("---", "");
-            devidedMsg.setTitle(parts[0].replaceAll("\\s+", ""));
-            if (parts.length != 2)
-                System.out.println("未找到分隔符## 背景，分割失败");
-            devidedMsg.setStrScript("## 背景\n" + parts[1]);
-        } else {
-            devidedMsg.setStrScript(content);
-            parts = content.split("## 背景\\s*", 2);
-        }
-
-        parts = parts[1].split("## 人物剧本", 2);
-        devidedMsg.setBackground(parts[0]);
-        if (parts.length != 2)
-            System.out.println("分割背景失败");
-
-        parts = content.split("## 人物剧本", 2);
-        parts = parts[1].split("## 线索", 2);
-        String temp_str[] = parts[0].split("CHR");
-        if (temp_str.length == 1)
-            System.out.println("未找到分隔符 CHR, 分割人物剧本失败");
-        devidedMsg.setChrScript(new ArrayList<>(Arrays.asList(temp_str).subList(1, temp_str.length)));
-
-        parts = parts[1].split("## 真相", 2);
-        temp_str = parts[0].split("C>");
-        if (temp_str.length == 1)
-            System.out.println("未找到分隔符 C> ，分割真相失败");
-        devidedMsg.setClues(new ArrayList<>(Arrays.asList(temp_str).subList(1, temp_str.length)));
-
-        parts = parts[1].split("## 组织者手册", 2);
-        devidedMsg.setTrues(parts[0]);
-        if (parts.length != 2)
-            System.out.println("未找到分隔符，分割真相失败");
-
-        devidedMsg.setGoBook(parts[1]);
-    }
-
-    private CompletableFuture<List<List<String>>> ParseAIRespOfGetDesc(CompletableFuture<String> future) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return future.thenApply(response -> {
-            try {
-                response = response.replaceAll("`*$", "");
-                response = response.replaceAll("`*json", "");
-
-                Map<String, Object> json = objectMapper.readValue(
-                        response, new TypeReference<Map<String, Object>>() {
-                        });
-
-                List<List<String>> nameAndDesc = new ArrayList<>();
-                @SuppressWarnings("unchecked")
-                List<String> temp = (List<String>) json.get("name");
-                nameAndDesc.add(temp);
-                @SuppressWarnings("unchecked")
-                List<String> tempDesc = (List<String>) json.get("description");
-                nameAndDesc.add(tempDesc);
-                return nameAndDesc;
-            } catch (Exception e) {
-                throw new CompletionException("解析API响应失败", e);
-            }
-        }).exceptionally(ex -> {
-            System.err.println("获取描述失败: " + ex.getCause().getMessage());
-            return null;
-        });
-    }
-
-    private String HmacSha256(String secret, String message)
-            throws NoSuchAlgorithmException, InvalidKeyException {
-        Mac sha256Hmac = Mac.getInstance("HmacSHA256");
-        SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        sha256Hmac.init(secretKey);
-        byte[] bytes = sha256Hmac.doFinal(message.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(bytes);
-    }
-
-    private String CreateSignedUrl(String url) {
-        try {
-            URI uri = URI.create(url);
-            String host = uri.getHost();
-            String path = uri.getPath();
-
-            DateTimeFormatter CUSTOM_RFC_1123 = DateTimeFormatter.ofPattern(
-                    "EEE, dd MMM yyyy HH:mm:ss 'GMT'",
-                    Locale.US).withZone(ZoneId.of("GMT"));
-
-            String date = CUSTOM_RFC_1123.format(ZonedDateTime.now());
-
-            // 拼接签名字符串
-            String signatureOrigin = "host: " + host + "\n" +
-                    "date: " + date + "\n" +
-                    "POST " + path + " HTTP/1.1";
-            // 计算HMAC-SHA256签名
-            String signature = HmacSha256(HiDreamAPI_SECRET, signatureOrigin);
-
-            // 构建授权字符串
-            String authorizationOrigin = String.format(
-                    "api_key=\"%s\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"%s\"",
-                    HiDreamAPI_KEY, signature);
-
-            // Base64编码授权字符串
-            String encodedAuthorization = Base64.getEncoder()
-                    .encodeToString(authorizationOrigin.getBytes(StandardCharsets.UTF_8));
-
-            // 构建URL参数
-            return url + "?" +
-                    "authorization=" + URLEncoder.encode(encodedAuthorization, "UTF-8") +
-                    "&date=" + URLEncoder.encode(date, "UTF-8") +
-                    "&host=" + URLEncoder.encode(host, "UTF-8");
-        } catch (Exception e) {
-            throw new RuntimeException("生成签名URL失败", e);
-        }
-    }
-
-    public CompletableFuture<JSONObject> GetImageTaskStateAsync(HttpClient httpClient, String taskId) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                Map<String, Object> data = new HashMap<>();
-                Map<String, Object> header = new HashMap<>();
-                header.put("app_id", XFAPP_ID);
-                header.put("task_id", taskId);
-                data.put("header", header);
-
-                String requestUrl = CreateSignedUrl(HIDREAM_QUERY_URL);
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(requestUrl))
-                        .header("Content-Type", "application/json")
-                        .header("app_id", XFAPP_ID)
-                        .POST(HttpRequest.BodyPublishers.ofString(new JSONObject(data).toString()))
-                        .build();
-
-                // 发送异步请求
-                return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                        .thenApply(response -> {
-                            String responseBody = response.body();
-
-                            if (response.statusCode() != 200) {
-                                throw new RuntimeException("HTTP请求失败: " + response.statusCode() + " " + responseBody);
-                            }
-
-                            return new JSONObject(responseBody);
-                        })
-                        .get(50, TimeUnit.SECONDS); // 等待查询完成
-            } catch (Exception e) {
-                throw new RuntimeException("查询任务失败: " + e.getMessage(), e);
-            }
-        });
-    }
-
-    public CompletableFuture<String> GetImageURLAsync(String taskId) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(50))
-                .followRedirects(HttpClient.Redirect.ALWAYS) // 自动处理重定向
-                .build();
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                System.out.println("开始轮询图片生成状态：");
-                while (true) {
-                    JSONObject queryResponse = GetImageTaskStateAsync(httpClient, taskId).get(50, TimeUnit.SECONDS);
-
-                    // 检查响应是否包含header
-                    if (!queryResponse.has("header")) {
-                        System.err.println("无效的API响应，缺少header字段: " + queryResponse);
-                        return null;
-                    }
-
-                    JSONObject header = queryResponse.getJSONObject("header");
-                    int code = header.getInt("code");
-
-                    if (code == 0) {
-                        String taskStatus = header.getString("task_status");
-
-                        if ("3".equals(taskStatus)) {
-                            // 检查是否包含payload.result字段
-                            if (!queryResponse.has("payload")) {
-                                System.err.println("无效的API响应，缺少payload字段: " + queryResponse);
-                                return null;
-                            }
-
-                            JSONObject payload = queryResponse.getJSONObject("payload");
-                            if (!payload.has("result")) {
-                                System.err.println("无效的API响应，缺少payload.result字段: " + queryResponse);
-                                return null;
-                            }
-
-                            JSONObject result = payload.getJSONObject("result");
-                            String fText = result.getString("text");
-                            byte[] decoded = Base64.getDecoder().decode(fText);
-                            fText = new String(decoded, StandardCharsets.UTF_8);
-                            return (new JSONArray(fText)).getJSONObject(0).getString("image_wm");
-                        } else {
-                            System.out.print(taskStatus);
-                            Thread.sleep(3000); // 3秒后再次查询
-                        }
-                    } else {
-                        String errorMsg = header.optString("message", "未知错误");
-                        System.err.println("API请求失败: 错误码=" + code + ", 错误信息=" + errorMsg);
-                        System.err.println("完整响应: " + queryResponse);
-                        return null;
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("轮询任务状态失败: " + e.getMessage());
-                e.printStackTrace();
-                return null;
-            }
-        });
-    }
-
-    public CompletableFuture<String> CreateGenImageTaskAsync(String DescPrompt, String NegPrompt) {
+    public CompletableFuture<String> GenImage(String Description) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .build();
         return CompletableFuture.supplyAsync(() -> {
             try {
-                Map<String, Object> textPayload = new HashMap<>();
-                textPayload.put("prompt", DescPrompt);
-                textPayload.put("aspect_ratio", "1:1");
-                textPayload.put("negative_prompt", NegPrompt);
-                textPayload.put("img_count", 1);
-                textPayload.put("resolution", "2k");
-
-                String jsonText = new JSONObject(textPayload).toString();
-                String bText = Base64.getEncoder().encodeToString(jsonText.getBytes(StandardCharsets.UTF_8));
-
                 Map<String, Object> requestData = new HashMap<>();
 
                 // 构建header
                 Map<String, Object> header = new HashMap<>();
-                header.put("app_id", XFAPP_ID);
-                header.put("status", 3);
-                header.put("channel", "default");
-                header.put("callback_url", "default");
+                header.put("app_id", xfyunConfig.getAppid_wwb());
                 requestData.put("header", header);
 
                 // 构建parameter
                 Map<String, Object> parameter = new HashMap<>();
-                Map<String, Object> oigParam = new HashMap<>();
-                Map<String, Object> resultParam = new HashMap<>();
-                resultParam.put("encoding", "utf8");
-                resultParam.put("compress", "raw");
-                resultParam.put("format", "json");
-                oigParam.put("result", resultParam);
-                parameter.put("oig", oigParam);
+                Map<String, Object> chat = new HashMap<>();
+                chat.put("domain", "general");
+                chat.put("width", 512);
+                chat.put("height", 512);
+                parameter.put("chat", chat);
                 requestData.put("parameter", parameter);
 
                 // 构建payload
                 Map<String, Object> payload = new HashMap<>();
-                Map<String, Object> oigPayload = new HashMap<>();
-                oigPayload.put("text", bText);
-                payload.put("oig", oigPayload);
+                Map<String, Object> message = new HashMap<>();
+                List<Map<String, Object>> textList = new ArrayList<>(); // 使用List而不是Map
+                Map<String, Object> textItem = new HashMap<>(); // 创建text数组中的项
+                textItem.put("role", "user");
+                textItem.put("content", Description);
+                textList.add(textItem);
+                message.put("text", textList);
+                payload.put("message", message);
                 requestData.put("payload", payload);
 
                 // 生成带签名的URL
-                String requestUrl = CreateSignedUrl(HIDREAM_CREATE_URL);
-
+                String requestUrl = xfyunConfig.CreateSignedUrl(xfyunConfig.getGenImageRequestURL());
+                System.out.println("请求URL: " + requestUrl);
                 // 异步发送请求
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(requestUrl))
                         .header("Content-Type", "application/json")
-                        .header("app_id", XFAPP_ID)
+                        .header("app_id", xfyunConfig.getAppid_wwb())
                         .POST(HttpRequest.BodyPublishers.ofString(new JSONObject(requestData).toString()))
                         .build();
 
@@ -637,6 +275,7 @@ public class AIServicelmpl implements AIService {
                 return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                         .thenApply(response -> {
                             String responseBody = response.body();
+                            System.out.println("API响应: " + responseBody);
 
                             if (response.statusCode() != 200) {
                                 throw new RuntimeException("HTTP请求失败: " + response.statusCode() + " " + responseBody);
@@ -644,43 +283,18 @@ public class AIServicelmpl implements AIService {
 
                             JSONObject resp = new JSONObject(responseBody);
 
-                            // 检查响应是否包含header
-                            if (!resp.has("header")) {
-                                throw new RuntimeException("API响应中缺少header字段: " + resp);
-                            }
+                            return resp
+                                    .getJSONObject("payload")
+                                    .getJSONObject("choices")
+                                    .getJSONArray("text")
+                                    .getJSONObject(0)
+                                    .getString("content");
 
-                            // 检查任务ID是否存在
-                            JSONObject respHeader = resp.getJSONObject("header");
-                            if (!respHeader.has("task_id") || respHeader.getString("task_id").isEmpty()) {
-                                throw new RuntimeException("任务ID缺失或为空: " + resp);
-                            }
-
-                            return respHeader.getString("task_id");
-                        })
-                        .get(60, TimeUnit.SECONDS); // 等待任务创建完成（可以调整超时时间）
+                        }).join();
             } catch (Exception e) {
                 throw new RuntimeException("创建任务失败: " + e.getMessage(), e);
             }
         });
-    }
-
-    public CompletableFuture<String> DownloadImageToBase64Async(String imageUrl) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(20))
-                .followRedirects(HttpClient.Redirect.ALWAYS) // 自动处理重定向
-                .build();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(imageUrl))
-                .GET()
-                .build();
-
-        return httpClient.sendAsync(request, BodyHandlers.ofByteArray())
-                .thenApply(response -> {
-                    if (response.statusCode() == 200) {
-                        return Base64.getEncoder().encodeToString(response.body());
-                    }
-                    throw new RuntimeException("HTTP错误: " + response.statusCode());
-                });
     }
 
     @Override
@@ -719,7 +333,7 @@ public class AIServicelmpl implements AIService {
                 messages.add(Map.of("role", "user", "content", request.getPrompt()));
 
                 // 执行非流式请求
-                CompletableFuture<String> future = GetAPIOutputAsync(messages, "x1");
+                CompletableFuture<String> future = xfyunConfig.GetAPIOutputAsync(messages, "x1");
                 String response = future.get();
 
                 // 解析响应内容为Slogan对象数组
@@ -897,11 +511,11 @@ public class AIServicelmpl implements AIService {
     }
 
     /**
-     * 从内容中提取核心创意
+     * 生成框架流式响应
      */
     @Override
     public CompletableFuture<AIMsgDevide> GenFrameworkStream(List<Map<String, String>> msgs,
-                                                             Consumer<String> callback) {
+            Consumer<String> callback) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 msgs.add(0, new HashMap<String, String>() {
@@ -919,11 +533,11 @@ public class AIServicelmpl implements AIService {
                 }
 
                 // 创建请求连接
-                URL url = new URL("https://spark-api-open.xf-yun.com/v2/chat/completions");// X1URL
+                URL url = new URL(xfyunConfig.getX1Url());// X1URL
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Authorization", "Bearer ZxztQfIySwHMqrLvRLGa:gZdZClyqiPxeoHVTZQbO");// X1APIPassword
+                conn.setRequestProperty("Authorization", "Bearer " + xfyunConfig.getX1APIPassword());
                 conn.setDoOutput(true);
 
                 // 发送请求体
@@ -939,7 +553,7 @@ public class AIServicelmpl implements AIService {
 
                 String StrScript = processStreamResponse(conn, callback);
                 AIMsgDevide devidedMsg = new AIMsgDevide();
-                DevideScriptContent(devidedMsg, StrScript, true);
+                xfyunConfig.DevideScriptContent(devidedMsg, StrScript, true);
                 return devidedMsg;
             } catch (Exception e) {
                 throw new RuntimeException("API请求失败", e);
@@ -988,6 +602,7 @@ public class AIServicelmpl implements AIService {
                     你是剧本杀创作的一员，你的任务是完善剧本背景，要求如下：
                     	1、请以如下模板输出
                     	## 背景
+
                     	...（纯文本）
 
                     	2、除了”## 背景“这部分内容使用MarkDown格式，剩余部分请用纯文本回答，不要使用任何Markdown格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
@@ -999,6 +614,7 @@ public class AIServicelmpl implements AIService {
                                 	1、请以 CHR 角色姓名 的形式开头
                                 	示例：
                                 	CHR 王小明
+
                                 	...（王小明的详细剧本内容）
 
                                 	2、请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
@@ -1011,6 +627,7 @@ public class AIServicelmpl implements AIService {
                     你是剧本杀创作的一员，你的任务是完整描述剧本中已有的线索，要求如下：
                     	1、请以如下模板输出
                             	## 线索
+
                                 - C> ...
                     		    - C> ...
                     		    - C> ...
@@ -1025,6 +642,7 @@ public class AIServicelmpl implements AIService {
                     你是剧本杀创作的一员，你的任务是完善剧本真相，要求如下：
                         1、请以如下模板输出
                      	## 真相
+
                         ...（纯文本）
 
                         2、除了”## 真相“这部分内容使用MarkDown格式，剩余部分请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
@@ -1033,7 +651,7 @@ public class AIServicelmpl implements AIService {
                                         """,
             """
                     你是剧本杀创作的一员，你的任务是完善组织者手册，要求如下：
-                    	1、请以 ## 组织者手册\n 开头
+                    	1、请以 ## 组织者手册\n\n 开头
 
                     	2、请用纯文本回答，不要使用任何 Markdown 格式（如 ```、**粗体**、*斜体*、标题等）。直接输出内容，无需装饰。
 
@@ -1065,27 +683,42 @@ public class AIServicelmpl implements AIService {
                         ...（这部分是给用户的礼貌性回答）
             		》》》
                 # ...（这部分是标题）
+
             		---
+
                 ## 背景
+
             		...
+
             		---
+
                 ## 人物剧本:
+
             		- CHR ...（角色1名称）
             		...（关于角色1的相关内容）
             		- CHR ...（角色2名称）
             		...（关于角色2的相关内容）
             		...（其它角色的格式以此类推）
+
             		---
+
                 ## 线索
+
             		- C> ...
             		- C> ...
             		- C> ...
             		...
+
             		---
+
                 ## 真相
+
             		...
+
             		---
+
                 ## 组织者手册
+
             		...
             		---
             	（到此结束，不要再输出文本）

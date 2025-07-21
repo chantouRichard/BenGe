@@ -1,5 +1,6 @@
 package com.bengebackend;
 
+import com.bengebackend.config.XfyunConfig;
 import com.bengebackend.entity.SloganRequestEntity;
 import com.bengebackend.service.serviceImpl.AIServicelmpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +22,8 @@ public class SloganStreamTestCommand {
         // 初始化服务
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper objectMapper = new ObjectMapper();
-        aiService = new AIServicelmpl(restTemplate, objectMapper);
+        XfyunConfig xfyunConfig = new XfyunConfig();
+        aiService = new AIServicelmpl(restTemplate, objectMapper, xfyunConfig);
 
         System.out.println("=================================");
         System.out.println("  Slogan流式生成测试工具");
