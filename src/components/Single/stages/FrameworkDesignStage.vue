@@ -551,8 +551,7 @@ const formatMessage = (content) => {
 
 const sendMessage = async () => {
   if (!messageInput.value.trim() || isProcessing.value) return;
-
-  // 生成临时消息ID
+  // 生成临时消息ID 
   const tempMessageId = Date.now().toString();
 
   // 添加用户消息到本地临时历史（不会持久化）
@@ -579,9 +578,10 @@ const sendMessage = async () => {
       timestamp: new Date()
     });
 
-    // 调用API更新剧本内容
-    const result = await scriptStore.UpdateFramework(messageInput.value);
-    
+    // 调用API更新剧本内容（非流式）
+    //const result = await scriptStore.UpdateFramework(messageInput.value);
+    const result = await scriptStore.streamUpdateFramework(messageInput.value);
+
     // 清空输入框
     messageInput.value = '';
     // 移除正在输入的提示
@@ -594,8 +594,11 @@ const sendMessage = async () => {
       // 清空本地临时消息（因为后端会返回完整的历史记录）
       localChatHistory.value = [];
     }
+    else{
+      throw new Error("");
+    }
   } catch (error) {
-    // console.error("更新剧本内容失败", error);
+    console.error("更新剧本内容失败", error);
     
     // 移除正在输入的提示
     localChatHistory.value.pop();

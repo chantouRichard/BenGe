@@ -390,7 +390,7 @@ const generateImage = async () => {
       };
     }
   } catch (error) {
-    // console.error('生成图片失败', error);
+    console.error('生成图片失败', error);
   } finally {
     isGeneratingImage.value = false;
   }

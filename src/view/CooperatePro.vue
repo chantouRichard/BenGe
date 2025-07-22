@@ -7,6 +7,7 @@
       <div class="page-title">
         <i class="fa-solid fa-house"></i>
         <h1>房间列表</h1>
+        <h1>房间列表</h1>
       </div>
 
       <!-- 创建房间区域 -->
@@ -35,7 +36,7 @@
           <!-- 左侧锁和文字 -->
           <label for="pwd-check" class="password-toggle-label">
             <i class="fas fa-lock icon"></i>
-            <span>Set</span>
+            <span>设置密码</span>
           </label>
 
           <!-- 复选框控制展开 -->
@@ -53,8 +54,10 @@
         <div class="button-group">
           <button class="cancel-btn" @click="showCreatePage = false">
             <i class="fas fa-times"></i> 取消
+            <i class="fas fa-times"></i> 取消
           </button>
           <button class="create-btn" @click="submitRoom">
+            <i class="fas fa-plus"></i> 创建
             <i class="fas fa-plus"></i> 创建
           </button>
         </div>

@@ -216,29 +216,39 @@ export default defineComponent({
     };
 
     const parseSSEChunk = (chunk) => {
-      const lines = chunk.split("\n");
+      const lines = chunk.split("data:");
       const dataLines = lines
-        .filter((line) => line.startsWith("data:"))
-        .map((line) => line.replace("data:", "").trim());
-      return dataLines.join(""); // 将所有 `data:` 内容拼接成完整字符串
+        .filter((line) => {return line.trim() !== "" && !line.startsWith("event:");})
+        .map((line) => line.replace("event:message", "").trim())
+        .filter((line) => line !== "");
+      return dataLines; // 将所有 `data:` 内容拼接成完整字符串
     };
 
     const updateAIMessage = (chunk) => {
       const lastMessage = messages[messages.length - 1];
-
       // 如果最后一条消息是 AI 的，则逐字更新
       if (lastMessage && lastMessage.type === "ai") {
         let currentContent = lastMessage.content || "";
-        let index = 0;
 
         const displayNextChar = () => {
-          if (index < chunk.length) {
-            currentContent += chunk[index];
-            lastMessage.content = currentContent; // 更新最后一条消息内容
-            index++;
-            scrollToBottom(); // 滚动到底部
-            setTimeout(displayNextChar, 50); // 每 50ms 显示一个字符
-          }
+          if (chunk.length === 0) return;
+            try{
+              const data = JSON.parse(chunk[0]);
+              if(data.choices?.[0]?.delta?.content){
+                currentContent += data.choices[0].delta.content;
+                lastMessage.content = currentContent; // 更新最后一条消息内容
+                scrollToBottom(); // 滚动到底部
+                chunk.shift();
+                if(chunk.length > 0){
+                  setTimeout(displayNextChar, 50);
+                }
+              }
+            }catch(e){
+              chunk.shift(); // 即使解析失败，也移除当前 chunk
+              if (chunk.length > 0) {
+                setTimeout(displayNextChar, 50);
+              }
+            }
         };
 
         displayNextChar();

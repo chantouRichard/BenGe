@@ -10,127 +10,13 @@ export const useAtmosphereStore = defineStore('atmosphereStore', () => {
 
   // 独立的氛围节点数据
   const nodes = ref([
-    // {
-    //   id: "atmo-node-1",
-    //   type: "atmosphere",
-    //   position: { x: 200, y: 600 },
-    //   data: {
-    //     title: "雾夜镜湖",
-    //     timeLabel: "DAY1 夜晚",
-    //     mood: "迷离、紧张",
-    //     lighting: "低能见度自然光",
-    //     music: "低频环境噪音 + 远处水声",
-    //     weather: "湖边突然起雾，能见度不足3米，疑似有人趁机出入现场。",
-    //     notes: ""
-    //   }
-    // },
-    // {
-    //   id: "atmo-node-2",
-    //   type: "atmosphere",
-    //   position: { x: 850, y: 630 },
-    //   data: {
-    //     title: "心理室咔哒声",
-    //     timeLabel: "DAY2 上午",
-    //     mood: "压抑、不安",
-    //     lighting: "昏暗灯光",
-    //     music: "催眠装置的机械节拍声",
-    //     weather: "催眠治疗过程中不断重复的咔哒声让人产生幻觉。",
-    //     notes: ""
-    //   }
-    // },
-    // {
-    //   id: "atmo-node-3",
-    //   type: "atmosphere",
-    //   position: { x: 580, y: 640 },
-    //   data: {
-    //     title: "湖中倒影",
-    //     timeLabel: "DAY2 傍晚",
-    //     mood: "诡异、压抑",
-    //     lighting: "水面反光，阳光破碎",
-    //     music: "无声静谧",
-    //     weather: "湖面出现与死者长相相似的倒影，引起惊恐。",
-    //     notes: ""
-    //   }
-    // },
-    // {
-    //   id: "atmo-node-4",
-    //   type: "atmosphere",
-    //   position: { x: 1550, y: 700 },
-    //   data: {
-    //     title: "黑猫惊影",
-    //     timeLabel: "DAY3 凌晨",
-    //     mood: "惊悚、诡异",
-    //     lighting: "手电照明中突现黑影",
-    //     music: "突发猫叫 + 镜头抖动",
-    //     weather: "柳念之称案发夜看到黑猫窜入镜湖小路，引发集体恐慌。",
-    //     notes: ""
-    //   }
-    // },
+   
 
   ]);
 
   // 独立的氛围边数据
   const edges = reactive([
-    // {
-    //   id: "atmo-link-atmo-node-1-plot-node-1",
-    //   source: "atmo-node-1",
-    //   target: "plot-node-1",
-    //   type: "atmosphere-influence",
-    //   data: {
-    //     type: "atmosphere-influence",
-    //     label: "氛围影响",
-    //     style: "dashed",
-    //     color: "#ff6b6b"
-    //   }
-    // },
-    // {
-    //   id: "atmo-link-atmo-node-2-plot-node-4",
-    //   source: "atmo-node-2",
-    //   target: "plot-node-4",
-    //   type: "atmosphere-influence",
-    //   data: {
-    //     type: "atmosphere-influence",
-    //     label: "氛围影响",
-    //     style: "dashed",
-    //     color: "#ff6b6b"
-    //   }
-    // },
-    // {
-    //   id: "atmo-link-atmo-node-3-plot-node-3",
-    //   source: "atmo-node-3",
-    //   target: "plot-node-3",
-    //   type: "atmosphere-influence",
-    //   data: {
-    //     type: "atmosphere-influence",
-    //     label: "氛围影响",
-    //     style: "dashed",
-    //     color: "#ff6b6b"
-    //   }
-    // },
-    // {
-    //   id: "atmo-link-atmo-node-4-plot-node-6",
-    //   source: "atmo-node-4",
-    //   target: "plot-node-6",
-    //   type: "atmosphere-influence",
-    //   data: {
-    //     type: "atmosphere-influence",
-    //     label: "氛围影响",
-    //     style: "dashed",
-    //     color: "#ff6b6b"
-    //   }
-    // },
-    // {
-    //   id: "atmo-link-atmo-node-5-plot-node-5",
-    //   source: "atmo-node-5",
-    //   target: "plot-node-5",
-    //   type: "atmosphere-influence",
-    //   data: {
-    //     type: "atmosphere-influence",
-    //     label: "氛围影响",
-    //     style: "dashed",
-    //     color: "#ff6b6b"
-    //   }
-    // }
+    
   ]);
 
   // 当前选择结点
