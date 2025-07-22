@@ -55,11 +55,11 @@ public class XfyunConfig {
     private String x1_api_password;
     private String ultra_api_password;
     private String api_url_ultra;
-    
+
     // AI流式聊天相关配置
     private String x1_http_api_password;
     private String x1_http_api_url;
-    
+
     @Autowired
     private ContextDataProcessor contextDataProcessor;
 

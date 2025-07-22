@@ -47,7 +47,7 @@ xfyun:
   api_url_ultra: "https://spark-api-open.xf-yun.com/v1/chat/completions"  #for Spark Ultra4.0
 
   appid_wwb: 0772d014
-  x1_api_password: "ZxztQfIySwHMqrLvRLGa:gZdZClyqiPxeoHVTZQbO"
+  x1_api_password: "LDyRZssDGkTXbIthwLqF:NFWmYevojkYpDKbYVZZL"
   ultra_api_password: "IpOQfvhLEITliSekghNa:SqZiQwEmoHfKXqIaIVSi"
   gen_image_api_secret_wwb: "ZDY3NzA0ZTNkZGFiMDZmZjc5ZGNmMzBk"
   gen_image_api_key_wwb: "6e7c2a3271a09fcbb55f1d5e5e4c38cd"

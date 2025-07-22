@@ -8,7 +8,6 @@ import com.bengebackend.service.AIService;
 import com.bengebackend.service.ScriptHistoryService;
 import com.bengebackend.util.ContextDataProcessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.langchain4j.community.model.dashscope.QwenChatModel;
 import lombok.extern.slf4j.Slf4j;
 import com.bengebackend.service.ScriptService;
 import com.bengebackend.dto.ScriptDetailDto;
@@ -16,7 +15,6 @@ import com.bengebackend.entity.ScriptReplyRequestEntity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import java.util.Arrays;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -36,9 +34,6 @@ public class AIStreamController {
 
     @Autowired
     private AIService aiService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Autowired
     private ScriptService scriptService;

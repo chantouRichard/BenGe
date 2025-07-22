@@ -58,7 +58,7 @@ public class AIServicelmpl implements AIService {
         msgs.add(0, new HashMap<String, String>() {
             {
                 put("role", "system");
-                put("content", XfyunConfig.SYSTEM_MSG);
+                put("content", System_MSG);
             }
         });
 
@@ -501,7 +501,7 @@ public class AIServicelmpl implements AIService {
                 msgs.add(0, new HashMap<String, String>() {
                     {
                         put("role", "system");
-                        put("content", XfyunConfig.SYSTEM_MSG);
+                        put("content", System_MSG);
                     }
                 });
                 // 构建消息数组
@@ -576,7 +576,8 @@ public class AIServicelmpl implements AIService {
         }
         return fullContent.toString();
     }
-}
+
+    private static final String[] GenDetailSysPrompt = {
             """
                     你是剧本杀创作的一员，你的任务是完善剧本背景，要求如下：
                     	1、请以如下模板输出
