@@ -444,7 +444,7 @@ export const usescriptStore = defineStore('script', () => {
                             ...scriptTemp,
                             title: titleTemp
                           };
-                          console.log("script:",  filteredScriptTemp);
+                          //console.log("script:",  filteredScriptTemp);
                           streamingState.value.currentAIResponse = streamingState.value.currentAIResponse.slice(0, tempIndex);
                         }
                       }
@@ -581,10 +581,10 @@ export const usescriptStore = defineStore('script', () => {
           // 更新剧本阶段
           scriptStage.value = updatedScript.stage || 3;
 
-          console.log("test here:",response.visualElements);
+          //console.log("test here:",response.visualElements);
           if(response.visualElements){
             visualElements.value = response.visualElements; 
-            console.log("test3 here:" , visualElements);
+            //console.log("test3 here:" , visualElements);
           }
         }
       } catch (error){
