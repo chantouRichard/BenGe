@@ -130,7 +130,7 @@ async function setupWebSocket() {
   // socketState.socket = new WebSocket("ws://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws");
 
   socketState.socket = new WebSocket(
-    "wss://9cd1-2001-250-4001-5012-c1e1-eff4-a331-25f4.ngrok-free.app/ws"
+    "ws://1.15.138.177/ws"
   );
 
   let pingInterval = null;
@@ -160,7 +160,7 @@ async function setupWebSocket() {
         socketState.socket &&
         socketState.socket.readyState === WebSocket.OPEN
       ) {
-        socketState.socket.send(JSON.stringify({ type: "ping" }));
+        // socketState.socket.send(JSON.stringify({ type: "ping" }));
         // 可选：// console.log("发送 ping 心跳");
       }
     }, 20000);

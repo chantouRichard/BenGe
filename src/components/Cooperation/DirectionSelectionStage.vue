@@ -6,7 +6,7 @@
       <div class="left-panel">
         <div class="left-panel-header">
           <div style="font-size: 24px; font-weight: bold;margin-left: 50px;">BenGe.Vision</div>
-          <button class="next-btn" @click="$emit('updateStage', 1)">
+          <button class="confirm-button" @click="$emit('updateStage', 1)">
             下一阶段
           </button>
         </div>
@@ -361,5 +361,22 @@ defineExpose({
 .fade-leave-from {
   opacity: 1;
   max-height: 200px;
+}
+.confirm-button {
+  width: 120px;
+  height: 36px;
+  padding: 12px;
+  background-color: #337df2;
+  color: white;
+  border: none;
+  border-radius: 18px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
