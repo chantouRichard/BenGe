@@ -6,7 +6,7 @@
       <!-- 页面标题 -->
       <div class="page-title">
         <i class="fa-solid fa-house"></i>
-        <h1>Rooms</h1>
+        <h1>房间列表</h1>
       </div>
 
       <!-- 创建房间区域 -->
@@ -16,8 +16,8 @@
             <i class="fas fa-home icon"></i>
           </div>
           <div class="header-right">
-            <h2 class="title">Create New Room</h2>
-            <p class="subtitle">Please enter basic room information</p>
+            <h2 class="title">创建新房间</h2>
+            <p class="subtitle">请输入基本信息</p>
           </div>
         </div>
 
@@ -28,7 +28,7 @@
 
         <div class="form-group">
           <i class="fas fa-list icon"></i>
-          <input id="room-description" v-model="newRoom.description" placeholder="Optional: Description" rows="2" />
+          <input id="room-description" v-model="newRoom.description" placeholder="可选：房间描述" rows="2" />
         </div>
 
         <div class="password-toggle-wrapper">
@@ -44,7 +44,7 @@
           <!-- 密码输入框：右侧展开 -->
           <transition name="expand-slide">
             <input v-if="newRoom.havePwd" type="password" class="password-slide-input" v-model="newRoom.password"
-              placeholder="Enter password" />
+              placeholder="请输入密码" />
           </transition>
         </div>
 
@@ -52,10 +52,10 @@
         <!-- 创建和取消按钮 -->
         <div class="button-group">
           <button class="cancel-btn" @click="showCreatePage = false">
-            <i class="fas fa-times"></i> Cancel
+            <i class="fas fa-times"></i> 取消
           </button>
           <button class="create-btn" @click="submitRoom">
-            <i class="fas fa-plus"></i> Create
+            <i class="fas fa-plus"></i> 创建
           </button>
         </div>
       </div>
@@ -73,7 +73,7 @@
 
           <button class="custom-create-btn" @click="create">
             <i class="fa fa-plus"></i>
-            <span>Create Room</span>
+            <span>创建房间</span>
           </button>
         </div>
 
