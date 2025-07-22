@@ -277,7 +277,7 @@ export const usescriptStore = defineStore('script', () => {
 
         // // console.log("确认方向", selectedDirection.value);
         // 调用API更新剧本内容和阶段
-        const response = await updateScriptContent(selectScriptId.value, content + coreIdea, 2);
+        const response = await updateScriptContent(selectScriptId.value, "# 核心谜题\n\n" + content + "\n\n---\n\n# 核心创意\n\n" + coreIdea, 2);
         
         if (response && response.script) {
           // 更新剧本内容和阶段
@@ -444,7 +444,7 @@ export const usescriptStore = defineStore('script', () => {
                             ...scriptTemp,
                             title: titleTemp
                           };
-                          console.log("script:",  filteredScriptTemp);
+                          //console.log("script:",  filteredScriptTemp);
                           streamingState.value.currentAIResponse = streamingState.value.currentAIResponse.slice(0, tempIndex);
                         }
                       }
@@ -581,10 +581,10 @@ export const usescriptStore = defineStore('script', () => {
           // 更新剧本阶段
           scriptStage.value = updatedScript.stage || 3;
 
-          console.log("test here:",response.visualElements);
+          //console.log("test here:",response.visualElements);
           if(response.visualElements){
             visualElements.value = response.visualElements; 
-            console.log("test3 here:" , visualElements);
+            //console.log("test3 here:" , visualElements);
           }
         }
       } catch (error){

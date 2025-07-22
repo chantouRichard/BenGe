@@ -15,6 +15,7 @@
           <div class="direction-card">
             <div class="card-front">
               <div class="card-number">{{ index + 1 }}</div>
+              <div class="core-idea-title">核心谜题</div>
               <div class="direction-content">{{ truncateContent(direction.content) }}</div>
               <div class="card-hint">
                 <i class="fas fa-search-plus"></i> 点击查看完整内容
@@ -145,7 +146,7 @@
         <h3 class="modal-title">剧本方向 {{ currentViewingIndex + 1 }}</h3>
         
         <div class="modal-section">
-          <h4>剧本背景与玩家目标</h4>
+          <h4>核心谜题</h4>
           <div class="modal-text">{{ currentViewingDirection.content }}</div>
         </div>
         
@@ -172,6 +173,7 @@
 <script setup>
 import { ref, computed, defineProps, onMounted, nextTick, watch ,onUnmounted} from 'vue';
 import { getScriptDirections } from '@/api/script';
+import { marked } from 'marked';
 import { usescriptStore } from '@/stores/scriptStore';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -356,11 +358,12 @@ const sendMessage = async () => {
     chatHistory.value.pop();    // 移除正在输入的提示
     scriptStore.clearDirections();// 清空现有方向
 
-    const response = await fetch('http://localhost:7122/api/ai/slogan/stream', {
+    const response = await fetch('/api/ai/slogan/stream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
+        'Connection': 'keep-alive'
       },
       body: JSON.stringify({
         prompt: userInput,
@@ -389,11 +392,13 @@ const sendMessage = async () => {
             line = line.slice(5).trim(); // 去掉 "data:" 并去除空白
           }
           if (line === '[DONE]') continue; // 忽略结束标记
-
           const data = JSON.parse(line);
 
           // 检查是否有 `choices[0].delta.content`（类似 OpenAI 流式响应）
           if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+
+
+            console.log(data.choices[0].delta.content);
             fullContent += data.choices[0].delta.content; // 累积内容
 
             // 如果后端是逐字返回，可以按需拆分句子（如按换行符）
@@ -401,11 +406,11 @@ const sendMessage = async () => {
 
             // 更新 slogans 列表
             slogans = newLines.map((text, index) => ({
-              content: text,
+              content: text.split("# 核心创意")[0]?.trim(),
+              coreIdea: text.split("# 核心创意")[1]?.trim(),
               id: index + 1, // 生成唯一 ID
             }));
 
-            // 实时更新 UI（假设 pendingSlogans 是 Vue 的 ref）
             pendingSlogans.value = [...slogans];
           }
         } catch (error) {
