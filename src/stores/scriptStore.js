@@ -277,7 +277,7 @@ export const usescriptStore = defineStore('script', () => {
 
         // // console.log("确认方向", selectedDirection.value);
         // 调用API更新剧本内容和阶段
-        const response = await updateScriptContent(selectScriptId.value, content + coreIdea, 2);
+        const response = await updateScriptContent(selectScriptId.value, "# 核心谜题\n\n" + content + "\n\n---\n\n# 核心创意\n\n" + coreIdea, 2);
         
         if (response && response.script) {
           // 更新剧本内容和阶段
